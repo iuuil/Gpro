@@ -3,6 +3,7 @@ import 'package:gproject/screens/admin_complaints_screen.dart';
 import 'admin_reports_screen.dart';
 import 'admin_settings_screen.dart';
 import 'admin_users_screen.dart';
+import 'admin_account_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -14,15 +15,8 @@ class AdminDashboardScreen extends StatefulWidget {
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
-
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _currentIndex = 0;
-
-  // 0: الرئيسية (لوحة التحكم)
-  // 1: إعدادات النظام
-  // 2: مؤقت ١
-  // 3: مؤقت ٢
-  // 4: الحساب الشخصي للمسؤول
 
   Widget _buildBody() {
     switch (_currentIndex) {
@@ -32,7 +26,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return AdminSettingsScreen(
           onBackToDashboard: () {
             setState(() {
-              _currentIndex = 0; // يرجع للرئيسية
+              _currentIndex = 0;
             });
           },
         );
@@ -45,13 +39,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           child: Text('صفحة مؤقتة ٢'),
         );
       case 4:
-        return const Center(
-          child: Text('الحساب الشخصي للمسؤول'),
+        return AdminProfileScreen(
+          onBackToDashboard: () {
+            setState(() {
+              _currentIndex = 0; // يرجع للوحة التحكم
+            });
+          },
         );
       default:
         return const _AdminHomeContent();
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

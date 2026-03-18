@@ -307,7 +307,7 @@ class _SettingsTile extends StatelessWidget {
               ),
             ),
             const Icon(
-              Icons.chevron_left,
+              Icons.chevron_right, // هنا غيرنا الاتجاه
               color: Color(0xFF9CA3AF),
             ),
           ],

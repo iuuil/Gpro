@@ -164,7 +164,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     ),
 
                     // زر عائم لإضافة مستخدم جديد
-                    Positioned(
+                    /* Positioned(
                       left: 16,
                       bottom: 16,
                       child: ElevatedButton.icon(
@@ -194,7 +194,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           ),
                         ),
                       ),
-                    ),
+                    ), */
                   ],
                 ),
               ),
