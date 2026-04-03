@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore: unnecessary_import
+import 'package:flutter/foundation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadLoginState();
+    _testFirebase(); // اختبار Firebase
   }
 
   Future<void> _loadLoginState() async {
@@ -27,6 +31,27 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isLoading = false;
     });
+  }
+
+  Future<void> _testFirebase() async {
+    // ignore: avoid_print
+    print('🔥 _testFirebase called'); // للتأكد أنها ان استدعيت
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('test')
+          .doc('ping')
+          .set({
+        'time': DateTime.now().toIso8601String(),
+        'source': 'home_screen',
+      });
+
+      // ignore: avoid_print
+      print('✅ Firestore write success from HomeScreen');
+    } catch (e) {
+      // ignore: avoid_print
+      print('❌ Firestore error: $e');
+    }
   }
 
   @override
@@ -76,8 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -244,6 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 class _FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -266,7 +292,6 @@ class _FeatureCard extends StatelessWidget {
 
     return SizedBox(
       width: cardWidth,
-      // ارتفاع ثابت مثلاً 150 (غيّره حسب ما يعجبك)
       height: 150,
       child: InkWell(
         onTap: onTap,
@@ -298,7 +323,7 @@ class _FeatureCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Expanded( // عشان النص يتمدد داخل المساحة المتبقية
+              Expanded(
                 child: Text(
                   description,
                   style: const TextStyle(

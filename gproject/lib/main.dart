@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
 
 import '../screens/splash_screen.dart';
 import '../screens/home_screen.dart';
@@ -16,9 +19,14 @@ import '../screens/education_complaint_screen.dart';
 import '../screens/map_report_screen.dart';
 import '../screens/main_shell_screen.dart';
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
+  // تهيئة Firebase لكل المنصات (Android / Web / iOS)
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-void main() {
   runApp(const MyApp());
 }
 
@@ -61,7 +69,6 @@ class MyApp extends StatelessWidget {
             const EducationComplaintScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
-        // حذف /complaints من الاستخدام للتبويب (سيستخدم من الشريط)
         '/admin-login': (context) => const AdminLoginScreen(),
         '/admin-register': (context) => const AdminRegisterScreen(),
         '/ministries': (context) => const MinistriesScreen(),
@@ -69,11 +76,11 @@ class MyApp extends StatelessWidget {
         '/map-report-screen': (context) => const MapReportScreen(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/admin-complaints': (context) => const AdminComplaintsScreen(),
-        '/complaints-center': (context) => const ComplaintsCenterScreen(),
+        '/complaints-center': (context) =>
+            const ComplaintsCenterScreen(),
 
         // صفحة تقديم الشكوى مع arguments من MinistriesScreen
         '/complaint': (context) {
-
           final args = ModalRoute.of(context)!.settings.arguments
               as Map<String, dynamic>;
 
