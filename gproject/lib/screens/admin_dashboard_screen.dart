@@ -147,7 +147,7 @@ class _AdminHomeContent extends StatelessWidget {
               'لوحة تحكم الأدمن',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 color: Color(0xFF1F2933),
               ),
             ),
@@ -199,7 +199,7 @@ class _AdminHomeContent extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -231,7 +231,7 @@ class _AdminHomeContent extends StatelessWidget {
                         'عرض',
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -260,7 +260,7 @@ class _AdminHomeContent extends StatelessWidget {
                         'إحصائيات الشكاوى',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF111827),
                         ),
                       ),
@@ -414,7 +414,7 @@ class _AdminHomeContent extends StatelessWidget {
                         'الوصول السريع',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF111827),
                         ),
                       ),
@@ -543,7 +543,7 @@ class _StatCard extends StatelessWidget {
             value,
             style: const TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: Color(0xFF111827),
             ),
           ),
@@ -564,7 +564,7 @@ class _StatCard extends StatelessWidget {
               badgeText,
               style: TextStyle(
                 fontSize: 9,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 color: badgeTextColor,
               ),
             ),
@@ -631,7 +631,7 @@ class _QuickAccessCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 color: Color(0xFF111827),
               ),
             ),
@@ -653,3 +653,4 @@ class _QuickAccessCard extends StatelessWidget {
     );
   }
 }
+

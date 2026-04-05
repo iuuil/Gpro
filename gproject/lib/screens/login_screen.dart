@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,42 +21,57 @@ class _LoginScreenState extends State<LoginScreen> {
     if (inputEmail.isEmpty || inputPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('يرجى إدخال اسم المستخدم/الإيميل وكلمة المرور')),
+          content: Text('يرجى إدخال البريد الإلكتروني وكلمة المرور'),
+        ),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final savedEmail = prefs.getString('user_email');
-    final savedPassword = prefs.getString('user_password');
+    try {
+      // تسجيل الدخول عبر Firebase Auth
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: inputEmail,
+        password: inputPassword,
+      ); // يسجل الدخول بالمستخدم الذي أنشأته في صفحة التسجيل[web:105][web:125]
 
-    await Future.delayed(const Duration(milliseconds: 300));
+      setState(() => _isLoading = false);
 
-    if (savedEmail == null || savedPassword == null) {
-      // ignore: use_build_context_synchronously
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('لا يوجد حساب محفوظ، يرجى إنشاء حساب أولاً')),
+        const SnackBar(content: Text('تم تسجيل الدخول بنجاح')),
       );
-      setState(() => _isLoading = false);
-      return;
-    }
 
-    if (inputEmail == savedEmail && inputPassword == savedPassword) {
-      await prefs.setBool('is_logged_in', true);
-      setState(() => _isLoading = false);
-
-      // بدل MaterialPageRoute
-      // ignore: use_build_context_synchronously
+      // توجيه المستخدم للصفحة الرئيسية (MainShell)
       Navigator.pushReplacementNamed(context, '/main-shell');
-    } else {
+    } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
-      // ignore: use_build_context_synchronously
+
+      // لطباعة الكود في الـconsole أثناء التطوير
+      // ignore: avoid_print
+      print('🔥 FirebaseAuthException (login) code: ${e.code}');
+
+      String message = 'حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى';
+
+      if (e.code == 'user-not-found') {
+        message = 'لا يوجد حساب مسجل بهذا البريد';
+      } else if (e.code == 'wrong-password') {
+        message = 'كلمة المرور غير صحيحة';
+      } else if (e.code == 'invalid-email') {
+        message = 'صيغة البريد الإلكتروني غير صحيحة';
+      } else if (e.code == 'user-disabled') {
+        message = 'هذا الحساب معطّل، يرجى مراجعة الدعم';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('بيانات الدخول غير صحيحة')),
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ غير متوقع: $e')),
       );
     }
   }
@@ -112,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             color: Color(0xFF020617),
                           ),
                         ),
@@ -165,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF020617),
                             ),
                           ),
@@ -180,11 +195,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 28),
 
-                          // حقل اسم المستخدم / البريد
+                          // حقل البريد الإلكتروني
                           const Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              'اسم المستخدم أو البريد الإلكتروني',
+                              'البريد الإلكتروني',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -214,10 +229,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: TextField(
                                     controller:
                                         _emailOrUsernameController,
+                                    keyboardType:
+                                        TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       border: InputBorder.none,
                                       hintText:
-                                          'أدخل اسم المستخدم أو البريد الإلكتروني',
+                                          'أدخل البريد الإلكتروني المسجل',
                                     ),
                                   ),
                                 ),
@@ -271,8 +288,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons
-                                            .visibility_off_outlined
+                                        ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
                                     color: const Color(0xFF64748B),
                                   ),

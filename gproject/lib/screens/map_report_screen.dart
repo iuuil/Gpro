@@ -1,3 +1,5 @@
+// ignore_for_file: duplicate_ignore, deprecated_member_use
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -107,7 +109,6 @@ class _MapReportScreenState extends State<MapReportScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              // ignore: deprecated_member_use
                               color: Colors.black.withOpacity(0.1),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
@@ -117,7 +118,8 @@ class _MapReportScreenState extends State<MapReportScreen> {
                         child: const TextField(
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            icon: Icon(Icons.search, color: Color(0xFF9CA3AF)),
+                            icon: Icon(Icons.search,
+                                color: Color(0xFF9CA3AF)),
                             hintText: 'ابحث عن عنوان أو معلم...',
                           ),
                         ),
@@ -137,7 +139,6 @@ class _MapReportScreenState extends State<MapReportScreen> {
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.15),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
@@ -178,7 +179,6 @@ class _MapReportScreenState extends State<MapReportScreen> {
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  // ignore: deprecated_member_use
                                   color: Colors.black.withOpacity(0.15),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
@@ -193,7 +193,8 @@ class _MapReportScreenState extends State<MapReportScreen> {
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         valueColor:
-                                            AlwaysStoppedAnimation(primaryColor),
+                                            AlwaysStoppedAnimation(
+                                                primaryColor),
                                       ),
                                     )
                                   : const Icon(
@@ -225,7 +226,6 @@ class _MapReportScreenState extends State<MapReportScreen> {
                             width: 6,
                             height: 3,
                             decoration: BoxDecoration(
-                              // ignore: deprecated_member_use
                               color: Colors.black.withOpacity(0.3),
                               borderRadius: BorderRadius.circular(100),
                             ),
@@ -237,7 +237,7 @@ class _MapReportScreenState extends State<MapReportScreen> {
                 ),
               ),
 
-              // الجزء السفلي: معلومات الموقع + الأزرار (قابل للتمرير لتفادي overflow)
+              // الجزء السفلي: معلومات الموقع + الأزرار
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
@@ -303,7 +303,8 @@ class _MapReportScreenState extends State<MapReportScreen> {
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF3F4F6),
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius:
+                                          BorderRadius.circular(10),
                                     ),
                                     child: const Icon(
                                       Icons.map_outlined,
@@ -347,7 +348,8 @@ class _MapReportScreenState extends State<MapReportScreen> {
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF3F4F6),
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius:
+                                          BorderRadius.circular(10),
                                     ),
                                     child: const Icon(
                                       Icons.explore_outlined,
@@ -370,7 +372,8 @@ class _MapReportScreenState extends State<MapReportScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Directionality(
-                                          textDirection: TextDirection.ltr,
+                                          textDirection:
+                                              TextDirection.ltr,
                                           child: Text(
                                             'Lat: ${_cameraTarget.latitude.toStringAsFixed(5)}   '
                                             'Lon: ${_cameraTarget.longitude.toStringAsFixed(5)}',
@@ -392,13 +395,13 @@ class _MapReportScreenState extends State<MapReportScreen> {
 
                         const SizedBox(height: 10),
 
-                        // زر تحسين الموقع (UI)
+                        // زر تحسين الموقع (UI فقط حالياً)
                         SizedBox(
                           width: double.infinity,
                           height: 44,
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              // مستقبلاً: فتح صفحة بحث أو إدخال يدوي
+                              // لاحقاً: ممكن تضيف بحث أو تعديل يدوي
                             },
                             icon: const Icon(
                               Icons.edit_location_alt_outlined,
@@ -422,13 +425,13 @@ class _MapReportScreenState extends State<MapReportScreen> {
 
                         const SizedBox(height: 16),
 
-                        // زر تأكيد الموقع – يرجع LatLng للشاشة السابقة
+                        // زر تأكيد الموقع – يرجع للشاشة السابقة بدون بيانات
                         SizedBox(
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pop(context, _cameraTarget);
+                              Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,
@@ -521,4 +524,3 @@ class _MapReportScreenState extends State<MapReportScreen> {
     setState(() => _isLoadingLocation = false);
   }
 }
- 

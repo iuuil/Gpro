@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // ignore: unnecessary_import
 import 'package:flutter/foundation.dart';
@@ -20,14 +20,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLoginState();
+    _checkLoginState();
     _testFirebase(); // اختبار Firebase
   }
 
-  Future<void> _loadLoginState() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-    if (!mounted) return;
+  void _checkLoginState() {
+    final user = FirebaseAuth.instance.currentUser;
+    _isLoggedIn = user != null;
     setState(() {
       _isLoading = false;
     });
@@ -35,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _testFirebase() async {
     // ignore: avoid_print
-    print('🔥 _testFirebase called'); // للتأكد أنها ان استدعيت
+    print('🔥 _testFirebase called');
 
     try {
       await FirebaseFirestore.instance
@@ -101,8 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Expanded(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -112,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 26,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF0D141B),
                         ),
                       ),
@@ -134,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'كيف يعمل التطبيق',
                           style: TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             color: Color(0xFF0D141B),
                           ),
                         ),
@@ -158,7 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             },
                           ),
-
                           _FeatureCard(
                             icon: Icons.map_outlined,
                             title: 'تقديم شكوى من الخريطة',
@@ -215,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             'إنشاء حساب',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -240,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             'تسجيل الدخول',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -318,7 +316,7 @@ class _FeatureCard extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   color: Color(0xFF0D141B),
                 ),
               ),

@@ -64,7 +64,7 @@ class AdminProfileScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF020617),
                         ),
                       ),
@@ -127,7 +127,7 @@ class AdminProfileScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 color: Color(0xFF020617),
                               ),
                             ),
@@ -178,7 +178,7 @@ class AdminProfileScreen extends StatelessWidget {
                                 'ملخص الإحصائيات',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: Color(0xFF020617),
                                 ),
                               ),
@@ -239,7 +239,7 @@ class AdminProfileScreen extends StatelessWidget {
                                 child: Text(
                                   'المعلومات الشخصية',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 14,
                                     color: Color(0xFF020617),
                                   ),
@@ -298,7 +298,7 @@ class AdminProfileScreen extends StatelessWidget {
                                 label: const Text(
                                   'تعديل الملف الشخصي',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -326,7 +326,7 @@ class AdminProfileScreen extends StatelessWidget {
                                 label: const Text(
                                   'إعدادات الأمان',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -343,7 +343,7 @@ class AdminProfileScreen extends StatelessWidget {
                               label: const Text(
                                 'تسجيل الخروج',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                   color: Color(0xFFDC2626),
                                   fontSize: 14,
                                 ),
@@ -435,7 +435,7 @@ class _StatCardProfile extends StatelessWidget {
                     trendText,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: trendColor,
                     ),
                   ),
@@ -457,7 +457,7 @@ class _StatCardProfile extends StatelessWidget {
             value,
             style: const TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: Color(0xFF020617),
             ),
           ),
@@ -528,3 +528,4 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+

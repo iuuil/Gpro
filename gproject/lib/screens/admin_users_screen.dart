@@ -83,7 +83,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF020617),
                         ),
                       ),
@@ -190,7 +190,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           'إضافة مستخدم جديد',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -316,7 +316,7 @@ class _TabChip extends StatelessWidget {
         label,
         style: TextStyle(
           fontSize: 13,
-          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           color:
               selected ? AdminUsersScreen.primary : const Color(0xFF6B7280),
         ),
@@ -503,7 +503,7 @@ class _UserCard extends StatelessWidget {
                       name,
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF020617),
                       ),
                     ),
@@ -703,7 +703,7 @@ class _RoundedButton extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             color: textColor,
           ),
         ),
@@ -748,3 +748,4 @@ class _IconSquareButton extends StatelessWidget {
     );
   }
 }
+

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, prefer_final_fields, deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class MinistriesScreen extends StatefulWidget {
@@ -49,7 +51,6 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
   ];
 
   List<Map<String, String>> _filteredMinistries = [];
-  // ignore: prefer_final_fields, unused_field
   int _currentIndex = 2;
 
   @override
@@ -81,10 +82,8 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -92,12 +91,11 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // AppBar مخصص
+              // AppBar
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
                   color: const Color(0xFFF9F9F9).withOpacity(0.9),
                 ),
                 child: Row(
@@ -107,7 +105,6 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                       width: 48,
                       child: IconButton(
                         onPressed: () {
-                          // يرجع دائماً للرئيسية المعرفة كـ '/'
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             '/main-shell',
@@ -132,7 +129,7 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF111827),
                         ),
                       ),
@@ -174,7 +171,6 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        // ignore: deprecated_member_use
                         color: Colors.black.withOpacity(0.03),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
@@ -219,7 +215,6 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          // ignore: deprecated_member_use
                           color: Colors.black.withOpacity(0.03),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
@@ -244,6 +239,7 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                               arguments: {
                                 'ministry': ministry['name']!,
                                 'logoUrl': ministry['logo'],
+                                'icon': Icons.account_balance,
                               },
                             );
                           },

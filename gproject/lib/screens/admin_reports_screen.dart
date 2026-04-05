@@ -51,7 +51,7 @@ class AdminReportsScreen extends StatelessWidget {
                       'التقارير والإحصائيات',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF1F2937),
                       ),
                     ),
@@ -432,7 +432,7 @@ class _SummaryCard extends StatelessWidget {
                 trendIcon,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   color: trendColor,
                 ),
               ),
@@ -443,7 +443,7 @@ class _SummaryCard extends StatelessWidget {
             value,
             style: const TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: Color(0xFF0F172A),
             ),
           ),
@@ -486,7 +486,7 @@ class _ComplaintsByTypeSection extends StatelessWidget {
           Text(
             'الشكاوى حسب النوع',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               fontSize: 15,
               color: Color(0xFF111827),
             ),
@@ -524,7 +524,7 @@ class _ComplaintsByTypeSection extends StatelessWidget {
                       '1,350',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         color: Color(0xFF0F172A),
                       ),
                     ),
@@ -629,7 +629,7 @@ class _ComplaintsByLocationSection extends StatelessWidget {
           Text(
             'الشكاوى حسب الموقع',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               fontSize: 15,
               color: Color(0xFF111827),
             ),
@@ -829,7 +829,7 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
           const Text(
             'الشكاوى بمرور الوقت',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               fontSize: 15,
               color: Color(0xFF111827),
             ),
@@ -1038,3 +1038,4 @@ class _ExportSection extends StatelessWidget {
     );
   }
 }
+

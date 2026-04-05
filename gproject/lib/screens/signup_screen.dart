@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -37,6 +38,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل')),
+      );
+      return;
+    }
+
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('كلمة المرور وتأكيدها غير متطابقتين')),
@@ -46,21 +55,61 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     setState(() => _isSaving = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', name);
-    await prefs.setString('user_email', email);
-    await prefs.setString('user_phone', phone);
-    await prefs.setString('user_password', password);
+    try {
+      // 1) إنشاء مستخدم في Firebase Authentication
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      ); // ينشئ user جديد بالبريد وكلمة المرور[web:105][web:112]
 
-    setState(() => _isSaving = false);
+      final uid = credential.user!.uid;
 
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم إنشاء الحساب بنجاح')),
-    );
+      // 2) حفظ بيانات إضافية للمستخدم في Firestore (users collection)
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'createdAt': FieldValue.serverTimestamp(),
+      }); // تخزين ملف تعريف المستخدم في Firestore[web:43][web:108]
 
-    // ignore: use_build_context_synchronously
-    Navigator.pushReplacementNamed(context, '/login');
+      setState(() => _isSaving = false);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إنشاء الحساب بنجاح')),
+      );
+
+      // بعد إنشاء الحساب، نوجهه لصفحة تسجيل الدخول أو الرئيسية
+      Navigator.pushReplacementNamed(context, '/login');
+        } on FirebaseAuthException catch (e) {
+      setState(() => _isSaving = false);
+
+      // اطبع تفاصيل الخطأ في الـconsole
+      // ignore: avoid_print
+      print('🔥 FirebaseAuthException code: ${e.code}');
+      // ignore: avoid_print
+      print('🔥 FirebaseAuthException message: ${e.message}');
+
+      String message = 'حدث خطأ غير متوقع، حاول مرة أخرى';
+      if (e.code == 'email-already-in-use') {
+        message = 'هذا البريد مستخدم مسبقاً';
+      } else if (e.code == 'invalid-email') {
+        message = 'صيغة البريد الإلكتروني غير صحيحة';
+      } else if (e.code == 'weak-password') {
+        message = 'كلمة المرور ضعيفة، جرب كلمة أقوى';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ: $e')),
+      );
+    }
   }
 
   @override
@@ -117,7 +166,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+
                             color: Color(0xFF020617),
                           ),
                         ),
@@ -142,7 +191,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'الاسم الكامل',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
                           color: Color(0xFF334155),
                         ),
                       ),
@@ -174,7 +222,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'البريد الإلكتروني',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
                           color: Color(0xFF334155),
                         ),
                       ),
@@ -207,7 +254,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'رقم الهاتف',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
                           color: Color(0xFF334155),
                         ),
                       ),
@@ -240,7 +286,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -267,7 +312,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'كلمة المرور',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
                           color: Color(0xFF334155),
                         ),
                       ),
@@ -316,12 +360,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // تأكيد كلمة المرور
-                      const Text(
+                      Text(
                         'تأكيد كلمة المرور',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF334155),
+                          color: const Color(0xFF334155),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -369,13 +412,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                       const SizedBox(height: 24),
 
-                      const Padding(
+                      Padding(
                         padding:
-                            EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                         child: Text(
                           'من خلال التسجيل، فإنك توافق على شروط الخدمة وسياسة الخصوصية.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
+                          // textAlign: TextAlign.center,
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF64748B),
                           ),
@@ -410,7 +453,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   'تسجيل',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                         ),
@@ -431,8 +473,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           const SizedBox(width: 4),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(
-                                  context, '/admin-login');
+                              Navigator.pushNamed(context, '/admin-login');
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -443,7 +484,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF137FEC),
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),

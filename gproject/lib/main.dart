@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
         );
       },
 
-      // البداية تكون من MainShellScreen
+      // البداية تكون من MainShellScreen (مثل ما كانت)
       initialRoute: '/main-shell',
       routes: {
         '/main-shell': (context) => const MainShellScreen(),
@@ -75,7 +75,8 @@ class MyApp extends StatelessWidget {
         '/splash': (context) => const SplashScreen(),
         '/map-report-screen': (context) => const MapReportScreen(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
-        '/admin-complaints': (context) => const AdminComplaintsScreen(),
+        '/admin-complaints': (context) =>
+            const AdminComplaintsScreen(),
         '/complaints-center': (context) =>
             const ComplaintsCenterScreen(),
 

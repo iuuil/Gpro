@@ -132,7 +132,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         'كل الشكاوى (عرض المسؤول)',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF020617),
                         ),
                       ),
@@ -417,7 +417,7 @@ class _ComplaintCard extends StatelessWidget {
                             '${data['title']} - ID ${data['id']}',
                             style: const TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF0F172A),
                             ),
                           ),
@@ -459,7 +459,7 @@ class _ComplaintCard extends StatelessWidget {
                         badgeLabel,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: badgeText,
                         ),
                       ),
@@ -515,3 +515,4 @@ class _ComplaintCard extends StatelessWidget {
     );
   }
 }
+

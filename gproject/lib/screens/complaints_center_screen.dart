@@ -1,3 +1,7 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'complaint_details_screen.dart';
 
@@ -5,69 +9,19 @@ class ComplaintsCenterScreen extends StatefulWidget {
   const ComplaintsCenterScreen({super.key});
 
   @override
-  State<ComplaintsCenterScreen> createState() => _ComplaintsCenterScreenState();
+  State<ComplaintsCenterScreen> createState() =>
+      _ComplaintsCenterScreenState();
 }
 
 class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
   static const Color primaryColor = Color(0xFF137FEC);
 
-  String _selectedFilter = 'الكل';
-
-  // بيانات الشكاوى (ثابتة مؤقتاً)
-  final List<_ComplaintItem> _allComplaints = const [
-    _ComplaintItem(
-      title: 'حفر في الشارع الرئيسي',
-      statusLabel: 'قيد المراجعة',
-      statusType: ComplaintStatus.review,
-      date: '2023-10-26',
-      lastUpdate:
-          'آخر تحديث: تم استلام الشكوى وتعيينها لدائرة الطرق. التوقع للحل خلال 7 أيام.',
-    ),
-    _ComplaintItem(
-      title: 'انقطاع المياه، الكرادة',
-      statusLabel: 'تم حلها',
-      statusType: ComplaintStatus.resolved,
-      date: '2023-10-20',
-      lastUpdate:
-          'آخر تحديث: تمت استعادة إمدادات المياه بالكامل في الكرادة. شكراً لصبركم. أغلقت القضية.',
-    ),
-    _ComplaintItem(
-      title: 'تلوث ضوضائي من موقع بناء، المنصور',
-      statusLabel: 'مرفوضة',
-      statusType: ComplaintStatus.rejected,
-      date: '2023-10-15',
-      lastUpdate:
-          'آخر تحديث: وجد التحقيق أن الموقع متوافق مع اللوائح. لا يمكن اتخاذ المزيد من الإجراءات.',
-    ),
-    _ComplaintItem(
-      title: 'انقطاع الكهرباء، حي الدورة',
-      statusLabel: 'قيد المراجعة',
-      statusType: ComplaintStatus.review,
-      date: '2023-11-01',
-      lastUpdate:
-          'آخر تحديث: تم إبلاغ وزارة الكهرباء بالانقطاع. الفنيون في الطريق. التقدير لإصلاح العطل بنهاية اليوم.',
-    ),
-    _ComplaintItem(
-      title: 'رمي نفايات غير قانوني، مدينة الصدر',
-      statusLabel: 'جديد',
-      statusType: ComplaintStatus.newStatus,
-      date: '2023-11-03',
-      lastUpdate:
-          'آخر تحديث: تم تسجيل شكوى جديدة. في انتظار التعيين للخدمات البلدية. رقم التتبع: COMP-2023-005.',
-    ),
-  ];
-
-  List<_ComplaintItem> get _filteredComplaints {
-    if (_selectedFilter == 'الكل') {
-      return _allComplaints;
-    }
-    return _allComplaints
-        .where((c) => c.statusLabel == _selectedFilter)
-        .toList();
-  }
+  String _selectedFilter = 'الكل'; // 'الكل' أو 'pending' أو 'resolved' أو 'rejected'
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -98,7 +52,7 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                         onPressed: () {
                           Navigator.pushNamedAndRemoveUntil(
                             context,
-                            '/main-shell', // الصفحة الرئيسية
+                            '/main-shell',
                             (route) => false,
                           );
                         },
@@ -116,20 +70,20 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
                         ),
                       ),
                     ),
                     const SizedBox(
                       height: 40,
-                      width: 40, // مكان فاضي بدل أيقونة الإشعارات
+                      width: 40,
                     ),
                   ],
                 ),
               ),
 
-              // فلاتر الحالة فقط
+              // فلاتر الحالة
               SizedBox(
                 height: 44,
                 child: ListView(
@@ -138,44 +92,139 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     _buildFilterChip('الكل'),
-                    _buildFilterChip('قيد المراجعة'),
-                    _buildFilterChip('تم حلها'),
-                    _buildFilterChip('مرفوضة'),
+                    _buildFilterChip('pending'),
+                    _buildFilterChip('resolved'),
+                    _buildFilterChip('rejected'),
                   ],
                 ),
               ),
 
               // المحتوى
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'نظرة عامة على شكواك',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                child: user == null
+                    ? const Center(
+                        child: Text(
+                          'يرجى تسجيل الدخول لعرض الشكاوى.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                      )
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('complaints')
+                            .where('userId', isEqualTo: user.uid)
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(), // [web:404][web:402]
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
 
-                      // عرض الشكاوى بعد الفلترة
-                      for (final c in _filteredComplaints) ...[
-                        _StatusCard(
-                          title: c.title,
-                          statusLabel: c.statusLabel,
-                          statusType: c.statusType,
-                          date: c.date,
-                          lastUpdate: c.lastUpdate,
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    ],
-                  ),
-                ),
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                'حدث خطأ أثناء جلب الشكاوى: ${snapshot.error}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFFB91C1C),
+                                ),
+                              ),
+                            );
+                          }
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          // تحويل الوثائق إلى _ComplaintItem
+                          final complaints = docs.map((doc) {
+                            final data =
+                                doc.data() as Map<String, dynamic>? ?? {};
+                            final status =
+                                (data['status'] ?? 'pending').toString().trim();
+
+                            return _ComplaintItem(
+                              id: doc.id,
+                              title:
+                                  (data['title'] as String?)?.isNotEmpty ==
+                                          true
+                                      ? data['title'] as String
+                                      : (data['description'] as String? ??
+                                              'بدون عنوان')
+                                          .toString(),
+                              statusLabel: _statusLabelFromStatus(status),
+                              statusCode: status, // نخزن كود الحالة كما هو
+                              statusType: _statusFromStatusField(status),
+                              date: (data['createdAt'] as Timestamp?)
+                                      ?.toDate()
+                                      .toString()
+                                      .split(' ')
+                                      .first ??
+                                  '',
+                              lastUpdate: data['lastUpdate'] as String? ??
+                                  'لا توجد تحديثات متاحة حالياً.',
+                            );
+                          }).toList();
+
+                          // تطبيق الفلتر حسب كود الحالة
+                          final List<_ComplaintItem> filtered;
+                          if (_selectedFilter == 'الكل') {
+                            filtered = complaints;
+                          } else {
+                            filtered = complaints
+                                .where(
+                                    (c) => c.statusCode == _selectedFilter)
+                                .toList();
+                          }
+
+                          if (filtered.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'لا توجد شكاوى لعرضها.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(
+                                16, 12, 16, 100),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'نظرة عامة على شكواك',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                for (final c in filtered) ...[
+                                  _StatusCard(
+                                    complaintId: c.id,
+                                    title: c.title,
+                                    statusLabel: c.statusLabel,
+                                    statusType: c.statusType,
+                                    date: c.date,
+                                    lastUpdate: c.lastUpdate,
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -186,6 +235,22 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
 
   Widget _buildFilterChip(String label) {
     final bool isSelected = _selectedFilter == label;
+    String displayLabel;
+
+    switch (label) {
+      case 'pending':
+        displayLabel = 'قيد المراجعة';
+        break;
+      case 'resolved':
+        displayLabel = 'تم حلها';
+        break;
+      case 'rejected':
+        displayLabel = 'مرفوضة';
+        break;
+      default:
+        displayLabel = 'الكل';
+    }
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -197,40 +262,66 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected
-              // ignore: deprecated_member_use
-              ? primaryColor.withOpacity(0.2) // bg-primary/20
-              : const Color(0xFFE5E7EB), // slate-200
+              ? primaryColor.withOpacity(0.2)
+              : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(999),
         ),
         alignment: Alignment.center,
         child: Text(
-          label,
+          displayLabel,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isSelected
-                ? primaryColor
-                : const Color(0xFF374151), // slate-700
+            color:
+                isSelected ? primaryColor : const Color(0xFF374151),
           ),
         ),
       ),
     );
   }
+
+  // helpers لتحويل القيم النصية للحالة
+  ComplaintStatus _statusFromStatusField(String status) {
+    switch (status) {
+      case 'resolved':
+        return ComplaintStatus.resolved;
+      case 'rejected':
+        return ComplaintStatus.rejected;
+      case 'pending':
+      default:
+        return ComplaintStatus.review;
+    }
+  }
+
+  String _statusLabelFromStatus(String status) {
+    switch (status) {
+      case 'resolved':
+        return 'تم حلها';
+      case 'rejected':
+        return 'مرفوضة';
+      case 'pending':
+      default:
+        return 'قيد المراجعة';
+    }
+  }
 }
 
-enum ComplaintStatus { review, resolved, rejected, newStatus, neww, underReview }
+enum ComplaintStatus { review, resolved, rejected, newStatus }
 
-// كائن بسيط لتمثيل الشكوى
 class _ComplaintItem {
+  final String id;
   final String title;
   final String statusLabel;
+  final String statusCode; // ← كود الحالة من Firestore
   final ComplaintStatus statusType;
   final String date;
   final String lastUpdate;
 
   const _ComplaintItem({
+    required this.id,
     required this.title,
     required this.statusLabel,
+    required this.statusCode,
     required this.statusType,
     required this.date,
     required this.lastUpdate,
@@ -238,6 +329,7 @@ class _ComplaintItem {
 }
 
 class _StatusCard extends StatelessWidget {
+  final String complaintId;
   final String title;
   final String statusLabel;
   final ComplaintStatus statusType;
@@ -245,6 +337,7 @@ class _StatusCard extends StatelessWidget {
   final String lastUpdate;
 
   const _StatusCard({
+    required this.complaintId,
     required this.title,
     required this.statusLabel,
     required this.statusType,
@@ -265,7 +358,6 @@ class _StatusCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.03),
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -284,7 +376,7 @@ class _StatusCard extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: Color(0xFF0F172A),
                   ),
                 ),
@@ -357,7 +449,6 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // زر عرض التفاصيل
-          // داخل _StatusCard
           SizedBox(
             width: double.infinity,
             height: 40,
@@ -366,7 +457,8 @@ class _StatusCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const ComplaintDetailsScreen(),
+                    builder: (_) =>
+                        ComplaintDetailsScreen(complaintId: complaintId),
                   ),
                 );
               },
@@ -400,7 +492,6 @@ class _StatusCard extends StatelessWidget {
               ),
             ),
           ),
-
         ],
       ),
     );
@@ -428,12 +519,6 @@ class _StatusCard extends StatelessWidget {
           'bg': const Color(0xFFF3F4F6),
           'text': const Color(0xFF374151),
         };
-      case ComplaintStatus.neww:
-        
-        throw UnimplementedError();
-      case ComplaintStatus.underReview:
-        
-        throw UnimplementedError();
     }
   }
 }

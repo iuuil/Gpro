@@ -129,7 +129,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                           'تسجيل حساب مسؤول',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             color: Color(0xFF020617),
                           ),
                         ),
@@ -151,7 +151,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                             'إنشاء حساب جديد',
                             style: TextStyle(
                               fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF020617),
                             ),
                           ),
@@ -496,7 +496,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                             'تسجيل حساب مسؤول',
                                             style: TextStyle(
                                               fontSize: 15,
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.w700,
                                             ),
                                           ),
                                   ),
@@ -555,3 +555,4 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     );
   }
 }
+

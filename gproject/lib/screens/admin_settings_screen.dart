@@ -63,7 +63,7 @@ class AdminSettingsScreen extends StatelessWidget {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF020617),
                         ),
                       ),
@@ -230,7 +230,7 @@ class _SectionTitle extends StatelessWidget {
         text,
         style: const TextStyle(
           fontSize: 16,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: Color(0xFF020617),
         ),
       ),
@@ -397,3 +397,4 @@ class _SettingsToggleTile extends StatelessWidget {
     );
   }
 }
+

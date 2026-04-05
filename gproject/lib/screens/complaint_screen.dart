@@ -1,9 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ComplaintScreen extends StatefulWidget {
   final String ministry;
-  final IconData icon;      // لو حاب تستخدمه لاحقاً
-  final String? logoUrl;    // شعار الوزارة (اختياري)
+  final IconData icon;
+  final String? logoUrl;
 
   const ComplaintScreen({
     super.key,
@@ -19,9 +23,72 @@ class ComplaintScreen extends StatefulWidget {
 class _ComplaintScreenState extends State<ComplaintScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  bool _isSubmitting = false;
 
-  // هنا مستقبلاً: تخزين الشكوى في Firebase أو API
-  void _submitComplaint() {
+  String _hotlineFor(String ministry) {
+    switch (ministry) {
+      case 'وزارة الصحة':
+        return '123';
+      case 'وزارة التربية':
+        return '104';
+      case 'وزارة الداخلية':
+        return '104';
+      case 'وزارة الخارجية':
+        return '0770 000 0000';
+      case 'وزارة المالية':
+        return '0780 000 0000';
+      case 'وزارة النفط':
+        return '0790 000 0000';
+      case 'وزارة الدفاع':
+        return '130';
+      default:
+        return '123';
+    }
+  }
+
+  String _websiteFor(String ministry) {
+    switch (ministry) {
+      case 'وزارة الصحة':
+        return 'moh.gov.iq';
+      case 'وزارة التربية':
+        return 'moedu.gov.iq';
+      case 'وزارة الداخلية':
+        return 'moi.gov.iq';
+      case 'وزارة الخارجية':
+        return 'mofa.gov.iq';
+      case 'وزارة المالية':
+        return 'mof.gov.iq';
+      case 'وزارة النفط':
+        return 'oil.gov.iq';
+      case 'وزارة الدفاع':
+        return 'mod.gov.iq';
+      default:
+        return 'gov.iq';
+    }
+  }
+
+  String _addressFor(String ministry) {
+    switch (ministry) {
+      case 'وزارة الصحة':
+        return 'مجمع مدينة الطب، باب المعظم، بغداد، العراق';
+      case 'وزارة التربية':
+        return 'شارع 52، بغداد، العراق';
+      case 'وزارة الداخلية':
+        return 'شارع فلسطين، بغداد، العراق';
+      case 'وزارة الخارجية':
+        return 'حي المنصور، بغداد، العراق';
+      case 'وزارة المالية':
+        return 'شارع الرشيد، بغداد، العراق';
+      case 'وزارة النفط':
+        return 'الكرادة داخل، بغداد، العراق';
+      case 'وزارة الدفاع':
+        return 'المنطقة الخضراء، بغداد، العراق';
+      default:
+        return 'بغداد، العراق';
+    }
+  }
+
+  Future<void> _submitComplaint() async {
     final title = _titleController.text.trim();
     final desc = _descriptionController.text.trim();
 
@@ -32,12 +99,46 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
       return;
     }
 
-    // مؤقتاً فقط رسالة نجاح
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم إرسال الشكوى بنجاح')),
-    );
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى تسجيل الدخول أولاً')),
+      );
+      return;
+    }
 
-    Navigator.pop(context);
+    setState(() => _isSubmitting = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('complaints').add({
+        'userId': user.uid,
+        'ministry': widget.ministry,
+        'complaintType': null,
+        'title': title,
+        'description': desc,
+        'contactName': null,
+        'contactPhone': null,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'attachments': [],
+        'source': 'ministries_screen',
+      });
+
+      setState(() => _isSubmitting = false);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إرسال الشكوى بنجاح')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء إرسال الشكوى: $e')),
+      );
+    }
   }
 
   @override
@@ -51,24 +152,28 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF137FEC);
 
+    final hotline = _hotlineFor(widget.ministry);
+    final website = _websiteFor(widget.ministry);
+    final address = _addressFor(widget.ministry);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8), // background-light
+        backgroundColor: const Color(0xFFF6F7F8),
         body: SafeArea(
           child: Stack(
             children: [
               Column(
                 children: [
-                  // AppBar مخصص أعلى الشاشة
+                  // AppBar
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
                     decoration: const BoxDecoration(
                       color: Color(0xFFF6F7F8),
                       border: Border(
                         bottom: BorderSide(
-                          color: Color(0xFFE2E8F0), // slate-200
+                          color: Color(0xFFE2E8F0),
                         ),
                       ),
                     ),
@@ -92,8 +197,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A), // slate-900
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -111,19 +216,19 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                         left: 16,
                         right: 16,
                         top: 12,
-                        bottom: 90, // مساحة لزر الإرسال الثابت
+                        bottom: 90,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // بلوك معلومات الوزارة (شعار + اسم + موقع)
+                          // بلوك معلومات الوزارة
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFE2E8F0), // slate-200
+                                color: const Color(0xFFE2E8F0),
                               ),
                             ),
                             child: Row(
@@ -137,8 +242,9 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                     color: const Color(0xFFE5E7EB),
                                     image: widget.logoUrl != null
                                         ? DecorationImage(
-                                            image:
-                                                NetworkImage(widget.logoUrl!),
+                                            image: NetworkImage(
+                                              widget.logoUrl!,
+                                            ),
                                             fit: BoxFit.cover,
                                           )
                                         : null,
@@ -161,14 +267,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                         widget.ministry,
                                         style: const TextStyle(
                                           fontSize: 20,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w700,
                                           color: Color(0xFF0F172A),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      const Text(
-                                        'الموقع الرسمي: moh.gov.iq',
-                                        style: TextStyle(
+                                      Text(
+                                        'الموقع الرسمي: $website',
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           color: Color(0xFF64748B),
                                         ),
@@ -191,20 +297,20 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                 color: const Color(0xFFE2E8F0),
                               ),
                             ),
-                            child: const Column(
+                            child: Column(
                               children: [
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.phone,
                                       color: primaryColor,
                                       size: 22,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'الخط الساخن العام: 123',
-                                        style: TextStyle(
+                                        'الخط الساخن: $hotline',
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF0F172A),
@@ -213,19 +319,19 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.language,
                                       color: primaryColor,
                                       size: 22,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'moh.gov.iq',
-                                        style: TextStyle(
+                                        website,
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF0F172A),
@@ -234,20 +340,21 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.location_on,
                                       color: primaryColor,
                                       size: 22,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'مجمع مدينة الطب، باب المعظم، بغداد، العراق',
-                                        style: TextStyle(
+                                        address,
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF0F172A),
@@ -266,7 +373,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             'تقديم شكوى جديدة',
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF0F172A),
                             ),
                           ),
@@ -287,7 +394,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFFCBD5E1), // slate-300
+                                color: const Color(0xFFCBD5E1),
                               ),
                             ),
                             child: TextField(
@@ -340,37 +447,6 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-
-                          // زر إرفاق ملف
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              // لاحقاً: picker للصور/الملفات
-                            },
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(52),
-                              side: const BorderSide(
-                                color: Color(0xFFCBD5E1),
-                                width: 1.5,
-                                style: BorderStyle.solid,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              backgroundColor: Colors.white,
-                            ),
-                            icon: const Icon(
-                              Icons.attach_file,
-                              color: Color(0xFF6B7280),
-                            ),
-                            label: const Text(
-                              'إرفاق صورة أو ملف',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -378,7 +454,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 ],
               ),
 
-              // زر إرسال الشكوى ثابت في الأسفل
+              // زر الإرسال
               Positioned(
                 left: 0,
                 right: 0,
@@ -393,13 +469,13 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                       ),
                     ),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
                   child: SizedBox(
                     height: 56,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _submitComplaint,
+                      onPressed: _isSubmitting ? null : _submitComplaint,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
@@ -408,11 +484,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                         ),
                         elevation: 4,
                       ),
-                      child: const Text(
-                        'إرسال الشكوى',
-                        style: TextStyle(
+                      child: Text(
+                        _isSubmitting ? 'جاري الإرسال...' : 'إرسال الشكوى',
+                        style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

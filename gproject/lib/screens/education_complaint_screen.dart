@@ -1,4 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EducationComplaintScreen extends StatefulWidget {
   const EducationComplaintScreen({super.key});
@@ -82,19 +86,17 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
 
   String? _selectedComplaintType;
 
-  // نوع الشكوى السابق (لو حاب تستخدمه داخلياً)
-  // String _selectedType = 'administrative';
-
-  final _titleController = TextEditingController();
+  // فقط الوصف
   final _descController = TextEditingController();
 
   // معلومات التواصل
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  bool _isSubmitting = false;
+
   @override
   void dispose() {
-    _titleController.dispose();
     _descController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
@@ -105,6 +107,67 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
   List<String> _currentComplaintTypes(String? ministry) {
     if (ministry == null) return [];
     return _complaintTypesByMinistry[ministry] ?? [];
+  }
+
+  Future<void> _submitComplaint() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('يرجى تسجيل الدخول أولاً قبل إرسال الشكوى')),
+      );
+      return;
+    }
+
+    if (_selectedMinistry == null ||
+        _selectedComplaintType == null ||
+        _descController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('يرجى اختيار الجهة والتصنيف وكتابة وصف الشكوى')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('complaints').add({
+        'userId': user.uid,
+        'ministry': _selectedMinistry,
+        'complaintType': _selectedComplaintType,
+        'title': null,
+        'description': _descController.text.trim(),
+        'contactName': _nameController.text.trim(),
+        'contactPhone': _phoneController.text.trim(),
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'attachments': [], // باقي الحقل فاضي بس بدون رفع
+      });
+
+      setState(() => _isSubmitting = false);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إرسال الشكوى بنجاح')),
+      );
+
+      setState(() {
+        _selectedMinistry = null;
+        _selectedComplaintType = null;
+        _descController.clear();
+        _nameController.clear();
+        _phoneController.clear();
+      });
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء إرسال الشكوى: $e')),
+      );
+    }
   }
 
   @override
@@ -173,7 +236,7 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                         children: [
                           const SizedBox(height: 8),
 
-                          // الجهة المعنية (قائمة منسدلة)
+                          // الجهة المعنية
                           const Text(
                             'الجهة المعنية',
                             style: TextStyle(
@@ -194,7 +257,8 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.03),
+                                  color:
+                                      Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -251,7 +315,6 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                                 onChanged: (value) {
                                   setState(() {
                                     _selectedMinistry = value;
-                                    // إعادة تعيين التصنيف عند تغيير الوزارة
                                     _selectedComplaintType = null;
                                   });
                                 },
@@ -261,7 +324,7 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
 
                           const SizedBox(height: 20),
 
-                          // تصنيف الشكوى (قائمة منسدلة)
+                          // تصنيف الشكوى
                           const Text(
                             'تصنيف الشكوى',
                             style: TextStyle(
@@ -306,34 +369,37 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                                     ),
                                   ],
                                 ),
-                                items: _currentComplaintTypes(_selectedMinistry)
-                                    .map(
-                                      (t) => DropdownMenuItem<String>(
-                                        value: t,
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _iconForComplaintType(t),
-                                              color:
-                                                  const Color(0xFF4B5563),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                t,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF111827),
+                                items:
+                                    _currentComplaintTypes(_selectedMinistry)
+                                        .map(
+                                          (t) => DropdownMenuItem<String>(
+                                            value: t,
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _iconForComplaintType(t),
+                                                  color:
+                                                      const Color(0xFF4B5563),
+                                                  size: 20,
                                                 ),
-                                              ),
+                                                const SizedBox(width: 8),
+                                                Flexible(
+                                                  child: Text(
+                                                    t,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color:
+                                                          Color(0xFF111827),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
+                                          ),
+                                        )
+                                        .toList(),
                                 onChanged: _selectedMinistry == null
                                     ? null
                                     : (value) {
@@ -358,39 +424,6 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // عنوان الشكوى
-                          const Text(
-                            'عنوان الشكوى',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFFCBD5E1),
-                              ),
-                            ),
-                            child: TextField(
-                              controller: _titleController,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 12),
-                                hintText: 'مثال: نقص في الكتب المدرسية',
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // وصف تفصيلي
                           const Text(
                             'وصف تفصيلي',
                             style: TextStyle(
@@ -418,119 +451,6 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                                 hintText:
                                     'يرجى ذكر كافة التفاصيل المتعلقة بالمشكلة...',
                               ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // المرفقات
-                          const Text(
-                            'المرفقات (صور أو مستندات)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.image_outlined,
-                                    color: Color(0xFF9CA3AF)),
-                                SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    'screenshot_issue.jpg',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF4B5563),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(Icons.delete_outline,
-                                    color: Colors.red, size: 22),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('إضافة مرفق غير متاح حالياً'),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: Color(0xFFCBD5E1),
-                                style: BorderStyle.solid,
-                              ),
-                              backgroundColor:
-                                  const Color(0xFFF3F4F6),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10),
-                            ),
-                            icon: const Icon(Icons.cloud_upload_outlined),
-                            label: const Text(
-                              'إضافة مرفق جديد',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // الموقع الجغرافي
-                          const Text(
-                            'الموقع الجغرافي (اختياري)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          OutlinedButton(
-                            onPressed: () {
-                              
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              side: const BorderSide(
-                                color: Color(0xFFCBD5E1),
-                              ),
-                              backgroundColor: Colors.white,
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.location_on_outlined,
-                                    color: Color(0xFF6B7280)),
-                                SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    'تحديد الموقع على الخريطة',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                ),
-                                Icon(Icons.chevron_left,
-                                    color: Color(0xFF9CA3AF), size: 20),
-                              ],
                             ),
                           ),
 
@@ -603,16 +523,8 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                           height: 48,
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: () {
-                              
-                              // _selectedMinistry
-                              // _selectedComplaintType
-                              // _selectedType (الكود الداخلي)
-                              // _titleController.text
-                              // _descController.text
-                              // _nameController.text
-                              // _phoneController.text
-                            },
+                            onPressed:
+                                _isSubmitting ? null : _submitComplaint,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,
                               foregroundColor: Colors.white,
@@ -621,10 +533,21 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                               ),
                               elevation: 4,
                             ),
-                            icon: const Icon(Icons.send, size: 18),
-                            label: const Text(
-                              'إرسال الشكوى',
-                              style: TextStyle(
+                            icon: _isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.send, size: 18),
+                            label: Text(
+                              _isSubmitting
+                                  ? 'جاري الإرسال...'
+                                  : 'إرسال الشكوى',
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -659,20 +582,6 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
         return Icons.bolt_outlined;
       default:
         return Icons.help_outline;
-    }
-  }
-
-  // ignore: unused_element
-  String _mapTypeToCode(String? type) {
-    switch (type) {
-      case 'مشكلة إدارية':
-        return 'administrative';
-      case 'المناهج الدراسية':
-        return 'curriculum';
-      case 'أبنية مدرسية / خدمات':
-        return 'infrastructure';
-      default:
-        return 'other';
     }
   }
 

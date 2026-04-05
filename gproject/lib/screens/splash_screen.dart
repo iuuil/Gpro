@@ -14,6 +14,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     });
   }
@@ -43,7 +44,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 'صوت المواطن',
                 style: TextStyle(
                   fontSize: 36,
-                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
