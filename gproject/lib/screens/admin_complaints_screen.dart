@@ -1,6 +1,11 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: deprecated_member_use, non_constant_identifier_names, use_build_context_synchronously
 
-enum ComplaintStatus { all, neww, underReview, resolved, rejected }
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'admin_complaint_details_screen.dart';
+
+// رجعنا neww كحالة خاصة لفلتر "جديدة"
+enum ComplaintStatus { all, neww, pending, resolved, rejected, underReview }
 
 class AdminComplaintsScreen extends StatefulWidget {
   const AdminComplaintsScreen({
@@ -25,7 +30,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _selectedFilter = widget.initialFilter; // نستلم الفلتر من الكونستركتور
+    _selectedFilter = widget.initialFilter;
   }
 
   @override
@@ -34,59 +39,58 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
     super.dispose();
   }
 
-  // بيانات تجريبية مطابقة تقريباً للي في الـ HTML
-  final List<Map<String, dynamic>> _complaints = [
-    {
-      'id': '#8821',
-      'title': 'شكوى ضوضاء',
-      'ministry': 'وزارة البيئة',
-      'citizen': 'المواطن: أحمد منصور',
-      'date': '2023-10-25',
-      'status': ComplaintStatus.neww,
-    },
-    {
-      'id': '#8815',
-      'title': 'صيانة طريق فرعي',
-      'ministry': 'وزارة النقل',
-      'citizen': 'المواطنة: سارة علي',
-      'date': '2023-10-22',
-      'status': ComplaintStatus.underReview,
-    },
-    {
-      'id': '#8790',
-      'title': 'انقطاع مياه متكرر',
-      'ministry': 'وزارة المياه',
-      'citizen': 'المواطن: محمد القحطاني',
-      'date': '2023-10-18',
-      'status': ComplaintStatus.resolved,
-    },
-    {
-      'id': '#8765',
-      'title': 'طلب إنارة شارع خاص',
-      'ministry': 'وزارة الشؤون البلدية',
-      'citizen': 'المواطن: فهد العتيبي',
-      'date': '2023-10-15',
-      'status': ComplaintStatus.rejected,
-    },
-  ];
+  ComplaintStatus _statusFromString(String? status) {
+    switch (status) {
+      case 'new':
+      case 'neww':
+        return ComplaintStatus.neww;       // نخزنها داخلياً كـ neww
+      case 'pending':
+        return ComplaintStatus.pending;
+      case 'resolved':
+        return ComplaintStatus.resolved;
+      case 'rejected':
+        return ComplaintStatus.rejected;
+      case 'underReview':
+        return ComplaintStatus.underReview;
+      default:
+        return ComplaintStatus.all;
+    }
+  }
 
-  List<Map<String, dynamic>> get _filteredComplaints {
-    final query = _searchController.text.trim();
-    return _complaints.where((c) {
-      // فلترة بالحالة
-      if (_selectedFilter != ComplaintStatus.all &&
-          c['status'] != _selectedFilter) {
+  bool _filterByStatus(ComplaintStatus complaintStatus, Map<String, dynamic> c) {
+    // فلتر "الكل" => لا يقيّد بالحالة
+    if (_selectedFilter == ComplaintStatus.all) return true;
+
+    // فلتر "جديدة" => الشكاوى pending خلال آخر 24 ساعة فقط
+    if (_selectedFilter == ComplaintStatus.neww) {
+      // لازم تكون حالتها pending
+      if (complaintStatus != ComplaintStatus.pending) return false;
+
+      final createdAt = c['createdAt'];
+      if (createdAt is Timestamp) {
+        final dt = createdAt.toDate();
+        final isLast24h =
+            DateTime.now().difference(dt).inHours <= 24;
+        return isLast24h;
+      } else {
         return false;
       }
+    }
 
-      // فلترة بالبحث (ID أو اسم المواطن أو العنوان)
-      if (query.isNotEmpty) {
-        final text = '${c['id']} ${c['citizen']} ${c['title']}';
-        if (!text.contains(query)) return false;
-      }
+    // باقي الفلاتر العادية (قيد المراجعة، تم الحل، مرفوضة)
+    return complaintStatus == _selectedFilter;
+  }
 
-      return true;
-    }).toList();
+  bool _filterBySearch(Map<String, dynamic> c) {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return true;
+
+    final id = (c['id'] ?? '').toString();
+    final citizen = (c['citizenName'] ?? '').toString();
+    final title = (c['title'] ?? '').toString();
+    final text = '$id $citizen $title';
+
+    return text.contains(query);
   }
 
   @override
@@ -182,7 +186,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 ),
               ),
 
-              // الفلاتر
+              // الفلاتر (أضفنا "جديدة")
               SizedBox(
                 height: 44,
                 child: ListView(
@@ -203,16 +207,18 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       dotColor: Colors.blue,
                       onTap: () {
                         setState(
-                            () => _selectedFilter = ComplaintStatus.neww);
+                          () => _selectedFilter = ComplaintStatus.neww,
+                        );
                       },
                     ),
                     _buildFilterChip(
                       label: 'قيد المراجعة',
-                      selected: _selectedFilter == ComplaintStatus.underReview,
+                      selected: _selectedFilter == ComplaintStatus.pending,
                       dotColor: Colors.amber,
                       onTap: () {
-                        setState(() =>
-                            _selectedFilter = ComplaintStatus.underReview);
+                        setState(
+                          () => _selectedFilter = ComplaintStatus.pending,
+                        );
                       },
                     ),
                     _buildFilterChip(
@@ -221,7 +227,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       dotColor: Colors.green,
                       onTap: () {
                         setState(
-                            () => _selectedFilter = ComplaintStatus.resolved);
+                          () => _selectedFilter = ComplaintStatus.resolved,
+                        );
                       },
                     ),
                     _buildFilterChip(
@@ -230,7 +237,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       dotColor: Colors.red,
                       onTap: () {
                         setState(
-                            () => _selectedFilter = ComplaintStatus.rejected);
+                          () => _selectedFilter = ComplaintStatus.rejected,
+                        );
                       },
                     ),
                   ],
@@ -239,22 +247,200 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
               const SizedBox(height: 4),
 
-              // قائمة الشكاوى
+              // شكاوى + إحصائيات من Firestore
               Expanded(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Column(
-                    children: _filteredComplaints
-                        .map((c) => _ComplaintCard(data: c))
-                        .toList(),
-                  ),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('complaints')
+                      .orderBy('createdAt', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'حدث خطأ أثناء تحميل الشكاوى: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      );
+                    }
+
+                    final docs = snapshot.data?.docs ?? [];
+
+                    // حساب الإحصائيات من كل الشكاوى
+                    int total = docs.length;
+                    int pendingCount = 0;
+                    int resolvedCount = 0;
+                    int rejectedCount = 0;
+                    int newCount = 0;
+
+                    for (final doc in docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final s = (data['status'] ?? '').toString().trim();
+                      final createdAt = data['createdAt'];
+
+                      switch (s) {
+                        case 'pending':
+                          pendingCount++;
+                          // نعتبر "جديدة" pending خلال آخر 24 ساعة
+                          if (createdAt is Timestamp) {
+                            final dt = createdAt.toDate();
+                            final isLast24h =
+                                DateTime.now().difference(dt).inHours <= 24;
+                            if (isLast24h) {
+                              newCount++;
+                            }
+                          }
+                          break;
+                        case 'resolved':
+                          resolvedCount++;
+                          break;
+                        case 'rejected':
+                          rejectedCount++;
+                          break;
+                        case 'new':
+                        case 'neww':
+                          // لو عندك حالة خاصة في الـ DB
+                          newCount++;
+                          break;
+                        default:
+                          break;
+                      }
+                    }
+
+                    // تحويل للعرض (مع الفلتر الحالي والبحث)
+                    final complaints = docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      data['docId'] = doc.id;
+                      return data;
+                    }).where((c) {
+                      final status = _statusFromString(
+                        (c['status'] ?? '').toString(),
+                      );
+
+                      return _filterByStatus(status, c) &&
+                          _filterBySearch(c);
+                    }).toList();
+
+                    if (complaints.isEmpty) {
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildStatsRow(
+                              total: total,
+                              pending: pendingCount,
+                              resolved: resolvedCount,
+                              rejected: rejectedCount,
+                              newCount: newCount,
+                            ),
+                            const SizedBox(height: 16),
+                            const Center(
+                              child: Text(
+                                'لا توجد شكاوى مطابقة للبحث / الفلتر الحالي.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildStatsRow(
+                            total: total,
+                            pending: pendingCount,
+                            resolved: resolvedCount,
+                            rejected: rejectedCount,
+                            newCount: newCount,
+                          ),
+                          const SizedBox(height: 12),
+                          for (final c in complaints)
+                            _ComplaintCard(
+                              data: c,
+                              status: _statusFromString(
+                                (c['status'] ?? '').toString(),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatsRow({
+    required int total,
+    required int pending,
+    required int resolved,
+    required int rejected,
+    required int newCount,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: 'إجمالي الشكاوى',
+            value: total.toString(),
+            color: const Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'شكاوى جديدة (آخر ٢٤ ساعة)',
+            value: newCount.toString(),
+            color: Colors.blue[700]!,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'شكاوى قيد المراجعة',
+            value: pending.toString(),
+            color: Colors.amber[700]!,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'تم حلها',
+            value: resolved.toString(),
+            color: Colors.green[700]!,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCard(
+            title: 'مرفوضة',
+            value: rejected.toString(),
+            color: Colors.red[700]!,
+          ),
+        ),
+      ],
     );
   }
 
@@ -270,9 +456,12 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? AdminComplaintsScreen.primaryColor : Colors.white,
+            color: selected
+                ? AdminComplaintsScreen.primaryColor
+                : Colors.white,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: selected
@@ -307,8 +496,11 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 label,
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? Colors.white : const Color(0xFF1F2933),
+                  fontWeight:
+                      selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected
+                      ? Colors.white
+                      : const Color(0xFF1F2933),
                 ),
               ),
             ],
@@ -319,28 +511,75 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   }
 }
 
-// كارت الشكوى الواحد
-class _ComplaintCard extends StatelessWidget {
-  final Map<String, dynamic> data;
+// كرت الإحصائيات الصغير
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color color;
 
-  const _ComplaintCard({required this.data});
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final ComplaintStatus status = data['status'] as ComplaintStatus;
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
+// كارت الشكوى الواحد مع النقل لصفحة التفاصيل
+class _ComplaintCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final ComplaintStatus status;
+
+  const _ComplaintCard({
+    required this.data,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     Color sideColor;
     Color badgeBg;
     Color badgeText;
     String badgeLabel;
 
     switch (status) {
-      case ComplaintStatus.neww:
-        sideColor = Colors.blue;
-        badgeBg = const Color(0xFFDBEAFE);
-        badgeText = const Color(0xFF1D4ED8);
-        badgeLabel = 'جديدة';
-        break;
+      case ComplaintStatus.pending:
       case ComplaintStatus.underReview:
         sideColor = Colors.amber;
         badgeBg = const Color(0xFFFEF3C7);
@@ -359,7 +598,15 @@ class _ComplaintCard extends StatelessWidget {
         badgeText = const Color(0xFFB91C1C);
         badgeLabel = 'مرفوضة';
         break;
+      case ComplaintStatus.neww:
+        sideColor = Colors.blue;
+        badgeBg = const Color(0xFFDBEAFE);
+        badgeText = const Color(0xFF1D4ED8);
+        badgeLabel = 'جديدة';
+        break;
       case ComplaintStatus.all:
+      // ignore: unreachable_switch_default
+      default:
         sideColor = Colors.grey;
         badgeBg = const Color(0xFFE5E7EB);
         badgeText = const Color(0xFF374151);
@@ -367,152 +614,195 @@ class _ComplaintCard extends StatelessWidget {
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: const Border.fromBorderSide(
-          BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+    final docId = (data['docId'] ?? '').toString(); // مهم
+    final id = (data['id'] ?? '').toString();
+    final title = (data['title'] ?? '').toString();
+    final ministry = (data['ministry'] ?? '').toString();
+    final citizen = (data['citizenName'] ?? '').toString();
+    final createdAt = data['createdAt'];
+    String dateText = '';
+
+    if (createdAt is Timestamp) {
+      final dt = createdAt.toDate();
+      dateText =
+          '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    } else {
+      dateText = (data['date'] ?? '').toString();
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        if (docId.isEmpty) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdminComplaintDetailsScreen(
+              complaintDocId: docId,
+            ),
           ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: 4,
-            child: Container(
-              decoration: BoxDecoration(
-                color: sideColor,
-                borderRadius: const BorderRadiusDirectional.only(
-                  topEnd: Radius.circular(14),
-                  bottomEnd: Radius.circular(14),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: const Border.fromBorderSide(
+            BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x08000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 4,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: sideColor,
+                  borderRadius: const BorderRadiusDirectional.only(
+                    topEnd: Radius.circular(14),
+                    bottomEnd: Radius.circular(14),
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // العنوان + الوزارة + البادج
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${data['title']} - ID ${data['id']}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AdminComplaintsScreen.primaryColor
-                                  // ignore: deprecated_member_use
-                                  .withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              data['ministry'] as String,
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  // العنوان + الوزارة + البادج
+                  Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$title - ID $id',
                               style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AdminComplaintsScreen.primaryColor,
+                                fontSize: 14,
+                                fontWeight:
+                                    FontWeight.w700,
+                                color: Color(0xFF0F172A),
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AdminComplaintsScreen
+                                    .primaryColor
+                                    .withOpacity(0.08),
+                                borderRadius:
+                                    BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                ministry,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight:
+                                      FontWeight.w600,
+                                  color:
+                                      AdminComplaintsScreen
+                                          .primaryColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: badgeBg,
+                          borderRadius:
+                              BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          badgeLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight:
+                                FontWeight.w700,
+                            color: badgeText,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: badgeBg,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        badgeLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: badgeText,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
-                // المواطن + التاريخ
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: Color(0xFF64748B),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        data['citizen'] as String,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
+                  // المواطن + التاريخ
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: Color(0xFF64748B),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          citizen.isEmpty
+                              ? 'غير معروف'
+                              : citizen,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 14,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'تاريخ التقديم: ${data['date']}',
-                      style: const TextStyle(
-                        fontSize: 11,
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
                         color: Color(0xFF94A3B8),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 4),
+                      Text(
+                        'تاريخ التقديم: $dateText',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-

@@ -1,9 +1,9 @@
-// ignore_for_file: unused_element, use_build_context_synchronously
+// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class AdminComplaintDetailsScreen extends StatefulWidget {
+class AdminComplaintDetailsScreen extends StatelessWidget {
   final String complaintDocId;
 
   const AdminComplaintDetailsScreen({
@@ -11,636 +11,446 @@ class AdminComplaintDetailsScreen extends StatefulWidget {
     required this.complaintDocId,
   });
 
-  @override
-  State<AdminComplaintDetailsScreen> createState() =>
-      _AdminComplaintDetailsScreenState();
-}
-
-class _AdminComplaintDetailsScreenState
-    extends State<AdminComplaintDetailsScreen> {
-  bool _updating = false;
-
-  Future<void> _updateStatus(String newStatus) async {
-    try {
-      setState(() => _updating = true);
-      await FirebaseFirestore.instance
-          .collection('complaints')
-          .doc(widget.complaintDocId)
-          .update({'status': newStatus});
-      setState(() => _updating = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم تحديث حالة الشكوى بنجاح.'),
-        ),
-      );
-    } catch (e) {
-      setState(() => _updating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('فشل في تحديث الحالة: $e'),
-        ),
-      );
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return const Color(0xFFF59E0B); // برتقالي
+      case 'resolved':
+        return const Color(0xFF16A34A); // أخضر
+      case 'rejected':
+        return const Color(0xFFDC2626); // أحمر
+      case 'new':
+      case 'neww':
+        return const Color(0xFF2563EB); // أزرق
+      default:
+        return const Color(0xFF6B7280); // رمادي
     }
+  }
+
+  Color _statusBg(String status) {
+    switch (status) {
+      case 'pending':
+        return const Color(0xFFFEF3C7);
+      case 'resolved':
+        return const Color(0xFFEFFDF3);
+      case 'rejected':
+        return const Color(0xFFFEE2E2);
+      case 'new':
+      case 'neww':
+        return const Color(0xFFDBEAFE);
+      default:
+        return const Color(0xFFF3F4F6);
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'pending':
+        return 'قيد المراجعة';
+      case 'resolved':
+        return 'تم الحل';
+      case 'rejected':
+        return 'مرفوضة';
+      case 'new':
+      case 'neww':
+        return 'جديدة';
+      default:
+        return 'غير محدد';
+    }
+  }
+
+  Future<void> _updateStatus(
+    BuildContext context, {
+    required String newStatus,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('complaints')
+        .doc(complaintDocId)
+        .update({'status': newStatus});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('تم تحديث حالة الشكوى إلى: ${_statusLabel(newStatus)}'),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final docRef =
+        FirebaseFirestore.instance.collection('complaints').doc(complaintDocId);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF3F4F6),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // الهيدر
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
-                    ),
+        backgroundColor: const Color(0xFFF6F7F8),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          iconTheme: const IconThemeData(color: Color(0xFF020617)),
+          title: const Text(
+            'تفاصيل الشكوى',
+            style: TextStyle(
+              color: Color(0xFF020617),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: docRef.snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(
+                child: Text(
+                  'لم يتم العثور على الشكوى.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new,
-                          size: 20,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'تفاصيل الشكوى (مسؤول)',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 40,
-                      width: 40,
-                    ),
-                  ],
-                ),
-              ),
+              );
+            }
 
-              // المحتوى
-              Expanded(
-                child: StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('complaints')
-                      .doc(widget.complaintDocId)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
+            final data = snapshot.data!.data()!;
+            final id = (data['id'] ?? '').toString();
+            final title = (data['title'] ?? '').toString();
+            final text = (data['text'] ?? '').toString();
+            final citizen = (data['citizenName'] ?? '').toString();
+            final ministry = (data['ministry'] ?? '').toString();
+            final status = (data['status'] ?? '').toString();
+            final location = (data['location'] ?? '').toString();
+            final createdAt = data['createdAt'];
+            String dateText = '';
 
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          'حدث خطأ أثناء جلب بيانات الشكوى: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFFB91C1C),
+            if (createdAt is Timestamp) {
+              final dt = createdAt.toDate();
+              dateText =
+                  '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+            } else {
+              dateText = (data['date'] ?? '').toString();
+            }
+
+            final statusColor = _statusColor(status);
+            final statusBg = _statusBg(status);
+            final statusLabel = _statusLabel(status);
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // كرت رئيسي لمعلومات الشكوى
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFE5E7EB),
                           ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x08000000),
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      );
-                    }
-
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return const Center(
-                        child: Text(
-                          'لم يتم العثور على هذه الشكوى.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final data = snapshot.data!.data() as Map<String, dynamic>;
-
-                    final title =
-                        (data['title'] as String? ?? '').trim().isNotEmpty
-                            ? data['title'] as String
-                            : (data['description'] as String? ??
-                                    'بدون عنوان')
-                                .toString();
-                    final description =
-                        (data['description'] as String? ?? '').toString();
-                    final status =
-                        (data['status'] as String? ?? 'pending').toString();
-                    final ministry =
-                        (data['ministry'] as String? ?? 'غير محددة')
-                            .toString();
-                    final createdAt = (data['createdAt'] as Timestamp?)
-                        ?.toDate()
-                        .toString()
-                        .split(' ')
-                        .first;
-                    final contactName =
-                        (data['contactName'] as String? ?? '').toString();
-                    final contactPhone =
-                        (data['contactPhone'] as String? ?? '').toString();
-                    final citizenName =
-                        (data['citizenName'] as String? ?? '').toString();
-                    final complaintNumber =
-                        (data['id'] ?? '').toString();
-
-                    final statusLabel = _statusLabelFromStatus(status);
-                    final statusColor = _statusColorFromStatus(status);
-
-                    return SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // رقم الشكوى + المواطن
-                          Row(
-                            children: [
-                              if (complaintNumber.isNotEmpty)
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius:
-                                        BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color: const Color(0xFFE5E7EB),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'رقم الشكوى: $complaintNumber',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Color(0xFF6B7280),
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // العنوان + البادج
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$title - ID $id',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: statusBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
+                                            ),
+                                            child: Text(
+                                              statusLabel,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: statusColor,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          if (ministry.isNotEmpty)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 3,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFE0ECFF),
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                ministry,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF1D4ED8),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              const SizedBox(width: 8),
-                              if (citizenName.isNotEmpty)
+                              ],
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // المواطن
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.person_outline,
+                                  size: 18,
+                                  color: Color(0xFF64748B),
+                                ),
+                                const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'المواطن: $citizenName',
+                                    citizen.isEmpty ? 'غير معروف' : citizen,
                                     style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF4B5563),
+                                      fontSize: 13,
+                                      color: Color(0xFF475569),
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // نظرة عامة
-                          _buildComplaintOverviewSection(
-                            title: title,
-                            description: description,
-                            statusLabel: statusLabel,
-                            statusColor: statusColor,
-                            ministry: ministry,
-                            createdAt: createdAt,
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE5E7EB)),
-                          const SizedBox(height: 16),
-
-                          // معلومات صاحب الشكوى
-                          _buildComplainantInfoSection(
-                            contactName: contactName.isNotEmpty
-                                ? contactName
-                                : citizenName,
-                            contactPhone: contactPhone,
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE5E7EB)),
-                          const SizedBox(height: 16),
-
-                          // أزرار تغيير الحالة
-                          const Text(
-                            'إدارة حالة الشكوى',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1F2937),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _StatusActionChip(
-                                label: 'تعيين كقيد المراجعة',
-                                color: const Color(0xFF0369A1),
-                                selected: status == 'pending',
-                                onTap: _updating
-                                    ? null
-                                    : () => _updateStatus('pending'),
-                              ),
-                              _StatusActionChip(
-                                label: 'تعيين كمحلولة',
-                                color: const Color(0xFF15803D),
-                                selected: status == 'resolved',
-                                onTap: _updating
-                                    ? null
-                                    : () => _updateStatus('resolved'),
-                              ),
-                              _StatusActionChip(
-                                label: 'تعيين كمرفوضة',
-                                color: const Color(0xFFB91C1C),
-                                selected: status == 'rejected',
-                                onTap: _updating
-                                    ? null
-                                    : () => _updateStatus('rejected'),
+                            const SizedBox(height: 6),
+
+                            // التاريخ
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 16,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  dateText.isEmpty
+                                      ? 'تاريخ غير متوفر'
+                                      : 'تاريخ التقديم: $dateText',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+
+                            // الموقع (اختياري)
+                            if (location.isNotEmpty) ...[
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on_outlined,
+                                    size: 18,
+                                    color: Color(0xFFEF4444),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      location,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
+                          ],
+                        ),
+                      ),
 
-                          if (_updating) ...[
-                            const SizedBox(height: 12),
-                            const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                      const SizedBox(height: 16),
+
+                      // نص الشكوى
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'نص الشكوى',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              text.isEmpty
+                                  ? 'لا يوجد نص مرفق لهذه الشكوى.'
+                                  : text,
+                              style: const TextStyle(
+                                fontSize: 13, 
+                                color: Color(0xFF4B5563),
+                                height: 1.5,
                               ),
                             ),
                           ],
+                        ),
+                      ),
 
-                          const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE5E7EB)),
-                          const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                          // ملاحظة ثابتة
+                      // أزرار تغيير الحالة
+                      const Text(
+                        'تحديث حالة الشكوى',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: status == 'pending'
+                                  ? null
+                                  : () => _updateStatus(
+                                        context,
+                                        newStatus: 'pending',
+                                      ),
+                              icon: const Icon(
+                                Icons.schedule_outlined,
+                                size: 18,
+                                color: Color(0xFFF59E0B),
+                              ),
+                              label: const Text(
+                                'قيد المراجعة',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                side: const BorderSide(
+                                  color: Color(0xFFFBBF24),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: status == 'resolved'
+                                  ? null
+                                  : () => _updateStatus(
+                                        context,
+                                        newStatus: 'resolved',
+                                      ),
+                              icon: const Icon(
+                                Icons.check_circle_outline,
+                                size: 18,
+                                color: Color(0xFF16A34A),
+                              ),
+                              label: const Text(
+                                'تم الحل',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                side: const BorderSide(
+                                  color: Color(0xFF16A34A),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // == Sections ==
-
-  Widget _buildComplaintOverviewSection({
-    required String title,
-    required String description,
-    required String statusLabel,
-    required Color statusColor,
-    required String ministry,
-    required String? createdAt,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // العنوان + الحالة
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                statusLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: statusColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (ministry.isNotEmpty)
-          Row(
-            children: [
-              const Icon(
-                Icons.account_balance,
-                size: 16,
-                color: Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'الجهة: $ministry',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        const SizedBox(height: 4),
-        if (createdAt != null)
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today,
-                size: 14,
-                color: Color(0xFF9CA3AF),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'تاريخ الإرسال: $createdAt',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        const SizedBox(height: 12),
-        const Text(
-          'وصف المشكلة',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF4B5563),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            description.isNotEmpty
-                ? description
-                : 'لا يوجد وصف تفصيلي لهذه الشكوى.',
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.5,
-              color: Color(0xFF374151),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildComplainantInfoSection({
-    required String contactName,
-    required String contactPhone,
-  }) {
-    final hasName = contactName.trim().isNotEmpty;
-    final hasPhone = contactPhone.trim().isNotEmpty;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'معلومات صاحب الشكوى',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const CircleAvatar(
-              radius: 28,
-              backgroundColor: Color(0xFFA3BCE0),
-              child: Icon(
-                Icons.person,
-                size: 28,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasName ? contactName : 'مستخدم التطبيق',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (hasPhone)
-                  Row(
-                    children: [
-                      const Icon(Icons.phone_in_talk_outlined,
-                          size: 12, color: Color(0xFF6B7280)),
-                      const SizedBox(width: 4),
-                      Text(
-                        contactPhone,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF6B7280),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: status == 'rejected'
+                              ? null
+                              : () => _updateStatus(
+                                    context,
+                                    newStatus: 'rejected',
+                                  ),
+                          icon: const Icon(
+                            Icons.cancel_outlined,
+                            size: 18,
+                            color: Color(0xFFDC2626),
+                          ),
+                          label: const Text(
+                            'رفض الشكوى',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 10),
+                            side: const BorderSide(
+                              color: Color(0xFFDC2626),
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                  )
-                else
-                  const Text(
-                    'لم يقم المستخدم بإدخال رقم هاتف.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF9CA3AF),
-                    ),
                   ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _statusLabelFromStatus(String status) {
-    switch (status) {
-      case 'resolved':
-        return 'تم حلها';
-      case 'rejected':
-        return 'مرفوضة';
-      case 'pending':
-      default:
-        return 'قيد المراجعة';
-    }
-  }
-
-  Color _statusColorFromStatus(String status) {
-    switch (status) {
-      case 'resolved':
-        return const Color(0xFF15803D);
-      case 'rejected':
-        return const Color(0xFFB91C1C);
-      case 'pending':
-      default:
-        return const Color(0xFF0369A1);
-    }
-  }
-}
-
-class _StatusActionChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _StatusActionChip({
-    required this.label,
-    required this.color,
-    required this.selected,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = selected ? color : Colors.white;
-    final border = selected ? color : const Color(0xFFE5E7EB);
-    final textColor = selected ? Colors.white : color;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.swap_horiz,
-              size: 14,
-              color: textColor,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InternalCommentCard extends StatelessWidget {
-  final String author;
-  final String datetime;
-  final String text;
-
-  const _InternalCommentCard({
-    required this.author,
-    required this.datetime,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.info_outline,
-                size: 14,
-                color: Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                author,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4B5563),
                 ),
               ),
-              const Spacer(),
-              Text(
-                datetime,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF9CA3AF),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF4B5563),
-              height: 1.4,
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

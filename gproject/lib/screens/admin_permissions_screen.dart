@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -403,7 +405,7 @@ class _PermissionTile extends StatelessWidget {
           const SizedBox(width: 8),
           Switch(
             value: value,
-            activeThumbColor: const Color(0xFF22C55E),
+            activeColor: const Color(0xFF22C55E),
             onChanged: onChanged,
           ),
         ],

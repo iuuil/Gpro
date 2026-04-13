@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AdminSettingsScreen extends StatelessWidget {
+class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({
     super.key,
     this.onBackToDashboard,
@@ -12,15 +12,138 @@ class AdminSettingsScreen extends StatelessWidget {
   final VoidCallback? onBackToDashboard;
 
   @override
+  State<AdminSettingsScreen> createState() => _AdminSettingsScreenState();
+}
+
+class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
+  bool _isSearching = false;
+  String _searchQuery = '';
+
+  String _appName = 'صوت المواطن';
+  String _logoDescription = 'تعديل الشعار الرسمي والهوية';
+
+  final List<Map<String, String>> _ministries = [
+    {'name': 'وزارة الداخلية', 'info': 'مسؤولة عن الأمن الداخلي'},
+    {'name': 'وزارة الصحة', 'info': 'مسؤولة عن الخدمات الصحية'},
+    {'name': 'وزارة التربية', 'info': 'مسؤولة عن التعليم المدرسي'},
+    {'name': 'وزارة التعليم العالي', 'info': 'مسؤولة عن الجامعات'},
+    {'name': 'وزارة الكهرباء', 'info': 'مسؤولة عن الطاقة الكهربائية'},
+  ];
+
+  Future<void> _showAppNameDialog() async {
+    final controller = TextEditingController(text: _appName);
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'تعديل اسم التطبيق',
+            textDirection: TextDirection.rtl,
+          ),
+          content: TextField(
+            controller: controller,
+            textDirection: TextDirection.rtl,
+            decoration: const InputDecoration(
+              labelText: 'الاسم الجديد',
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) {
+                  setState(() => _appName = text);
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showLogoDialog() async {
+    final controller = TextEditingController(text: _logoDescription);
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'تعديل الشعار والهوية',
+            textDirection: TextDirection.rtl,
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            textDirection: TextDirection.rtl,
+            decoration: const InputDecoration(
+              labelText: 'وصف الشعار / ملاحظات',
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) {
+                  setState(() => _logoDescription = text);
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showMinistriesList() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MinistriesScreen(ministries: _ministries),
+      ),
+    );
+    setState(() {});
+  }
+
+  bool _matchesSearch(String title, String subtitle) {
+    if (_searchQuery.isEmpty) return true;
+    final q = _searchQuery.toLowerCase();
+    return title.toLowerCase().contains(q) ||
+        subtitle.toLowerCase().contains(q);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final primary = AdminSettingsScreen.primary;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: bgLight,
+        backgroundColor: AdminSettingsScreen.bgLight,
         body: SafeArea(
           child: Column(
             children: [
-              // الهيدر
+              // الهيدر + البحث
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -44,10 +167,10 @@ class AdminSettingsScreen extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: () {
-                        if (onBackToDashboard != null) {
-                          onBackToDashboard!(); // يرجع للـDashboard
+                        if (widget.onBackToDashboard != null) {
+                          widget.onBackToDashboard!();
                         } else {
-                          Navigator.pop(context); // fallback
+                          Navigator.pop(context);
                         }
                       },
                       icon: const Icon(
@@ -57,31 +180,80 @@ class AdminSettingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'إعدادات النظام',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF020617),
+                    if (!_isSearching)
+                      const Expanded(
+                        child: Text(
+                          'إعدادات النظام',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF020617),
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: TextField(
+                            autofocus: true,
+                            textDirection: TextDirection.rtl,
+                            decoration: InputDecoration(
+                              hintText: 'بحث في الإعدادات...',
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF137FEC),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            onChanged: (v) {
+                              setState(() {
+                                _searchQuery = v.trim();
+                              });
+                            },
+                          ),
                         ),
                       ),
-                    ),
                     IconButton(
                       onPressed: () {
-                        // بحث
+                        setState(() {
+                          if (_isSearching) {
+                            _isSearching = false;
+                            _searchQuery = '';
+                          } else {
+                            _isSearching = true;
+                          }
+                        });
                       },
-                      icon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF6B7280),
+                      icon: Icon(
+                        _isSearching ? Icons.close : Icons.search,
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // باقي المحتوى
+              // المحتوى
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
@@ -92,114 +264,91 @@ class AdminSettingsScreen extends StatelessWidget {
                       children: [
                         const SizedBox(height: 16),
 
-                        // === إعدادات عامة ===
                         const _SectionTitle('إعدادات عامة'),
-                        _SettingsTile(
-                          icon: Icons.settings_applications_outlined,
-                          iconBg: primary,
-                          title: 'اسم التطبيق',
-                          subtitle: 'صوت المواطن',
-                          onTap: () {},
-                        ),
-                        _SettingsTile(
-                          icon: Icons.image_outlined,
-                          iconBg: primary,
-                          title: 'شعار النظام',
-                          subtitle: 'تعديل الشعار الرسمي والهوية',
-                          onTap: () {},
-                        ),
-                        _SettingsToggleTile(
-                          icon: Icons.construction_outlined,
-                          iconBg: primary,
-                          title: 'وضع الصيانة',
-                          subtitle: 'إيقاف النظام مؤقتاً للتحديث',
-                          value: false,
-                          onChanged: (v) {},
-                        ),
+                        if (_matchesSearch('اسم التطبيق', _appName))
+                          _SettingsTile(
+                            icon: Icons.settings_applications_outlined,
+                            iconBg: primary,
+                            title: 'اسم التطبيق',
+                            subtitle: _appName,
+                            onTap: _showAppNameDialog,
+                          ),
+                        if (_matchesSearch(
+                            'شعار النظام', _logoDescription))
+                          _SettingsTile(
+                            icon: Icons.image_outlined,
+                            iconBg: primary,
+                            title: 'شعار النظام',
+                            subtitle: _logoDescription,
+                            onTap: _showLogoDialog,
+                          ),
 
                         const Divider(height: 24),
 
-                        // === إدارة الوزارات ===
                         const _SectionTitle('إدارة الوزارات'),
-                        _SettingsTile(
-                          icon: Icons.account_balance_outlined,
-                          iconBg: primary,
-                          title: 'قائمة الوزارات',
-                          subtitle:
-                              'إضافة أو تعديل بيانات الجهات الحكومية',
-                          onTap: () {},
-                        ),
-                        _SettingsTile(
-                          icon: Icons.contact_phone_outlined,
-                          iconBg: primary,
-                          title: 'معلومات التواصل',
-                          subtitle:
-                              'تحديث أرقام الطوارئ والبريد لكل وزارة',
-                          onTap: () {},
-                        ),
+                        if (_matchesSearch(
+                            'قائمة الوزارات',
+                            'إضافة أو تعديل بيانات الجهات الحكومية'))
+                          _SettingsTile(
+                            icon: Icons.account_balance_outlined,
+                            iconBg: primary,
+                            title: 'قائمة الوزارات',
+                            subtitle:
+                                'إضافة أو تعديل بيانات الجهات الحكومية',
+                            onTap: _showMinistriesList,
+                          ),
+                        if (_matchesSearch(
+                            'معلومات التواصل',
+                            'تحديث أرقام الطوارئ والبريد لكل وزارة'))
+                          _SettingsTile(
+                            icon: Icons.contact_phone_outlined,
+                            iconBg: primary,
+                            title: 'معلومات التواصل',
+                            subtitle:
+                                'تحديث أرقام الطوارئ والبريد لكل وزارة',
+                            onTap: _showMinistriesList,
+                          ),
 
                         const Divider(height: 24),
 
-                        // === قواعد التصنيف ===
-                        const _SectionTitle('قواعد التصنيف'),
-                        _SettingsTile(
-                          icon: Icons.rule_folder_outlined,
-                          iconBg: primary,
-                          title: 'أنواع البلاغات',
-                          subtitle:
-                              'تصنيف الشكاوى، الاقتراحات، والطلبات',
-                          onTap: () {},
-                        ),
-                        _SettingsTile(
-                          icon: Icons.priority_high_outlined,
-                          iconBg: primary,
-                          title: 'مستويات الأولوية',
-                          subtitle:
-                              'تحديد الفترات الزمنية لكل مستوى أولوية',
-                          onTap: () {},
-                        ),
-
-                        const Divider(height: 24),
-
-                        // === إعدادات التنبيهات ===
                         const _SectionTitle('إعدادات التنبيهات'),
-                        _SettingsTile(
-                          icon: Icons.sms_outlined,
-                          iconBg: primary,
-                          title: 'بوابة الرسائل النصية',
-                          subtitle:
-                              'ربط مزود خدمة الرسائل (SMS Gateway)',
-                          onTap: () {},
-                        ),
-                        _SettingsTile(
-                          icon: Icons.mail_outline,
-                          iconBg: primary,
-                          title: 'خادم البريد',
-                          subtitle:
-                              'إعدادات SMTP لإرسال الإشعارات البريدية',
-                          onTap: () {},
-                        ),
+                        if (_matchesSearch(
+                            'بوابة الرسائل النصية',
+                            'ربط مزود خدمة الرسائل (SMS Gateway)'))
+                          _SettingsTile(
+                            icon: Icons.sms_outlined,
+                            iconBg: primary,
+                            title: 'بوابة الرسائل النصية',
+                            subtitle:
+                                'ربط مزود خدمة الرسائل (SMS Gateway)',
+                            onTap: () {},
+                          ),
+                        if (_matchesSearch(
+                            'خادم البريد',
+                            'إعدادات SMTP لإرسال الإشعارات البريدية'))
+                          _SettingsTile(
+                            icon: Icons.mail_outline,
+                            iconBg: primary,
+                            title: 'خادم البريد',
+                            subtitle:
+                                'إعدادات SMTP لإرسال الإشعارات البريدية',
+                            onTap: () {},
+                          ),
 
                         const Divider(height: 24),
 
-                        // === الأمان ===
                         const _SectionTitle('الأمان'),
-                        _SettingsTile(
-                          icon: Icons.timer_outlined,
-                          iconBg: primary,
-                          title: 'انتهاء الجلسة',
-                          subtitle:
-                              'تحديد وقت الخروج التلقائي (30 دقيقة)',
-                          onTap: () {},
-                        ),
-                        _SettingsTile(
-                          icon: Icons.history_edu_outlined,
-                          iconBg: primary,
-                          title: 'سجلات الوصول',
-                          subtitle:
-                              'مراقبة عمليات دخول المشرفين',
-                          onTap: () {},
-                        ),
+                        if (_matchesSearch(
+                            'سجلات الوصول',
+                            'مراقبة عمليات دخول المشرفين'))
+                          _SettingsTile(
+                            icon: Icons.history_edu_outlined,
+                            iconBg: primary,
+                            title: 'سجلات الوصول',
+                            subtitle:
+                                'مراقبة عمليات دخول المشرفين',
+                            onTap: () {},
+                          ),
 
                         const SizedBox(height: 24),
                       ],
@@ -246,6 +395,8 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _SettingsTile({
+    // ignore: unused_element_parameter
+    super.key,
     required this.icon,
     required this.iconBg,
     required this.title,
@@ -307,7 +458,7 @@ class _SettingsTile extends StatelessWidget {
               ),
             ),
             const Icon(
-              Icons.chevron_right, // هنا غيرنا الاتجاه
+              Icons.chevron_right,
               color: Color(0xFF9CA3AF),
             ),
           ],
@@ -317,84 +468,201 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
-class _SettingsToggleTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconBg;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
+// ===== شاشات الوزارات =====
 
-  const _SettingsToggleTile({
-    required this.icon,
-    required this.iconBg,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    this.onChanged,
-  });
+class MinistriesScreen extends StatefulWidget {
+  final List<Map<String, String>> ministries;
 
-  Color get primary => const Color(0xFF137FEC);
+  const MinistriesScreen({super.key, required this.ministries});
 
   @override
+  State<MinistriesScreen> createState() => _MinistriesScreenState();
+
+  // ignore: body_might_complete_normally_nullable
+  static Object? of(BuildContext context) {}
+}
+
+class _MinistriesScreenState extends State<MinistriesScreen> {
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: iconBg.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: iconBg,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          iconTheme: const IconThemeData(color: Color(0xFF020617)),
+          title: const Text(
+            'قائمة الوزارات',
+            style: TextStyle(
+              color: Color(0xFF020617),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF020617),
-                  ),
+          centerTitle: true,
+        ),
+        backgroundColor: const Color(0xFFF6F7F8),
+        body: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: widget.ministries.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final m = widget.ministries[index];
+            final name = m['name'] ?? '';
+            final info = m['info'] ?? '';
+
+            return ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              tileColor: Colors.white,
+              title: Text(
+                name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                  ),
+              ),
+              subtitle: Text(
+                info,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF6B7280),
                 ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            activeThumbColor: Colors.white,
-            activeTrackColor: primary,
-            onChanged: onChanged,
-          ),
-        ],
+              ),
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: Color(0xFF9CA3AF),
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MinistryEditScreen(
+                      ministry: m,
+                    ),
+                  ),
+                );
+                setState(() {});
+              },
+            );
+          },
+        ),
       ),
     );
   }
 }
 
+class MinistryEditScreen extends StatefulWidget {
+  final Map<String, String> ministry;
+
+  const MinistryEditScreen({super.key, required this.ministry});
+
+  @override
+  State<MinistryEditScreen> createState() => _MinistryEditScreenState();
+}
+
+class _MinistryEditScreenState extends State<MinistryEditScreen> {
+  late TextEditingController _nameController;
+  late TextEditingController _infoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController =
+        TextEditingController(text: widget.ministry['name'] ?? '');
+    _infoController =
+        TextEditingController(text: widget.ministry['info'] ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _infoController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          iconTheme: const IconThemeData(color: Color(0xFF020617)),
+          title: const Text(
+            'تعديل بيانات الوزارة',
+            style: TextStyle(
+              color: Color(0xFF020617),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        backgroundColor: const Color(0xFFF6F7F8),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              TextField(
+                controller: _nameController,
+                textDirection: TextDirection.rtl,
+                decoration: const InputDecoration(
+                  labelText: 'اسم الوزارة',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _infoController,
+                textDirection: TextDirection.rtl,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'وصف / معلومات الوزارة',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final newName = _nameController.text.trim();
+                    final newInfo = _infoController.text.trim();
+
+                    if (newName.isNotEmpty) {
+                      widget.ministry['name'] = newName;
+                    }
+                    if (newInfo.isNotEmpty) {
+                      widget.ministry['info'] = newInfo;
+                    }
+
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF137FEC),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'حفظ التعديلات',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

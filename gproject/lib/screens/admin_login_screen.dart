@@ -1,3 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AdminLoginScreen extends StatefulWidget {
@@ -15,38 +19,80 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
   static const Color primaryColor = Color(0xFF137FEC);
 
-Future<void> _loginAdmin() async {
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+  Future<void> _loginAdmin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-  if (email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('يرجى إدخال البريد الإلكتروني وكلمة المرور')),
-    );
-    return;
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال البريد الإلكتروني وكلمة المرور')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 1) تسجيل الدخول في Firebase Auth
+      final cred = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+      final user = cred.user;
+
+      if (user == null) {
+        throw Exception('تعذر تسجيل الدخول، يرجى المحاولة مرة أخرى.');
+      }
+
+      // 2) التحقق أن هذا المستخدم موجود في Collection admins
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(user.uid)
+          .get();
+
+      if (!adminDoc.exists) {
+        // ليس مسؤول حتى لو عنده حساب Auth
+        await FirebaseAuth.instance.signOut();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('هذا الحساب ليس حساب مسؤول، لا يمكنك الدخول من هنا.'),
+          ),
+        );
+        return;
+      }
+
+      // 3) نجاح: رسالة + الانتقال إلى لوحة تحكم المسؤول
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تسجيل دخول المسؤول بنجاح')),
+      );
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/admin-dashboard',
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'فشل تسجيل الدخول، تحقق من البيانات.';
+      if (e.code == 'user-not-found') {
+        message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
+      } else if (e.code == 'wrong-password') {
+        message = 'كلمة المرور غير صحيحة.';
+      } else if (e.code == 'invalid-email') {
+        message = 'صيغة البريد الإلكتروني غير صحيحة.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ غير متوقع: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
-
-  setState(() => _isLoading = true);
-
-  // هنا منطق التحقق الحقيقي لاحقاً
-  await Future.delayed(const Duration(milliseconds: 500));
-
-  setState(() => _isLoading = false);
-
-  // أولاً نعرض الرسالة
-  // ignore: use_build_context_synchronously
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('تم تسجيل دخول المسؤول بنجاح')),
-  );
-
-  // ثم ننتقل إلى لوحة تحكم المسؤول مع حذف شاشة تسجيل الدخول من الستاك
-  Navigator.pushNamedAndRemoveUntil(
-    // ignore: use_build_context_synchronously
-    context,
-    '/admin-dashboard', // اسم الراوت اللي عرفناه
-    (route) => false,
-  );
-}
 
   @override
   void dispose() {
@@ -66,11 +112,9 @@ Future<void> _loginAdmin() async {
             children: [
               // شريط علوي مع سهم رجوع أعلى اليمين
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
-                    // السهم يكون أول عنصر في RTL فيطلع يمين
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(
@@ -87,14 +131,12 @@ Future<void> _loginAdmin() async {
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 24),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                     child: ConstrainedBox(
-                      constraints:
-                          const BoxConstraints(maxWidth: 420),
+                      constraints: const BoxConstraints(maxWidth: 420),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const SizedBox(height: 8),
                           const Text(
@@ -113,11 +155,9 @@ Future<void> _loginAdmin() async {
                             height: 72,
                             width: 72,
                             decoration: BoxDecoration(
-                              color:
-                                  // ignore: deprecated_member_use
-                                  primaryColor.withOpacity(0.08),
-                              borderRadius:
-                                  BorderRadius.circular(16),
+                              // ignore: deprecated_member_use
+                              color: primaryColor.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
                             child: const Icon(
@@ -172,12 +212,12 @@ Future<void> _loginAdmin() async {
                             ),
                           ),
                           const SizedBox(height: 8),
+                        
                           Container(
                             height: 56,
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius:
-                                  BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: const Color(0xFFCBD5E1),
                               ),
@@ -193,15 +233,11 @@ Future<void> _loginAdmin() async {
                                 Expanded(
                                   child: TextField(
                                     controller: _emailController,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
-                                    decoration:
-                                        const InputDecoration(
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: const InputDecoration(
                                       border: InputBorder.none,
-                                      hintText:
-                                          'admin@ministry.gov',
-                                      hintTextDirection:
-                                          TextDirection.ltr,
+                                      hintText: 'admin@ministry.gov',
+                                      hintTextDirection: TextDirection.ltr,
                                     ),
                                   ),
                                 ),
@@ -229,8 +265,7 @@ Future<void> _loginAdmin() async {
                             height: 56,
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius:
-                                  BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: const Color(0xFFCBD5E1),
                               ),
@@ -247,27 +282,22 @@ Future<void> _loginAdmin() async {
                                   child: TextField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
-                                    decoration:
-                                        const InputDecoration(
+                                    decoration: const InputDecoration(
                                       border: InputBorder.none,
-                                      hintText:
-                                          'أدخل كلمة المرور الخاصة بك',
+                                      hintText: 'أدخل كلمة المرور الخاصة بك',
                                     ),
                                   ),
                                 ),
                                 IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons
-                                            .visibility_off_outlined
+                                        ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
-                                    color:
-                                        const Color(0xFF64748B),
+                                    color: const Color(0xFF64748B),
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _obscurePassword =
-                                          !_obscurePassword;
+                                      _obscurePassword = !_obscurePassword;
                                     });
                                   },
                                 ),
@@ -282,14 +312,12 @@ Future<void> _loginAdmin() async {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed:
-                                  _isLoading ? null : _loginAdmin,
+                              onPressed: _isLoading ? null : _loginAdmin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryColor,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 2,
                               ),
@@ -297,8 +325,7 @@ Future<void> _loginAdmin() async {
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child:
-                                          CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         color: Colors.white,
                                       ),
@@ -324,15 +351,14 @@ Future<void> _loginAdmin() async {
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Color(0xFF64748B),
-                                decoration:
-                                    TextDecoration.underline,
+                                decoration: TextDecoration.underline,
                               ),
                             ),
                           ),
 
                           const SizedBox(height: 16),
 
-                          // هنا النص الجديد
+                          // إنشاء حساب مسؤول جديد
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -345,7 +371,8 @@ Future<void> _loginAdmin() async {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushNamed(context, '/admin-register');
+                                  Navigator.pushNamed(
+                                      context, '/admin-register');
                                 },
                                 child: const Text(
                                   'إنشاء حساب جديد',
@@ -373,4 +400,3 @@ Future<void> _loginAdmin() async {
     );
   }
 }
-

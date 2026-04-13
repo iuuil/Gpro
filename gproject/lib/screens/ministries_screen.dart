@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field, prefer_final_fields, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'main_shell_screen.dart';
 
 class MinistriesScreen extends StatefulWidget {
   const MinistriesScreen({super.key});
@@ -64,14 +65,12 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       setState(() {
-        _filteredMinistries =
-            List<Map<String, String>>.from(_allMinistries);
+        _filteredMinistries = List<Map<String, String>>.from(_allMinistries);
       });
     } else {
       setState(() {
-        _filteredMinistries = _allMinistries
-            .where((m) => m['name']!.contains(query))
-            .toList();
+        _filteredMinistries =
+            _allMinistries.where((m) => m['name']!.contains(query)).toList();
       });
     }
   }
@@ -87,39 +86,57 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
+        backgroundColor: const Color(0xFFF6F7F8),
         body: SafeArea(
           child: Column(
             children: [
-              // AppBar
+              // هيدر
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9F9F9).withOpacity(0.9),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     SizedBox(
-                      height: 48,
-                      width: 48,
+                      height: 40,
+                      width: 40,
                       child: IconButton(
                         onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/main-shell',
-                            (route) => false,
-                          );
+                          // أولاً نحاول نغيّر التاب داخل MainShell لو كنا فيه
+                          final shell = MainShellScreen.of(context);
+                          if (shell != null) {
+                            // نرجع لتب الرئيسية داخل الشيل
+                            shell.setTab(0);
+                          } else {
+                            // لو مو داخل MainShell (مفتوحة كـ Route مستقل)
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop();
+                            } else {
+                              Navigator.of(context)
+                                  .pushReplacementNamed('/main-shell');
+                            }
+                          }
                         },
-                        style: IconButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          shape: const CircleBorder(),
-                          backgroundColor: Colors.transparent,
-                        ),
+                        padding: EdgeInsets.zero,
                         icon: const Icon(
-                          Icons.arrow_back_ios_new,
+                          Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF111827),
+                          color: Color(0xFF4B5563),
                         ),
                       ),
                     ),
@@ -130,28 +147,13 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 48,
-                      width: 48,
-                      child: IconButton(
-                        onPressed: () {
-                          // لاحقاً: صفحة مساعدة
-                        },
-                        style: IconButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          shape: const CircleBorder(),
-                          backgroundColor: Colors.transparent,
-                        ),
-                        icon: const Icon(
-                          Icons.help_outline,
-                          size: 24,
-                          color: Color(0xFF111827),
-                        ),
-                      ),
+                    const SizedBox(
+                      height: 40,
+                      width: 40,
                     ),
                   ],
                 ),
@@ -159,15 +161,14 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
 
               // حقل البحث
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Container(
                   height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFe5e7eb),
+                      color: const Color(0xFFE5E7EB),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -183,7 +184,7 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                       const Icon(
                         Icons.search,
                         color: Color(0xFF6B7280),
-                        size: 22,
+                        size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -205,13 +206,13 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
               Expanded(
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFe5e7eb),
+                        color: const Color(0xFFE5E7EB),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -223,8 +224,7 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                     ),
                     child: ListView.separated(
                       itemCount: _filteredMinistries.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(
+                      separatorBuilder: (context, index) => const Divider(
                         indent: 64,
                         height: 1,
                         color: Color(0xFFE5E7EB),
@@ -243,15 +243,16 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                               },
                             );
                           },
-                          child: Container(
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             child: Row(
                               children: [
                                 CircleAvatar(
                                   radius: 20,
-                                  backgroundColor:
-                                      const Color(0xFFE0E0E0),
+                                  backgroundColor: const Color(0xFFE0E7FF),
                                   backgroundImage: NetworkImage(
                                     ministry['logo']!,
                                   ),
@@ -261,12 +262,10 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                                   child: Text(
                                     ministry['name']!,
                                     maxLines: 1,
-                                    overflow:
-                                        TextOverflow.ellipsis,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight:
-                                          FontWeight.w500,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
                                       color: Color(0xFF111827),
                                     ),
                                   ),

@@ -17,13 +17,21 @@ dependencies:
   provider: ^6.1.2
   firebase_core: ^4.6.0
   firebase_auth: ^6.3.0
+  file_picker: ^5.2.0
   cloud_firestore: ^6.2.0
   google_maps_flutter: ^2.7.0
   google_maps_flutter_web: ^0.6.2
   geolocator: ^14.0.2
+  geocoding: ^2.2.0
 
   image_picker: ^1.0.0
   firebase_storage: 13.2.0
+
+  # التصدير
+  printing: ^5.13.1
+  pdf: ^3.10.7
+  excel: ^4.0.6
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:
@@ -32,7 +40,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: Cairo
-      fonts:
-        - asset: fonts/Cairo-Regular.ttf

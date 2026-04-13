@@ -3,11 +3,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'complaint_details_screen.dart';
+// استخدم الـ prefix لتجنب التداخل
+// ignore: library_prefixes
+import 'complaint_details_screen.dart' as DetailsScreen;
 
 class UserComplaintsListScreen extends StatelessWidget {
-  final String status; // 'pending' أو 'resolved'
-  final String title;  // عنوان الصفحة بالعربي
+  final String status;
+  final String title;
 
   const UserComplaintsListScreen({
     super.key,
@@ -48,9 +50,7 @@ class UserComplaintsListScreen extends StatelessWidget {
                 size: 20,
                 color: Color(0xFF4B5563),
               ),
-              onPressed: () {
-                Navigator.pop(context); // يرجع لصفحة الحساب
-              },
+              onPressed: () => Navigator.pop(context),
             ),
           ),
         ),
@@ -70,13 +70,10 @@ class UserComplaintsListScreen extends StatelessWidget {
                     .where('userId', isEqualTo: user.uid)
                     .where('status', isEqualTo: status)
                     .orderBy('createdAt', descending: true)
-                    .snapshots(), // [web:43][web:249][web:301]
+                    .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
@@ -109,31 +106,16 @@ class UserComplaintsListScreen extends StatelessWidget {
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                     itemCount: docs.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 10),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final doc = docs[index];
-                      final data = doc.data()
-                              as Map<String, dynamic>? ??
-                          {};
+                      final data = doc.data() as Map<String, dynamic>? ?? {};
 
-                      final title = (data['title'] as String?)
-                                      ?.trim()
-                                      .isNotEmpty ==
-                                  true
+                      final title = (data['title'] as String?)?.trim().isNotEmpty == true
                           ? data['title'] as String
-                          : (data['description'] as String? ??
-                                  'بدون عنوان')
-                              .toString();
-                      final createdAt = (data['createdAt']
-                              as Timestamp?)
-                          ?.toDate()
-                          .toString()
-                          .split(' ')
-                          .first;
-                      final lastUpdate = data['lastUpdate']
-                              as String? ??
-                          'لا توجد تحديثات متاحة حالياً.';
+                          : (data['description'] as String? ?? 'بدون عنوان').toString();
+                      final createdAt = (data['createdAt'] as Timestamp?)?.toDate().toString().split(' ').first;
+                      final lastUpdate = data['lastUpdate'] as String? ?? 'لا توجد تحديثات متاحة حالياً.';
 
                       return _ComplaintListTile(
                         complaintId: doc.id,
@@ -168,11 +150,11 @@ class _ComplaintListTile extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () {
+        // استخدم الـ prefix هنا
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                ComplaintDetailsScreen(complaintId: complaintId),
+            builder: (_) => DetailsScreen.ComplaintDetailsScreen(complaintId: complaintId),
           ),
         );
       },
@@ -193,7 +175,6 @@ class _ComplaintListTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // العنوان
             Text(
               title,
               style: const TextStyle(
@@ -203,8 +184,6 @@ class _ComplaintListTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-
-            // التاريخ
             Row(
               children: [
                 const Icon(
@@ -223,8 +202,6 @@ class _ComplaintListTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-
-            // آخر تحديث
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

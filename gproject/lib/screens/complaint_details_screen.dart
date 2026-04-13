@@ -14,28 +14,24 @@ class ComplaintDetailsScreen extends StatelessWidget {
 
   static const Color brandBlue = Color(0xFF4A76B8);
   static const Color brandLightBlue = Color(0xFFA3BCE0);
-  static const Color bgGray = Color(0xFFF8F9FA);
+  static const Color bgGray = Color(0xFFF3F4F6);
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF3F4F6),
+        backgroundColor: bgGray,
         body: SafeArea(
           child: Column(
             children: [
-              // الهيدر مع سهم رجوع
+              // الهيدر
               Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   border: Border(
-                    bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
-                    ),
+                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
                   ),
                 ),
                 child: Row(
@@ -88,12 +84,24 @@ class ComplaintDetailsScreen extends StatelessWidget {
 
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text(
-                          'حدث خطأ أثناء جلب بيانات الشكوى: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFFB91C1C),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFDC2626)),
+                            ),
+                            child: Text(
+                              'حدث خطأ أثناء جلب بيانات الشكوى:\n${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFFB91C1C),
+                                height: 1.5,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -101,11 +109,15 @@ class ComplaintDetailsScreen extends StatelessWidget {
 
                     if (!snapshot.hasData || !snapshot.data!.exists) {
                       return const Center(
-                        child: Text(
-                          'لم يتم العثور على هذه الشكوى.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF6B7280),
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'لم يتم العثور على هذه الشكوى.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
                         ),
                       );
@@ -117,16 +129,14 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     final title =
                         (data['title'] as String?)?.trim().isNotEmpty == true
                             ? data['title'] as String
-                            : (data['description'] as String? ??
-                                    'بدون عنوان')
+                            : (data['description'] as String? ?? 'بدون عنوان')
                                 .toString();
                     final description =
                         (data['description'] as String? ?? '').toString();
                     final status =
                         (data['status'] as String? ?? 'pending').toString();
                     final ministry =
-                        (data['ministry'] as String? ?? 'غير محددة')
-                            .toString();
+                        (data['ministry'] as String? ?? 'غير محددة').toString();
                     final createdAt = (data['createdAt'] as Timestamp?)
                         ?.toDate()
                         .toString()
@@ -141,36 +151,73 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     final statusColor = _statusColorFromStatus(status);
 
                     return SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // نظرة عامة على الشكوى
-                          _buildComplaintOverviewSection(
-                            title: title,
-                            description: description,
-                            statusLabel: statusLabel,
-                            statusColor: statusColor,
-                            ministry: ministry,
-                            createdAt: createdAt,
+                          // كرت نظرة عامة
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: _buildComplaintOverviewSection(
+                              title: title,
+                              description: description,
+                              statusLabel: statusLabel,
+                              statusColor: statusColor,
+                              ministry: ministry,
+                              createdAt: createdAt,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE5E7EB)),
-                          const SizedBox(height: 16),
 
-                          // معلومات صاحب الشكوى
-                          _buildComplainantInfoSection(
-                            context: context,
-                            contactName: contactName,
-                            contactPhone: contactPhone,
+                          // كرت معلومات صاحب الشكوى
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: _buildComplainantInfoSection(
+                              context: context,
+                              contactName: contactName,
+                              contactPhone: contactPhone,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE5E7EB)),
-                          const SizedBox(height: 16),
 
-                          // ملاحظة (نص ثابت فقط)
-                          _buildInternalCommentsSection(),
+                          // كرت ملاحظة النظام
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: _buildInternalCommentsSection(),
+                          ),
                         ],
                       ),
                     );
@@ -213,25 +260,38 @@ class ComplaintDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text(
-                statusLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: statusColor,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        if (ministry.isNotEmpty)
+        if (ministry.isNotEmpty) ...[
           Row(
             children: [
               const Icon(
@@ -249,7 +309,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
-        const SizedBox(height: 4),
+          const SizedBox(height: 4),
+        ],
         if (createdAt != null)
           Row(
             children: [
@@ -277,12 +338,14 @@ class ComplaintDetailsScreen extends StatelessWidget {
             color: Color(0xFF4B5563),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.all(8),
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: const Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Text(
             description.isNotEmpty
@@ -295,7 +358,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         const Text(
           'المرفقات',
           style: TextStyle(
@@ -304,12 +367,32 @@ class ComplaintDetailsScreen extends StatelessWidget {
             color: Color(0xFF4B5563),
           ),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'لا توجد مرفقات مضافة لهذه الشكوى.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Color(0xFF9CA3AF),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: const Row(
+            children: [
+              Icon(
+                Icons.attach_file,
+                size: 16,
+                color: Color(0xFF9CA3AF),
+              ),
+              SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'لا توجد مرفقات مضافة لهذه الشكوى.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9CA3AF),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -335,58 +418,63 @@ class ComplaintDetailsScreen extends StatelessWidget {
             color: Color(0xFF1F2937),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Row(
           children: [
             const CircleAvatar(
-              radius: 28,
+              radius: 26,
               backgroundColor: brandLightBlue,
               child: Icon(
                 Icons.person,
-                size: 28,
+                size: 26,
                 color: Colors.white,
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasName ? contactName : 'مستخدم التطبيق',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (hasPhone)
-                  Row(
-                    children: [
-                      const Icon(Icons.phone_in_talk_outlined,
-                          size: 12, color: Color(0xFF6B7280)),
-                      const SizedBox(width: 4),
-                      Text(
-                        contactPhone,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  const Text(
-                    'لم يقم المستخدم بإدخال رقم هاتف.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF9CA3AF),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasName ? contactName : 'مستخدم التطبيق',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
                     ),
                   ),
-              ],
+                  const SizedBox(height: 4),
+                  if (hasPhone)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.phone_in_talk_outlined,
+                          size: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          contactPhone,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    const Text(
+                      'لم يقم المستخدم بإدخال رقم هاتف.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -403,6 +491,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
+              padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             child: const Text(
               'عرض الملف الشخصي',
@@ -430,11 +519,12 @@ class ComplaintDetailsScreen extends StatelessWidget {
             color: Color(0xFF1F2937),
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 10),
         _InternalCommentCard(
           author: 'النظام',
           datetime: '—',
-          text: 'تم تسجيل الشكوى في النظام، بانتظار اتخاذ إجراء من الجهة المختصة.',
+          text:
+              'تم تسجيل الشكوى في النظام، بانتظار اتخاذ إجراء من الجهة المختصة.',
         ),
       ],
     );
@@ -483,12 +573,14 @@ class _InternalCommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-          const EdgeInsets.only(right: 10, left: 8, top: 6, bottom: 6),
+      padding: const EdgeInsets.only(right: 10, left: 8, top: 8, bottom: 8),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          right: BorderSide(color: ComplaintDetailsScreen.brandBlue, width: 3),
+          right: BorderSide(
+            color: ComplaintDetailsScreen.brandBlue,
+            width: 3,
+          ),
         ),
       ),
       child: Column(
@@ -502,6 +594,7 @@ class _InternalCommentCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
                 ),
               ),
               Text(
@@ -519,6 +612,7 @@ class _InternalCommentCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF4B5563),
+              height: 1.4,
             ),
           ),
         ],

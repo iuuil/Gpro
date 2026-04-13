@@ -8,23 +8,33 @@ import 'settings_screen.dart';
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
 
+  // حتى نقدر نغيّر التاب من أي صفحة داخلية
+  // ignore: library_private_types_in_public_api
+  static _MainShellScreenState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_MainShellScreenState>();
+  }
+
   @override
   State<MainShellScreen> createState() => _MainShellScreenState();
 }
+
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
 
-  // الصفحات المرتبطة بتبويبات الشريط
   final List<Widget> _pages = [
-    const HomeScreen(),                 // 0: الرئيسية
-    const MinistriesScreen(),                // 1: الوزارات
-    const ComplaintsCenterScreen(),     // 2: الشكاوى
-    // const ComplaintScreen(),          
-    const SettingsScreen(),              // 3: الإعدادات
-    const ProfileScreen(),              // 4: الحساب
+    const HomeScreen(),               // 0: الرئيسية
+    const MinistriesScreen(),         // 1: الوزارات
+    const ComplaintsCenterScreen(),   // 2: الشكاوى
+    const SettingsScreen(),           // 3: الإعدادات
+    const ProfileScreen(),            // 4: الحساب
   ];
 
   void _onBottomNavTap(int index) {
+    setState(() => _currentIndex = index);
+  }
+
+  // نستخدمها من الصفحات الداخلية لتغيير التبويب
+  void setTab(int index) {
     setState(() => _currentIndex = index);
   }
 
@@ -70,4 +80,3 @@ class _MainShellScreenState extends State<MainShellScreen> {
     );
   }
 }
-

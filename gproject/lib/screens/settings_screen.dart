@@ -61,6 +61,90 @@ class SettingsScreen extends StatelessWidget {
     };
   }
 
+  Future<void> _showAboutDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'حول التطبيق',
+            textDirection: TextDirection.rtl,
+          ),
+          content: const Text(
+            'تطبيق صوت المواطن يسهّل على المواطنين تقديم الشكاوى والمتابعة مع الجهات الحكومية المختصة بطريقة منظمة وآمنة، مع عرض حالة الشكوى وتحديثاتها بشكل مستمر.',
+            textDirection: TextDirection.rtl,
+          ),
+          actionsAlignment: MainAxisAlignment.end,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('حسنًا'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showPrivacyDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'سياسة الخصوصية',
+            textDirection: TextDirection.rtl,
+          ),
+          content: const Text(
+            'نقوم باستخدام بياناتك لتقديم خدمة تقديم الشكاوى فقط، ولا نشارك معلوماتك الشخصية مع أي جهة غير مخوّلة. قد نستخدم بعض البيانات الإحصائية لتحسين أداء التطبيق وتجربة المستخدم دون الكشف عن هويتك.',
+            textDirection: TextDirection.rtl,
+          ),
+          actionsAlignment: MainAxisAlignment.end,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('حسنًا'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showTermsDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'شروط الخدمة',
+            textDirection: TextDirection.rtl,
+          ),
+          content: const Text(
+            'باستخدامك لتطبيق صوت المواطن، فإنك تتعهد بإدخال بيانات صحيحة وتجنّب تقديم بلاغات كيدية أو مضللة. يحتفظ فريق التطبيق بحق مراجعة أو إلغاء أي شكوى مخالفة والقيام بالتعديلات اللازمة على الخدمة متى ما دعت الحاجة.',
+            textDirection: TextDirection.rtl,
+          ),
+          actionsAlignment: MainAxisAlignment.end,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('حسنًا'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>?>(
@@ -68,13 +152,15 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, snapshot) {
         final data = snapshot.data;
 
-        final displayName = (data?['fullName'] as String?)?.trim().isNotEmpty == true
-            ? data!['fullName'] as String
-            : 'مستخدم التطبيق';
+        final displayName =
+            (data?['fullName'] as String?)?.trim().isNotEmpty == true
+                ? data!['fullName'] as String
+                : 'مستخدم التطبيق';
 
-        final email = (data?['email'] as String?)?.trim().isNotEmpty == true
-            ? data!['email'] as String
-            : 'no-email@example.com';
+        final email =
+            (data?['email'] as String?)?.trim().isNotEmpty == true
+                ? data!['email'] as String
+                : 'no-email@example.com';
 
         final photoUrl = (data?['photoUrl'] as String?) ?? '';
 
@@ -87,8 +173,8 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   // Header
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -145,7 +231,8 @@ class SettingsScreen extends StatelessWidget {
 
                           // Profile Quick View
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
                                 Stack(
@@ -163,7 +250,8 @@ class SettingsScreen extends StatelessWidget {
                                         ),
                                         image: photoUrl.isNotEmpty
                                             ? DecorationImage(
-                                                image: NetworkImage(photoUrl),
+                                                image:
+                                                    NetworkImage(photoUrl),
                                                 fit: BoxFit.cover,
                                               )
                                             : null,
@@ -224,7 +312,8 @@ class SettingsScreen extends StatelessWidget {
                           // إعدادات الحساب
                           const _SectionHeader(title: 'إعدادات الحساب'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -234,7 +323,8 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color:
+                                        Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -268,12 +358,13 @@ class SettingsScreen extends StatelessWidget {
                             ),
                           ),
 
-                          // const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
                           // إعدادات التطبيق
-                          /* const _SectionHeader(title: 'إعدادات التطبيق'),
+                          const _SectionHeader(title: 'إعدادات التطبيق'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -283,7 +374,8 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color:
+                                        Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -291,19 +383,126 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               child: Column(
                                 children: [
-                                  // هنا كان كود اللغة + الديفيدر + كود الوضع الليلي
-                                  // كله نحذفه ونخلي العمود فاضي أو تضيف إعدادات ثانية لاحقاً
+                                  // اللغة (قائمة منسدلة)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 10),
+                                    child: Row(
+                                      children: [
+                                        const _IconBox(
+                                          icon: Icons.language,
+                                          bgColor: Color(0x1F137FEC),
+                                          iconColor: SettingsScreen.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: const [
+                                              Text(
+                                                'اللغة',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight:
+                                                      FontWeight.w500,
+                                                  color: Color(0xFF0F172A),
+                                                ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                'العربية',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF6B7280),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const _LanguageDropdown(),
+                                      ],
+                                    ),
+                                  ),
+                                  const Divider(
+                                    height: 1,
+                                    color: Color(0xFFE5E7EB),
+                                  ),
+                                  // الوضع الليلي (سويتش شكلي)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 10),
+                                    child: Row(
+                                      children: [
+                                        const _IconBox(
+                                          icon:
+                                              Icons.dark_mode_outlined,
+                                          bgColor: Color(0x1F137FEC),
+                                          iconColor:
+                                              SettingsScreen.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Expanded(
+                                          child: Text(
+                                            'الوضع الليلي',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight:
+                                                  FontWeight.w500,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: 44,
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                                    999),
+                                            color:
+                                                const Color(0xFFE5E7EB),
+                                          ),
+                                          alignment:
+                                              Alignment.centerLeft,
+                                          padding:
+                                              const EdgeInsets.only(
+                                                  left: 3, right: 3),
+                                          child: Container(
+                                            width: 18,
+                                            height: 18,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      999),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 3,
+                                                  offset: const Offset(
+                                                      0, 1),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                          ), */
+                          ),
 
                           const SizedBox(height: 24),
 
                           // معلومات
                           const _SectionHeader(title: 'معلومات'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -313,30 +512,35 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color:
+                                        Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              child: const Column(
+                              child: Column(
                                 children: [
                                   _SettingsTile(
                                     icon: Icons.info_outline,
-                                    iconBgColor: Color(0x1F137FEC),
+                                    iconBgColor: const Color(0x1F137FEC),
                                     title: 'حول التطبيق',
                                     showDivider: true,
+                                    onTap: () => _showAboutDialog(context),
                                   ),
                                   _SettingsTile(
-                                    icon: Icons.verified_user_outlined,
-                                    iconBgColor: Color(0x1F137FEC),
+                                    icon:
+                                        Icons.verified_user_outlined,
+                                    iconBgColor: const Color(0x1F137FEC),
                                     title: 'سياسة الخصوصية',
                                     showDivider: true,
+                                    onTap: () => _showPrivacyDialog(context),
                                   ),
                                   _SettingsTile(
                                     icon: Icons.description_outlined,
-                                    iconBgColor: Color(0x1F137FEC),
+                                    iconBgColor: const Color(0x1F137FEC),
                                     title: 'شروط الخدمة',
+                                    onTap: () => _showTermsDialog(context),
                                   ),
                                 ],
                               ),
@@ -347,7 +551,8 @@ class SettingsScreen extends StatelessWidget {
 
                           // زر تسجيل الخروج
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
                             child: SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(
@@ -372,7 +577,8 @@ class SettingsScreen extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 12),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius:
+                                        BorderRadius.circular(16),
                                   ),
                                 ),
                               ),
@@ -477,7 +683,8 @@ class _SettingsTile extends StatelessWidget {
     final tile = InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
             _IconBox(
@@ -515,6 +722,91 @@ class _SettingsTile extends StatelessWidget {
           color: Color(0xFFE5E7EB),
         ),
       ],
+    );
+  }
+}
+
+class _LanguageDropdown extends StatefulWidget {
+  // ignore: use_super_parameters
+  const _LanguageDropdown({Key? key}) : super(key: key);
+
+  @override
+  State<_LanguageDropdown> createState() => _LanguageDropdownState();
+}
+
+class _LanguageDropdownState extends State<_LanguageDropdown> {
+  String _selected = 'العربية';
+
+  final List<String> _items = [
+    'العربية',
+    'English',
+    'Español',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: _selected,
+        icon: const Icon(
+          Icons.expand_more,
+          color: Color(0xFF9CA3AF),
+        ),
+        style: const TextStyle(
+          fontSize: 13,
+          color: Color(0xFF0F172A),
+        ),
+        borderRadius: BorderRadius.circular(12),
+        dropdownColor: Colors.white,
+        items: _items.map((lang) {
+          return DropdownMenuItem<String>(
+            value: lang,
+            child: Text(lang),
+          );
+        }).toList(),
+        onChanged: (value) async {
+          if (value == null) return;
+
+          setState(() {
+            _selected = value;
+          });
+
+          if (value == 'English' || value == 'Español') {
+            await showDialog(
+              context: context,
+              builder: (ctx) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: const Text(
+                    'اللغة غير متوفرة',
+                    textDirection: TextDirection.rtl,
+                  ),
+                  content: const Text(
+                    'سيتم إضافة هذه اللغة قريبًا في التحديثات القادمة.',
+                    textDirection: TextDirection.rtl,
+                  ),
+                  actionsAlignment: MainAxisAlignment.end,
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                      },
+                      child: const Text('حسنًا'),
+                    ),
+                  ],
+                );
+              },
+            );
+
+            // نرجّع الاختيار إلى العربية بعد إغلاق التنبيه
+            setState(() {
+              _selected = 'العربية';
+            });
+          }
+        },
+      ),
     );
   }
 }

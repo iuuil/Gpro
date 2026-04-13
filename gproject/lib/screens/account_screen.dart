@@ -35,6 +35,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _phoneController = TextEditingController();
   final _nationalIdController = TextEditingController();
 
+  // حقول تغيير كلمة المرور
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   Map<String, dynamic> _userData = {};
   UserComplaintStats? _stats;
 
@@ -44,11 +51,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _nationalIdController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  // Alert منسق بزر "حسنًا"
+  Future<void> _showAlert(String message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF111827),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'حسنًا',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // تحقق من قوة كلمة المرور (حروف + أرقام + رموز، على الأقل 6)
+  bool _isStrongPassword(String password) {
+    if (password.length < 6) return false;
+    final hasLetter = password.contains(RegExp(r'[A-Za-z]'));
+    final hasDigit = password.contains(RegExp(r'[0-9]'));
+    final hasSpecial =
+        password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>_\-]'));
+    return hasLetter && hasDigit && hasSpecial;
+  }
+
   Future<UserComplaintStats> _loadUserStats(String uid) async {
-    final complaintsRef = FirebaseFirestore.instance.collection('complaints');
+    final complaintsRef =
+        FirebaseFirestore.instance.collection('complaints');
 
     final activeSnap = await complaintsRef
         .where('userId', isEqualTo: uid)
@@ -83,12 +141,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // الاسم: من users.fullName ثم displayName ثم جزء الإيميل
     _fullNameController.text =
         (data['fullName'] as String?) ??
-        (authUser?.displayName) ??
-        (authUser?.email?.split('@').first ?? '');
+            (authUser?.displayName) ??
+            (authUser?.email?.split('@').first ?? '');
 
     _emailController.text =
         (data['email'] as String? ?? authUser?.email ?? '').toString();
-    _phoneController.text = (data['phone'] as String? ?? '').toString();
+    _phoneController.text =
+        (data['phone'] as String? ?? '').toString();
     _nationalIdController.text =
         (data['nationalId'] as String? ?? '').toString();
 
@@ -98,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     };
   }
 
-  Future<void> _saveProfile(String uid) async {
+  Future<void> _saveProfileAndPassword(String uid) async {
     setState(() {
       _isSaving = true;
     });
@@ -109,7 +168,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final phone = _phoneController.text.trim();
       final nationalId = _nationalIdController.text.trim();
 
-      // تحديث Firestore (إنشاء أو تحديث)
+      final currentPassword = _currentPasswordController.text.trim();
+      final newPassword = _newPasswordController.text.trim();
+      final confirmPassword = _confirmPasswordController.text.trim();
+
+      if (fullName.isEmpty ||
+          email.isEmpty ||
+          phone.isEmpty ||
+          nationalId.isEmpty) {
+        await _showAlert('يرجى ملء جميع الحقول قبل الحفظ');
+        return;
+      }
+
+      final wantsToChangePassword =
+          currentPassword.isNotEmpty ||
+          newPassword.isNotEmpty ||
+          confirmPassword.isNotEmpty;
+
+      if (wantsToChangePassword) {
+        if (currentPassword.isEmpty ||
+            newPassword.isEmpty ||
+            confirmPassword.isEmpty) {
+          await _showAlert(
+            'يرجى ملء حقول كلمة المرور الثلاثة لتغيير كلمة المرور',
+          );
+          return;
+        }
+
+        if (newPassword != confirmPassword) {
+          await _showAlert(
+            'كلمة المرور الجديدة وتأكيدها غير متطابقتين',
+          );
+          return;
+        }
+
+        if (!_isStrongPassword(newPassword)) {
+          await _showAlert(
+            'يجب أن تتكون كلمة المرور الجديدة من حروف وأرقام ورموز، وألا تقل عن 6 أحرف.',
+          );
+          return;
+        }
+      }
+
+      // تحديث Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -123,16 +224,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SetOptions(merge: true),
       );
 
-      // تحديث FirebaseAuth displayName (والإيميل اختيارياً)
+      // تحديث FirebaseAuth (الاسم + كلمة المرور إن لزم)
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         if (fullName.isNotEmpty && fullName != user.displayName) {
           await user.updateDisplayName(fullName);
         }
-        // لو حاب تسمح للمستخدم يغير الإيميل من البروفايل:
-        // if (email.isNotEmpty && email != user.email) {
-        //   await user.updateEmail(email);
-        // }
+
+        if (wantsToChangePassword) {
+          final credential = EmailAuthProvider.credential(
+            email: user.email ?? email,
+            password: currentPassword,
+          );
+
+          try {
+            await user.reauthenticateWithCredential(credential);
+          } on FirebaseAuthException catch (e) {
+            if (e.code == 'wrong-password' ||
+                e.code == 'invalid-credential') {
+              await _showAlert(
+                'كلمة المرور الحالية غير صحيحة، يرجى المحاولة مرة أخرى',
+              );
+              return;
+            } else {
+              await _showAlert(
+                'خطأ في التحقق من كلمة المرور: ${e.message}',
+              );
+              return;
+            }
+          }
+
+          await user.updatePassword(newPassword);
+
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+        }
+
         await user.reload();
       }
 
@@ -141,18 +269,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم حفظ الملف الشخصي بنجاح'),
-        ),
+      await _showAlert(
+        'تم حفظ الملف الشخصي'
+        '${wantsToChangePassword ? ' وتغيير كلمة المرور بنجاح' : ' بنجاح'}',
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ أثناء الحفظ: $e'),
-        ),
-      );
+      await _showAlert('حدث خطأ أثناء الحفظ: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -160,6 +283,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/main-shell',
+      (route) => false,
+    );
   }
 
   @override
@@ -173,15 +306,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // Header
+              // الهيدر بدون أيقونة الإعدادات + شادو بسيط مثل باقي الصفحات
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   border: Border(
                     bottom: BorderSide(color: Color(0xFFE5E7EB)),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -215,24 +357,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(
+                    // مكان أيقونة الإعدادات سابقًا (فراغ للحفاظ على الترتيب)
+                    const SizedBox(
                       height: 40,
                       width: 40,
-                      child: IconButton(
-                        onPressed: () {},
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.settings,
-                          size: 22,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
 
-              // المحتوى
+              // المحتوى + الأزرار المثبتة أسفل الصفحة
               Expanded(
                 child: user == null
                     ? const Center(
@@ -302,483 +436,634 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           final activeComplaints = stats.activeCount;
                           final resolvedComplaints = stats.resolvedCount;
 
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                // Profile section
-                                Padding(
-                                  padding: const EdgeInsets.all(24),
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.only(bottom: 24),
                                   child: Column(
                                     children: [
-                                      Stack(
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          Container(
-                                            width: 120,
-                                            height: 120,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 4,
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.08),
-                                                  blurRadius: 6,
-                                                  offset:
-                                                      const Offset(0, 3),
+                                      // Profile section
+                                      Padding(
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                          children: [
+                                            Stack(
+                                              clipBehavior: Clip.none,
+                                              children: [
+                                                Container(
+                                                  width: 120,
+                                                  height: 120,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                      color: Colors.white,
+                                                      width: 4,
+                                                    ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.08),
+                                                        blurRadius: 6,
+                                                        offset:
+                                                            const Offset(0, 3),
+                                                      ),
+                                                    ],
+                                                    color: const Color(
+                                                        0xFFD1D5DB),
+                                                    image: avatarUrl.isNotEmpty
+                                                        ? DecorationImage(
+                                                            image:
+                                                                NetworkImage(
+                                                              avatarUrl,
+                                                            ),
+                                                            fit: BoxFit.cover,
+                                                          )
+                                                        : null,
+                                                  ),
+                                                  child: avatarUrl.isEmpty
+                                                      ? const Icon(
+                                                          Icons.person,
+                                                          size: 60,
+                                                          color: Colors.white,
+                                                        )
+                                                      : null,
+                                                ),
+                                                Positioned(
+                                                  bottom: 0,
+                                                  right: 0,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            6),
+                                                    decoration: BoxDecoration(
+                                                      color: ProfileScreen
+                                                          .primary,
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: Colors.white,
+                                                        width: 2,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.15),
+                                                          blurRadius: 4,
+                                                          offset:
+                                                              const Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.photo_camera,
+                                                      size: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
                                                 ),
                                               ],
-                                              color:
-                                                  const Color(0xFFD1D5DB),
-                                              image: avatarUrl.isNotEmpty
-                                                  ? DecorationImage(
-                                                      image: NetworkImage(
-                                                        avatarUrl,
-                                                      ),
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : null,
                                             ),
-                                            child: avatarUrl.isEmpty
-                                                ? const Icon(
-                                                    Icons.person,
-                                                    size: 60,
-                                                    color: Colors.white,
-                                                  )
-                                                : null,
-                                          ),
-                                          Positioned(
-                                            bottom: 0,
-                                            right: 0,
-                                            child: Container(
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              fullName,
+                                              style: const TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF0F172A),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              city,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Color(0xFF6B7280),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // ملخص الشكاوى
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 4,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 4),
+                                              child: Text(
+                                                'ملخص الشكاوى',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.8,
+                                                  color: Color(0xFF0F172A),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                // الشكاوى النشطة
+                                                Expanded(
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) =>
+                                                              const UserComplaintsListScreen(
+                                                            status: 'pending',
+                                                            title:
+                                                                'الشكاوى النشطة',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              16),
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        border: Border.all(
+                                                          color: const Color(
+                                                              0xFFE5E7EB),
+                                                        ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.03),
+                                                            blurRadius: 4,
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          const Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons
+                                                                    .pending_actions,
+                                                                color: Color(
+                                                                    0xFFF59E0B),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 6),
+                                                              Text(
+                                                                'الشكاوى النشطة',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 13,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  color: Color(
+                                                                      0xFF6B7280),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 6),
+                                                          Text(
+                                                            activeComplaints
+                                                                .toString(),
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 26,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: Color(
+                                                                  0xFF0F172A),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                // الشكاوى المكتملة
+                                                Expanded(
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) =>
+                                                              const UserComplaintsListScreen(
+                                                            status: 'resolved',
+                                                            title:
+                                                                'الشكاوى المكتملة',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              16),
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        border: Border.all(
+                                                          color: const Color(
+                                                              0xFFE5E7EB),
+                                                        ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.03),
+                                                            blurRadius: 4,
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          const Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons.task_alt,
+                                                                color: Color(
+                                                                    0xFF10B981),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 6),
+                                                              Text(
+                                                                'الشكاوى المكتملة',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 13,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  color: Color(
+                                                                      0xFF6B7280),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 6),
+                                                          Text(
+                                                            resolvedComplaints
+                                                                .toString(),
+                                                            style:
+                                                                const TextStyle(
+                                                              fontSize: 26,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: Color(
+                                                                  0xFF0F172A),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 12),
+
+                                      // المعلومات الشخصية
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 4,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 4),
+                                              child: Text(
+                                                'المعلومات الشخصية',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.8,
+                                                  color: Color(0xFF0F172A),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Container(
                                               padding:
-                                                  const EdgeInsets.all(6),
+                                                  const EdgeInsets.all(16),
                                               decoration: BoxDecoration(
-                                                color:
-                                                    ProfileScreen.primary,
-                                                shape: BoxShape.circle,
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
                                                 border: Border.all(
-                                                  color: Colors.white,
-                                                  width: 2,
+                                                  color: const Color(
+                                                      0xFFE5E7EB),
                                                 ),
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.15),
+                                                        .withOpacity(0.03),
                                                     blurRadius: 4,
                                                     offset:
                                                         const Offset(0, 2),
                                                   ),
                                                 ],
                                               ),
-                                              child: const Icon(
-                                                Icons.photo_camera,
-                                                size: 16,
-                                                color: Colors.white,
+                                              child: Column(
+                                                children: [
+                                                  _ProfileField(
+                                                    label: 'الاسم الكامل',
+                                                    icon: Icons.person,
+                                                    controller:
+                                                        _fullNameController,
+                                                    keyboardType:
+                                                        TextInputType.text,
+                                                    enabled: _isEditing,
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  _ProfileField(
+                                                    label: 'البريد الإلكتروني',
+                                                    icon: Icons.mail_outline,
+                                                    controller:
+                                                        _emailController,
+                                                    keyboardType:
+                                                        TextInputType
+                                                            .emailAddress,
+                                                    enabled: _isEditing,
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  _ProfileField(
+                                                    label: 'رقم الهاتف',
+                                                    icon: Icons.call,
+                                                    controller:
+                                                        _phoneController,
+                                                    keyboardType:
+                                                        TextInputType.phone,
+                                                    ltr: true,
+                                                    enabled: _isEditing,
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  _ProfileField(
+                                                    label:
+                                                        'رقم البطاقة الوطنية',
+                                                    icon: Icons
+                                                        .badge_outlined,
+                                                    controller:
+                                                        _nationalIdController,
+                                                    keyboardType:
+                                                        TextInputType.number,
+                                                    ltr: true,
+                                                    enabled: _isEditing,
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        fullName,
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0F172A),
+                                          ],
                                         ),
-                                        textAlign: TextAlign.center,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        city,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Color(0xFF6B7280),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
 
-                                // ملخص الشكاوى
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 4),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 4),
-                                        child: Text(
-                                          'ملخص الشكاوى',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.8,
-                                            color: Color(0xFF0F172A),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          // الشكاوى النشطة
-                                          Expanded(
-                                            child: InkWell(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      16),
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const UserComplaintsListScreen(
-                                                      status: 'pending',
-                                                      title:
-                                                          'الشكاوى النشطة',
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(
-                                                        16),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          16),
-                                                  border: Border.all(
-                                                    color: const Color(
-                                                        0xFFE5E7EB),
-                                                  ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(
-                                                              0.03),
-                                                      blurRadius: 4,
-                                                      offset:
-                                                          const Offset(
-                                                              0, 2),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .start,
-                                                  children: [
-                                                    const Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons
-                                                              .pending_actions,
-                                                          color: Color(
-                                                              0xFFF59E0B),
-                                                        ),
-                                                        SizedBox(
-                                                            width: 6),
-                                                        Text(
-                                                          'الشكاوى النشطة',
-                                                          style:
-                                                              TextStyle(
-                                                            fontSize: 13,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500,
-                                                            color: Color(
-                                                                0xFF6B7280),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(
-                                                        height: 6),
-                                                    Text(
-                                                      activeComplaints
-                                                          .toString(),
-                                                      style:
-                                                          const TextStyle(
-                                                        fontSize: 26,
-                                                        fontWeight:
-                                                            FontWeight
-                                                                .w700,
-                                                        color: Color(
-                                                            0xFF0F172A),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          // الشكاوى المكتملة
-                                          Expanded(
-                                            child: InkWell(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      16),
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const UserComplaintsListScreen(
-                                                      status: 'resolved',
-                                                      title:
-                                                          'الشكاوى المكتملة',
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(
-                                                        16),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          16),
-                                                  border: Border.all(
-                                                    color: const Color(
-                                                        0xFFE5E7EB),
-                                                  ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(
-                                                              0.03),
-                                                      blurRadius: 4,
-                                                      offset:
-                                                          const Offset(
-                                                              0, 2),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .start,
-                                                  children: [
-                                                    const Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.task_alt,
-                                                          color: Color(
-                                                              0xFF10B981),
-                                                        ),
-                                                        SizedBox(
-                                                            width: 6),
-                                                        Text(
-                                                          'الشكاوى المكتملة',
-                                                          style:
-                                                              TextStyle(
-                                                            fontSize: 13,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w500,
-                                                            color: Color(
-                                                                0xFF6B7280),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(
-                                                        height: 6),
-                                                    Text(
-                                                      resolvedComplaints
-                                                          .toString(),
-                                                      style:
-                                                          const TextStyle(
-                                                        fontSize: 26,
-                                                        fontWeight:
-                                                            FontWeight
-                                                                .w700,
-                                                        color: Color(
-                                                            0xFF0F172A),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // المعلومات الشخصية (في وضع التعديل فقط)
-                                if (_isEditing)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 4),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 4),
-                                          child: Text(
-                                            'المعلومات الشخصية',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.8,
-                                              color: Color(0xFF0F172A),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Container(
+                                      // حقول كلمة المرور في وضع التعديل فقط
+                                      if (_isEditing) ...[
+                                        const SizedBox(height: 12),
+                                        Padding(
                                           padding:
-                                              const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                            border: Border.all(
-                                              color: const Color(
-                                                  0xFFE5E7EB),
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withOpacity(0.03),
-                                                blurRadius: 4,
-                                                offset:
-                                                    const Offset(0, 2),
-                                              ),
-                                            ],
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 4,
                                           ),
                                           child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              _ProfileField(
-                                                label: 'الاسم الكامل',
-                                                icon: Icons.person,
-                                                controller:
-                                                    _fullNameController,
-                                                keyboardType:
-                                                    TextInputType.text,
+                                              const Padding(
+                                                padding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 4),
+                                                child: Text(
+                                                  'تغيير كلمة المرور',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight:
+                                                        FontWeight.w700,
+                                                    letterSpacing: 0.8,
+                                                    color:
+                                                        Color(0xFF0F172A),
+                                                  ),
+                                                ),
                                               ),
-                                              const SizedBox(height: 12),
-                                              _ProfileField(
-                                                label: 'البريد الإلكتروني',
-                                                icon: Icons.mail_outline,
-                                                controller:
-                                                    _emailController,
-                                                keyboardType:
-                                                    TextInputType
-                                                        .emailAddress,
-                                              ),
-                                              const SizedBox(height: 12),
-                                              _ProfileField(
-                                                label: 'رقم الهاتف',
-                                                icon: Icons.call,
-                                                controller:
-                                                    _phoneController,
-                                                keyboardType:
-                                                    TextInputType.phone,
-                                                ltr: true,
-                                              ),
-                                              const SizedBox(height: 12),
-                                              _ProfileField(
-                                                label:
-                                                    'رقم البطاقة الوطنية',
-                                                icon:
-                                                    Icons.badge_outlined,
-                                                controller:
-                                                    _nationalIdController,
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                ltr: true,
+                                              const SizedBox(height: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          16),
+                                                  border: Border.all(
+                                                    color: const Color(
+                                                        0xFFE5E7EB),
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.03),
+                                                      blurRadius: 4,
+                                                      offset: const Offset(
+                                                          0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    _PasswordField(
+                                                      label:
+                                                          'كلمة المرور الحالية',
+                                                      icon: Icons
+                                                          .lock_outline,
+                                                      controller:
+                                                          _currentPasswordController,
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 12),
+                                                    _PasswordField(
+                                                      label:
+                                                          'كلمة المرور الجديدة',
+                                                      icon: Icons
+                                                          .lock_reset_outlined,
+                                                      controller:
+                                                          _newPasswordController,
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 12),
+                                                    _PasswordField(
+                                                      label:
+                                                          'تأكيد كلمة المرور الجديدة',
+                                                      icon: Icons
+                                                          .lock_outline,
+                                                      controller:
+                                                          _confirmPasswordController,
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ),
-
-                                const SizedBox(height: 20),
-
-                                // زر تعديل / حفظ الملف الشخصي
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: _isSaving
-                                          ? null
-                                          : () {
-                                              if (_isEditing) {
-                                                _saveProfile(user.uid);
-                                              } else {
-                                                setState(() {
-                                                  _isEditing = true;
-                                                });
-                                              }
-                                            },
-                                      icon: _isSaving
-                                          ? const SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Icon(
-                                              _isEditing
-                                                  ? Icons.save
-                                                  : Icons.edit,
-                                            ),
-                                      label: Text(
-                                        _isEditing
-                                            ? 'حفظ الملف الشخصي'
-                                            : 'تعديل الملف الشخصي',
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            ProfileScreen.primary,
-                                        foregroundColor: Colors.white,
-                                        padding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 14),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
-                                        elevation: 4,
-                                        shadowColor: ProfileScreen.primary
-                                            .withOpacity(0.3),
-                                      ),
-                                    ),
+                                    ],
                                   ),
                                 ),
+                              ),
 
-                                const SizedBox(height: 20),
-                              ],
-                            ),
+                              // الأزرار المثبتة أسفل الصفحة
+                              SafeArea(
+                                top: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    16,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed: _isSaving
+                                              ? null
+                                              : () {
+                                                  if (_isEditing) {
+                                                    _saveProfileAndPassword(
+                                                        user.uid);
+                                                  } else {
+                                                    setState(() {
+                                                      _isEditing = true;
+                                                    });
+                                                  }
+                                                },
+                                          icon: _isSaving
+                                              ? const SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white,
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  _isEditing
+                                                      ? Icons.save_outlined
+                                                      : Icons.edit_outlined,
+                                                ),
+                                          label: Text(
+                                            _isEditing
+                                                ? 'حفظ الملف الشخصي'
+                                                : 'تعديل الملف الشخصي',
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                ProfileScreen.primary,
+                                            foregroundColor: Colors.white,
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            elevation: 4,
+                                            shadowColor:
+                                                ProfileScreen.primary
+                                                    .withOpacity(0.3),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton.icon(
+                                          onPressed: _logout,
+                                          icon: const Icon(
+                                            Icons.logout,
+                                            color: Color(0xFFDC2626),
+                                          ),
+                                          label: const Text(
+                                            'تسجيل الخروج',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFFDC2626),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            side: const BorderSide(
+                                              color: Color(0xFFDC2626),
+                                            ),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -797,6 +1082,7 @@ class _ProfileField extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType keyboardType;
   final bool ltr;
+  final bool enabled;
 
   const _ProfileField({
     required this.label,
@@ -804,12 +1090,14 @@ class _ProfileField extends StatelessWidget {
     required this.controller,
     required this.keyboardType,
     this.ltr = false,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -824,13 +1112,18 @@ class _ProfileField extends StatelessWidget {
           children: [
             TextField(
               controller: controller,
+              enabled: enabled,
               keyboardType: keyboardType,
-              textDirection: ltr ? TextDirection.ltr : TextDirection.rtl,
+              textDirection:
+                  ltr ? TextDirection.ltr : TextDirection.rtl,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 12),
+                  horizontal: 40,
+                  vertical: 12,
+                ),
                 filled: true,
-                fillColor: const Color(0xFFF9FAFB),
+                fillColor:
+                    enabled ? const Color(0xFFF9FAFB) : const Color(0xFFF3F4F6),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide:
@@ -838,8 +1131,9 @@ class _ProfileField extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: ProfileScreen.primary),
+                  borderSide: const BorderSide(
+                    color: ProfileScreen.primary,
+                  ),
                 ),
               ),
             ),
@@ -849,6 +1143,96 @@ class _ProfileField extends StatelessWidget {
               bottom: 0,
               child: Icon(
                 icon,
+                size: 20,
+                color: const Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PasswordField extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final TextEditingController controller;
+
+  const _PasswordField({
+    required this.label,
+    required this.icon,
+    required this.controller,
+  });
+
+  @override
+  State<_PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<_PasswordField> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Stack(
+          children: [
+            TextField(
+              controller: widget.controller,
+              obscureText: _obscure,
+              textDirection: TextDirection.ltr,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 12,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF9FAFB),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: ProfileScreen.primary,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscure
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    size: 18,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscure = !_obscure;
+                    });
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              left: 10,
+              top: 0,
+              bottom: 0,
+              child: Icon(
+                widget.icon,
                 size: 20,
                 color: const Color(0xFF9CA3AF),
               ),

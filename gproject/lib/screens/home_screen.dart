@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// ignore: unnecessary_import
-import 'package:flutter/foundation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   static const Color primaryColor = Color(0xFF137FEC);
+  static const Color backgroundLight = Color(0xFFF6F7F8);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -21,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _checkLoginState();
-    _testFirebase(); // اختبار Firebase
+    _testFirebase();
   }
 
   void _checkLoginState() {
@@ -33,9 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _testFirebase() async {
-    // ignore: avoid_print
-    print('🔥 _testFirebase called');
-
     try {
       await FirebaseFirestore.instance
           .collection('test')
@@ -44,13 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'time': DateTime.now().toIso8601String(),
         'source': 'home_screen',
       });
-
-      // ignore: avoid_print
-      print('✅ Firestore write success from HomeScreen');
-    } catch (e) {
-      // ignore: avoid_print
-      print('❌ Firestore error: $e');
-    }
+    } catch (_) {}
   }
 
   @override
@@ -64,112 +54,175 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: HomeScreen.backgroundLight,
         body: SafeArea(
           child: Column(
             children: [
-              // الجزء العلوي مع الصورة
-              Container(
-                height: 260,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      'https://lh3.googleusercontent.com/aida-public/AB6AXuClxssmMsvRhdxAjOf6-rwnyTxTKT8O8o8T1mpzLxghWmHlOm4EYovFyh0PIFv36IoFhAaRjXWGg7Yz88lhfi6u_tkgSyApQtwbhg_8wUCQ3QH4taXYmpc7V8IrYTlaILjcpLDgz721CSzNJ6Fq9tWx-YKCNWdLmTaAbgbnaHbbf6KUZ4aUpPyEYa-fH-JBaCJZlnczMDViSfe83FMW7pTj3_7k9zFERByUwcKmCdVATq2i_ePTECd11L07mKfbEnX9Dj_Fnn-8MIh4',
-                    ),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                      Colors.black54,
-                      BlendMode.darken,
-                    ),
+            // الهيدر العلوي مع العنوان وأكشن بسيط
+            // الهيدر العلوي مع العنوان
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Color(0xFFE5E7EB),
+                    width: 1,
                   ),
                 ),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  alignment: Alignment.bottomRight,
-                  child: const Text(
-                    'صوت المواطن',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'صوت المواطن',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF020617),
                   ),
                 ),
               ),
+            ),
 
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 8),
-                      const Text(
-                        'صوتك من أجل عراق أفضل',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0D141B),
+                      // بانر علوي (كرت كبير)
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(16),
+                          image: const DecorationImage(
+                            image: NetworkImage(
+                              'https://lh3.googleusercontent.com/aida-public/AB6AXuClxssmMsvRhdxAjOf6-rwnyTxTKT8O8o8T1mpzLxghWmHlOm4EYovFyh0PIFv36IoFhAaRjXWGg7Yz88lhfi6u_tkgSyApQtwbhg_8wUCQ3QH4taXYmpc7V8IrYTlaILjcpLDgz721CSzNJ6Fq9tWx-YKCNWdLmTaAbgbnaHbbf6KUZ4aUpPyEYa-fH-JBaCJZlnczMDViSfe83FMW7pTj3_7k9zFERByUwcKmCdVATq2i_ePTECd11L07mKfbEnX9Dj_Fnn-8MIh4',
+                            ),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(
+                              Colors.black54,
+                              BlendMode.darken,
+                            ),
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x22000000),
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'ربط المواطنين بالوزارات الحكومية لحل قضايا الخدمة العامة بكفاءة وشفافية.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF4C739A),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SizedBox(height: 8),
+                            Text(
+                              'صوت المواطن',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'منصّة رقمية لعرض شكاوى المواطنين وربطها بالوزارات الحكومية المختصة.',
+                              style: TextStyle(
+                                color: Color(0xFFE5E7EB),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      // نص ترحيبي
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'صوتك من أجل عراق أفضل',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'قدّم شكوى، بلّغ عن مشكلة خدمية، وساهم بتحسين أداء المؤسسات الحكومية.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                      const Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'كيف يعمل التطبيق',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0D141B),
+                      const SizedBox(height: 16),
+
+                      // عنوان كيف يعمل التطبيق
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        child: const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'ما الذي تريد القيام به؟',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF020617),
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
 
-                      // البطاقات
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          _FeatureCard(
-                            icon: Icons.edit_note,
-                            title: 'تقديم شكوى',
-                            description:
-                                'أنشئ وأرسل تقريراً مع التفاصيل والصور.',
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/education-complaint',
-                              );
-                            },
-                          ),
-                          _FeatureCard(
-                            icon: Icons.map_outlined,
-                            title: 'تقديم شكوى من الخريطة',
-                            description:
-                                'حدد موقع المشكلة على الخريطة أو أبلغ عن حادث مروري.',
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/map-report-screen',
-                              );
-                            },
-                          ),
-                        ],
+                      // كروت الميزات
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            _FeatureCard(
+                              icon: Icons.edit_note,
+                              title: 'تقديم شكوى',
+                              description:
+                                  'أنشئ وأرسل بلاغاً تفصيلياً مع وصف واضح وصور داعمة.',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/education-complaint',
+                                );
+                              },
+                            ),
+                            _FeatureCard(
+                              icon: Icons.map_outlined,
+                              title: 'تقديم شكوى من الخريطة',
+                              description:
+                                  'حدد موقع المشكلة على الخريطة أو أبلغ عن حادث مروري.',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/map-report-screen',
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 90),
@@ -178,17 +231,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // صناديق إنشاء الحساب / تسجيل الدخول إذا لم يكن مسجل
+              // شريط إنشاء حساب / تسجيل الدخول
               if (!_isLoggedIn)
                 Container(
                   decoration: BoxDecoration(
                     // ignore: deprecated_member_use
-                    color: const Color(0xFFF6F7F8).withOpacity(0.96),
+                    color: Colors.white.withOpacity(0.98),
                     border: const Border(
                       top: BorderSide(
                         color: Color(0xFFE5E7EB),
                       ),
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 6,
+                        offset: Offset(0, -2),
+                      ),
+                    ],
                   ),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 12),
@@ -212,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Text(
                             'إنشاء حساب',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -237,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Text(
                             'تسجيل الدخول',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -250,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Text(
                           'تسجيل الدخول كمسؤول',
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: 14,
                             color: Color(0xFF137FEC),
                             decoration: TextDecoration.underline,
                             fontWeight: FontWeight.w600,
@@ -293,15 +353,22 @@ class _FeatureCard extends StatelessWidget {
       height: 150,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF6F7F8),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFCFDBE7),
+              color: const Color(0xFFE5E7EB),
             ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x08000000),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,15 +376,15 @@ class _FeatureCard extends StatelessWidget {
               Icon(
                 icon,
                 color: HomeScreen.primaryColor,
-                size: 32,
+                size: 28,
               ),
               const SizedBox(height: 8),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF0D141B),
+                  color: Color(0xFF020617),
                 ),
               ),
               const SizedBox(height: 4),
@@ -326,7 +393,7 @@ class _FeatureCard extends StatelessWidget {
                   description,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF4C739A),
+                    color: Color(0xFF6B7280),
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,

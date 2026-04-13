@@ -1,3 +1,7 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AdminRegisterScreen extends StatefulWidget {
@@ -42,8 +46,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
       child: Text('قسم المتابعة والرقابة'),
     ),
   ];
-  
-  Color? get backgroundLight => null;
+
+  Color? get backgroundLight => AdminRegisterScreen.backgroundLight;
 
   @override
   void dispose() {
@@ -56,6 +60,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -67,26 +72,108 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
 
     setState(() => _isSubmitting = true);
 
-    await Future.delayed(const Duration(seconds: 1));
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final employeeId = _employeeIdController.text.trim();
+    final password = _passwordController.text.trim();
+    final department = _selectedDepartment;
 
-    setState(() => _isSubmitting = false);
+    // تحقق من قوة كلمة المرور: 8 أحرف على الأقل + حروف + أرقام + رموز
+    final passwordRegex =
+        RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$&*~^%\-_+=<>?]).{8,}$');
 
-    // رسالة نجاح إنشاء الحساب
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم إنشاء حساب المسؤول بنجاح، يرجى تسجيل الدخول.'),
-      ),
-    );
+    if (!passwordRegex.hasMatch(password)) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'كلمة المرور يجب أن تكون قوية (8 أحرف على الأقل وتحتوي على حروف وأرقام ورموز).',
+          ),
+        ),
+      );
+      return;
+    }
 
-    // الانتقال إلى صفحة تسجيل دخول المسؤول
-    Navigator.pushNamedAndRemoveUntil(
-      // ignore: use_build_context_synchronously
-      context,
-      '/admin-login',   // تأكد أنه نفس الاسم في MaterialApp
-      (route) => false, // يحذف كل الشاشات السابقة
-    );
+    try {
+      final firestore = FirebaseFirestore.instance;
 
+      // 1) التحقق أن هذا البريد + الرقم الوظيفي موجودين في allowed_admins
+      final allowedQuery = await firestore
+          .collection('allowed_admins')
+          .where('email', isEqualTo: email)
+          .where('employeeId', isEqualTo: employeeId)
+          .limit(1)
+          .get();
+
+      if (allowedQuery.docs.isEmpty) {
+        // ليس ضمن قائمة المسؤولين المعتمدين
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'لا يمكنك التسجيل لأنك لست مسؤولاً معتمداً (تحقق من البريد والرقم الوظيفي).',
+            ),
+          ),
+        );
+        return;
+      }
+
+      // 2) إنشاء حساب في FirebaseAuth (مسؤول فقط إذا كان في allowed_admins)
+      final cred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      final user = cred.user;
+
+      if (user == null) {
+        throw Exception('تعذر إنشاء حساب المسؤول، الرجاء المحاولة مرة أخرى.');
+      }
+
+      await user.updateDisplayName(fullName);
+
+      // 3) حفظ بيانات المسؤول في Firestore داخل collection admins
+      await firestore.collection('admins').doc(user.uid).set({
+        'fullName': fullName,
+        'email': email,
+        'employeeId': employeeId,
+        'department': department,
+        'createdAt': FieldValue.serverTimestamp(),
+        'isActive': true,
+        'role': 'admin',
+      });
+
+      // 4) رسالة نجاح + تحويل مباشرة لصفحة لوحة تحكم المسؤول
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إنشاء حساب المسؤول بنجاح.'),
+        ),
+      );
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/admin-dashboard',
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'حدث خطأ أثناء إنشاء الحساب.';
+      if (e.code == 'weak-password') {
+        message = 'كلمة المرور ضعيفة، يرجى اختيار كلمة مرور أقوى.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'يوجد حساب مسؤول مسجل بهذا البريد الإلكتروني.';
+      } else if (e.code == 'invalid-email') {
+        message = 'صيغة البريد الإلكتروني غير صالحة.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ غير متوقع: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -106,7 +193,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
                       color: backgroundLight?.withOpacity(0.9),
                     ),
                     child: Row(
@@ -401,8 +487,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                     if (value == null || value.trim().isEmpty) {
                                       return 'يرجى إدخال كلمة المرور';
                                     }
-                                    if (value.length < 6) {
-                                      return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                                    if (value.length < 8) {
+                                      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
                                     }
                                     return null;
                                   },
@@ -486,8 +572,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                         ? const SizedBox(
                                             width: 22,
                                             height: 22,
-                                            child:
-                                                CircularProgressIndicator(
+                                            child: CircularProgressIndicator(
                                               color: Colors.white,
                                               strokeWidth: 2,
                                             ),
@@ -511,7 +596,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                           Center(
                             child: TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, '/admin-login');
+                                Navigator.pushNamed(
+                                    context, '/admin-login');
                               },
                               child: const Text(
                                 'لديك حساب بالفعل؟ تسجيل الدخول',
@@ -555,4 +641,3 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     );
   }
 }
-

@@ -13,7 +13,7 @@ class EducationComplaintScreen extends StatefulWidget {
 }
 
 class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
-  // الجهة المعنية (الوزارة)
+  // الوزارات
   final List<String> _ministries = [
     'وزارة التربية',
     'وزارة الصحة',
@@ -86,10 +86,8 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
 
   String? _selectedComplaintType;
 
-  // فقط الوصف
+  // الحقول النصية
   final _descController = TextEditingController();
-
-  // معلومات التواصل
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
@@ -103,10 +101,33 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
     super.dispose();
   }
 
-  // ترجّع قائمة التصنيفات بحسب الوزارة المختارة
   List<String> _currentComplaintTypes(String? ministry) {
     if (ministry == null) return [];
     return _complaintTypesByMinistry[ministry] ?? [];
+  }
+
+  // تحميل بيانات حساب المستخدم من Firestore (users/{uid})
+  Future<Map<String, dynamic>> _loadUserInfo(String uid) async {
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    final data = userDoc.data() ?? {};
+    final authUser = FirebaseAuth.instance.currentUser;
+
+    // fallback إذا بعض البيانات فارغة
+    final fullName = (data['fullName'] as String?) ??
+        authUser?.displayName ??
+        (authUser?.email?.split('@').first ?? '');
+    final email = (data['email'] as String?) ?? authUser?.email ?? '';
+    final phone = (data['phone'] as String?) ?? '';
+
+    return {
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'uid': uid,
+    };
   }
 
   Future<void> _submitComplaint() async {
@@ -115,7 +136,8 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('يرجى تسجيل الدخول أولاً قبل إرسال الشكوى')),
+          content: Text('يرجى تسجيل الدخول أولاً قبل إرسال الشكوى'),
+        ),
       );
       return;
     }
@@ -125,8 +147,9 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
         _descController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('يرجى اختيار الجهة والتصنيف وكتابة وصف الشكوى')),
+          content:
+              Text('يرجى اختيار الجهة والتصنيف وكتابة وصف الشكوى'),
+        ),
       );
       return;
     }
@@ -134,6 +157,9 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      // جلب معلومات المستخدم
+      final userInfo = await _loadUserInfo(user.uid);
+
       await FirebaseFirestore.instance.collection('complaints').add({
         'userId': user.uid,
         'ministry': _selectedMinistry,
@@ -144,7 +170,8 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
         'contactPhone': _phoneController.text.trim(),
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
-        'attachments': [], // باقي الحقل فاضي بس بدون رفع
+        'attachments': [],
+        'userInfo': userInfo, // هنا نخزن بيانات الحساب
       });
 
       setState(() => _isSubmitting = false);
@@ -181,15 +208,25 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // AppBar
+              // هيدر بنفس ستايل الشاشات السابقة
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF6F7F8),
+                  color: Colors.white,
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -198,10 +235,11 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                       width: 40,
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
                         icon: const Icon(
-                          Icons.arrow_back_ios_new,
+                          Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF0F172A),
+                          color: Color(0xFF4B5563),
                         ),
                       ),
                     ),
@@ -211,7 +249,7 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
                         ),
                       ),
@@ -231,277 +269,300 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                         top: 12,
                         bottom: 90,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 8),
+                      child: Container(
+                        constraints:
+                            const BoxConstraints(maxWidth: 520),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 8),
 
-                          // الجهة المعنية
-                          const Text(
-                            'الجهة المعنية',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: primaryColor.withValues(alpha: 0.3),
+                            // الجهة المعنية
+                            const Text(
+                              'الجهة المعنية',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedMinistry,
-                                isExpanded: true,
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Color(0xFF6B7280),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color:
+                                      // ignore: deprecated_member_use
+                                      primaryColor.withOpacity(0.3),
                                 ),
-                                hint: const Row(
-                                  children: [
-                                    Icon(Icons.account_balance,
-                                        color: primaryColor, size: 22),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'اختر الجهة المعنية',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF6B7280),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black
+                                        // ignore: deprecated_member_use
+                                        .withOpacity(0.03),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedMinistry,
+                                  isExpanded: true,
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  hint: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.account_balance,
+                                        color: primaryColor,
+                                        size: 22,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                items: _ministries
-                                    .map(
-                                      (m) => DropdownMenuItem<String>(
-                                        value: m,
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.account_balance,
-                                                color: primaryColor,
-                                                size: 20),
-                                            const SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                m,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF111827),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'اختر الجهة المعنية',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF6B7280),
                                         ),
                                       ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedMinistry = value;
-                                    _selectedComplaintType = null;
-                                  });
-                                },
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // تصنيف الشكوى
-                          const Text(
-                            'تصنيف الشكوى',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: const Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedComplaintType,
-                                isExpanded: true,
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Color(0xFF6B7280),
-                                ),
-                                hint: Row(
-                                  children: [
-                                    const Icon(Icons.category_outlined,
-                                        color: Color(0xFF6B7280), size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _selectedMinistry == null
-                                          ? 'اختر الجهة أولاً'
-                                          : 'اختر تصنيف الشكوى',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                items:
-                                    _currentComplaintTypes(_selectedMinistry)
-                                        .map(
-                                          (t) => DropdownMenuItem<String>(
-                                            value: t,
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  _iconForComplaintType(t),
-                                                  color:
-                                                      const Color(0xFF4B5563),
-                                                  size: 20,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Flexible(
-                                                  child: Text(
-                                                    t,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color:
-                                                          Color(0xFF111827),
-                                                    ),
+                                    ],
+                                  ),
+                                  items: _ministries
+                                      .map(
+                                        (m) => DropdownMenuItem<String>(
+                                          value: m,
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.account_balance,
+                                                color: primaryColor,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: Text(
+                                                  m,
+                                                  style:
+                                                      const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.w500,
+                                                    color:
+                                                        Color(0xFF111827),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                        )
-                                        .toList(),
-                                onChanged: _selectedMinistry == null
-                                    ? null
-                                    : (value) {
-                                        setState(() {
-                                          _selectedComplaintType = value;
-                                        });
-                                      },
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedMinistry = value;
+                                      _selectedComplaintType = null;
+                                    });
+                                  },
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                          // تفاصيل الشكوى
-                          const Text(
-                            'تفاصيل الشكوى',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          const Text(
-                            'وصف تفصيلي',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFFCBD5E1),
+                            // تصنيف الشكوى
+                            const Text(
+                              'تصنيف الشكوى',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
                               ),
                             ),
-                            child: TextField(
-                              controller: _descController,
-                              maxLines: 5,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                hintText:
-                                    'يرجى ذكر كافة التفاصيل المتعلقة بالمشكلة...',
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                               ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // معلومات التواصل
-                          Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.only(top: 12),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'معلومات التواصل الخاصة بك',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedComplaintType,
+                                  isExpanded: true,
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: Color(0xFF6B7280),
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _editableField(
-                                        label: 'الاسم الكامل',
-                                        icon: Icons.person_outline,
-                                        controller: _nameController,
-                                        keyboardType: TextInputType.name,
+                                  hint: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.category_outlined,
+                                        color: Color(0xFF6B7280),
+                                        size: 20,
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: _editableField(
-                                        label: 'رقم الهاتف',
-                                        icon: Icons.phone_outlined,
-                                        controller: _phoneController,
-                                        keyboardType: TextInputType.phone,
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _selectedMinistry == null
+                                            ? 'اختر الجهة أولاً'
+                                            : 'اختر تصنيف الشكوى',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF6B7280),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                  items: _currentComplaintTypes(
+                                          _selectedMinistry)
+                                      .map(
+                                        (t) => DropdownMenuItem<String>(
+                                          value: t,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                _iconForComplaintType(t),
+                                                color:
+                                                    const Color(0xFF4B5563),
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: Text(
+                                                  t,
+                                                  style:
+                                                      const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.w500,
+                                                    color:
+                                                        Color(0xFF111827),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: _selectedMinistry == null
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _selectedComplaintType =
+                                                value;
+                                          });
+                                        },
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 20),
+
+                            // تفاصيل الشكوى
+                            const Text(
+                              'تفاصيل الشكوى',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'وصف تفصيلي',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFCBD5E1),
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _descController,
+                                maxLines: 5,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  hintText:
+                                      'يرجى ذكر كافة التفاصيل المتعلقة بالمشكلة...',
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // معلومات التواصل
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              padding: const EdgeInsets.only(top: 12),
+                              decoration: const BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                      color: Color(0xFFE5E7EB)),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'معلومات التواصل الخاصة بك',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _editableField(
+                                          label: 'الاسم الكامل',
+                                          icon: Icons.person_outline,
+                                          controller: _nameController,
+                                          keyboardType:
+                                              TextInputType.name,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: _editableField(
+                                          label: 'رقم الهاتف',
+                                          icon: Icons.phone_outlined,
+                                          controller: _phoneController,
+                                          keyboardType:
+                                              TextInputType.phone,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -516,7 +577,9 @@ class _EducationComplaintScreenState extends State<EducationComplaintScreen> {
                         decoration: const BoxDecoration(
                           color: Color(0xFFF6F7F8),
                           border: Border(
-                            top: BorderSide(color: Color(0xFFE5E7EB)),
+                            top: BorderSide(
+                              color: Color(0xFFE5E7EB),
+                            ),
                           ),
                         ),
                         child: SizedBox(

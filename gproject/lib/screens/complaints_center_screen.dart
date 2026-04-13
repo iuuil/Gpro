@@ -16,7 +16,8 @@ class ComplaintsCenterScreen extends StatefulWidget {
 class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
   static const Color primaryColor = Color(0xFF137FEC);
 
-  String _selectedFilter = 'الكل'; // 'الكل' أو 'pending' أو 'resolved' أو 'rejected'
+  // 'الكل' / 'pending' / 'resolved' / 'rejected'
+  String _selectedFilter = 'الكل';
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +30,22 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // AppBar
+              // هيدر موحد
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
                 decoration: const BoxDecoration(
                   color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x1F000000),
-                      blurRadius: 6,
+                      color: Color(0x12000000),
+                      blurRadius: 4,
                       offset: Offset(0, 2),
                     ),
                   ],
@@ -50,17 +57,16 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                       width: 40,
                       child: IconButton(
                         onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
+                          Navigator.of(context).pushNamedAndRemoveUntil(
                             '/main-shell',
                             (route) => false,
                           );
                         },
                         padding: EdgeInsets.zero,
                         icon: const Icon(
-                          Icons.arrow_back_ios_new,
+                          Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF0F172A),
+                          color: Color(0xFF4B5563),
                         ),
                       ),
                     ),
@@ -85,7 +91,7 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
 
               // فلاتر الحالة
               SizedBox(
-                height: 44,
+                height: 48,
                 child: ListView(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -116,7 +122,7 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                             .collection('complaints')
                             .where('userId', isEqualTo: user.uid)
                             .orderBy('createdAt', descending: true)
-                            .snapshots(), // [web:404][web:402]
+                            .snapshots(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -127,12 +133,15 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
 
                           if (snapshot.hasError) {
                             return Center(
-                              child: Text(
-                                'حدث خطأ أثناء جلب الشكاوى: ${snapshot.error}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFFB91C1C),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  'حدث خطأ أثناء جلب الشكاوى: ${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFFB91C1C),
+                                  ),
                                 ),
                               ),
                             );
@@ -144,13 +153,22 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                           final complaints = docs.map((doc) {
                             final data =
                                 doc.data() as Map<String, dynamic>? ?? {};
+
+                            // تأكد من أن status سترنق نظيف حتى لو كان null
                             final status =
                                 (data['status'] ?? 'pending').toString().trim();
+
+                            final createdAt =
+                                (data['createdAt'] as Timestamp?)
+                                    ?.toDate()
+                                    .toString()
+                                    .split(' ')
+                                    .first;
 
                             return _ComplaintItem(
                               id: doc.id,
                               title:
-                                  (data['title'] as String?)?.isNotEmpty ==
+                                  (data['title'] as String?)?.trim().isNotEmpty ==
                                           true
                                       ? data['title'] as String
                                       : (data['description'] as String? ??
@@ -159,25 +177,21 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                               statusLabel: _statusLabelFromStatus(status),
                               statusCode: status, // نخزن كود الحالة كما هو
                               statusType: _statusFromStatusField(status),
-                              date: (data['createdAt'] as Timestamp?)
-                                      ?.toDate()
-                                      .toString()
-                                      .split(' ')
-                                      .first ??
-                                  '',
-                              lastUpdate: data['lastUpdate'] as String? ??
-                                  'لا توجد تحديثات متاحة حالياً.',
+                              date: createdAt ?? '',
+                              lastUpdate: (data['lastUpdate'] as String? ??
+                                      'لا توجد تحديثات متاحة حالياً.')
+                                  .toString(),
                             );
                           }).toList();
 
-                          // تطبيق الفلتر حسب كود الحالة
+                          // تطبيق الفلتر محلياً على القائمة حسب كود الحالة
                           final List<_ComplaintItem> filtered;
                           if (_selectedFilter == 'الكل') {
                             filtered = complaints;
                           } else {
                             filtered = complaints
-                                .where(
-                                    (c) => c.statusCode == _selectedFilter)
+                                .where((c) =>
+                                    c.statusCode == _selectedFilter)
                                 .toList();
                           }
 
@@ -196,31 +210,36 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                           return SingleChildScrollView(
                             padding: const EdgeInsets.fromLTRB(
                                 16, 12, 16, 100),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'نظرة عامة على شكواك',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
+                            child: Container(
+                              constraints:
+                                  const BoxConstraints(maxWidth: 520),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'نظرة عامة على شكواك',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0F172A),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
+                                  const SizedBox(height: 12),
 
-                                for (final c in filtered) ...[
-                                  _StatusCard(
-                                    complaintId: c.id,
-                                    title: c.title,
-                                    statusLabel: c.statusLabel,
-                                    statusType: c.statusType,
-                                    date: c.date,
-                                    lastUpdate: c.lastUpdate,
-                                  ),
-                                  const SizedBox(height: 10),
+                                  for (final c in filtered) ...[
+                                    _StatusCard(
+                                      complaintId: c.id,
+                                      title: c.title,
+                                      statusLabel: c.statusLabel,
+                                      statusType: c.statusType,
+                                      date: c.date,
+                                      lastUpdate: c.lastUpdate,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           );
                         },
@@ -259,12 +278,15 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
       },
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? primaryColor.withOpacity(0.2)
+              ? primaryColor.withOpacity(0.12)
               : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(999),
+          border: isSelected
+              ? Border.all(color: primaryColor.withOpacity(0.4))
+              : null,
         ),
         alignment: Alignment.center,
         child: Text(
@@ -312,7 +334,7 @@ class _ComplaintItem {
   final String id;
   final String title;
   final String statusLabel;
-  final String statusCode; // ← كود الحالة من Firestore
+  final String statusCode; // كود الحالة من Firestore
   final ComplaintStatus statusType;
   final String date;
   final String lastUpdate;
@@ -382,8 +404,8 @@ class _StatusCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: colors['bg'],
                   borderRadius: BorderRadius.circular(999),
