@@ -89,22 +89,54 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
     }
   }
 
+  Future<void> _showAlert(String message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF111827),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'حسنًا',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _submitComplaint() async {
     final title = _titleController.text.trim();
     final desc = _descriptionController.text.trim();
 
     if (title.isEmpty || desc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال عنوان ووصف الشكوى')),
-      );
+      await _showAlert('يرجى إدخال عنوان ووصف الشكوى');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى تسجيل الدخول أولاً')),
-      );
+      await _showAlert('يرجى تسجيل الدخول أولاً');
       return;
     }
 
@@ -112,7 +144,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
     try {
       await FirebaseFirestore.instance.collection('complaints').add({
-        'userId': user.uid,
+        'userId': user.uid, // مهم للـ Cloud Function حتى تعرف صاحب الشكوى
         'ministry': widget.ministry,
         'complaintType': null,
         'title': title,
@@ -120,7 +152,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
         'contactName': null,
         'contactPhone': null,
         'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(), // ختم وقت من السيرفر [web:336][web:338]
         'attachments': [],
         'source': 'ministries_screen',
       });
@@ -129,9 +161,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إرسال الشكوى بنجاح')),
-      );
+      await _showAlert('تم إرسال الشكوى بنجاح');
 
       // بعد الإرسال: رجوع إلى صفحة الوزارات داخل MainShell
       // 1) نسوي pop لهاي الصفحة
@@ -142,9 +172,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
       shell?.setTab(1);
     } catch (e) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ أثناء إرسال الشكوى: $e')),
-      );
+      await _showAlert('حدث خطأ أثناء إرسال الشكوى: $e');
     }
   }
 
@@ -248,7 +276,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border:
+                                    Border.all(color: const Color(0xFFE2E8F0)),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.02),
@@ -268,7 +297,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       color: const Color(0xFFE5E7EB),
                                       image: widget.logoUrl != null
                                           ? DecorationImage(
-                                              image: NetworkImage(widget.logoUrl!),
+                                              image:
+                                                  NetworkImage(widget.logoUrl!),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
@@ -317,7 +347,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border:
+                                    Border.all(color: const Color(0xFFE2E8F0)),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.02),
@@ -371,7 +402,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Icon(
                                         Icons.location_on,

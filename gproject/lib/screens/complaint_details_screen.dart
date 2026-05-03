@@ -27,7 +27,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
             children: [
               // الهيدر
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   border: Border(
@@ -76,7 +77,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       .doc(complaintId)
                       .get(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
@@ -91,7 +93,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEE2E2),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFDC2626)),
+                              border: Border.all(
+                                  color: const Color(0xFFDC2626)),
                             ),
                             child: Text(
                               'حدث خطأ أثناء جلب بيانات الشكوى:\n${snapshot.error}',
@@ -123,20 +126,25 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       );
                     }
 
-                    final data =
-                        snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                    final data = snapshot.data!.data()
+                            as Map<String, dynamic>? ??
+                        {};
 
                     final title =
-                        (data['title'] as String?)?.trim().isNotEmpty == true
+                        (data['title'] as String?)?.trim().isNotEmpty ==
+                                true
                             ? data['title'] as String
-                            : (data['description'] as String? ?? 'بدون عنوان')
+                            : (data['description'] as String? ??
+                                    'بدون عنوان')
                                 .toString();
                     final description =
                         (data['description'] as String? ?? '').toString();
                     final status =
-                        (data['status'] as String? ?? 'pending').toString();
+                        (data['status'] as String? ?? 'pending')
+                            .toString();
                     final ministry =
-                        (data['ministry'] as String? ?? 'غير محددة').toString();
+                        (data['ministry'] as String? ?? 'غير محددة')
+                            .toString();
                     final createdAt = (data['createdAt'] as Timestamp?)
                         ?.toDate()
                         .toString()
@@ -147,23 +155,33 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     final contactPhone =
                         (data['contactPhone'] as String? ?? '').toString();
 
+                    // قراءة المرفقات من الوثيقة
+                    final List<dynamic> attachmentsDyn =
+                        (data['attachments'] as List<dynamic>? ?? []);
+                    final List<String> attachments =
+                        attachmentsDyn.map((e) => e.toString()).toList();
+
                     final statusLabel = _statusLabelFromStatus(status);
                     final statusColor = _statusColorFromStatus(status);
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                      padding:
+                          const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.stretch,
                         children: [
                           // كرت نظرة عامة
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius:
+                                  BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color:
+                                      Colors.black.withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -176,6 +194,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                               statusColor: statusColor,
                               ministry: ministry,
                               createdAt: createdAt,
+                              attachments: attachments,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -185,10 +204,12 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius:
+                                  BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color:
+                                      Colors.black.withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -207,10 +228,12 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius:
+                                  BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
+                                  color:
+                                      Colors.black.withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -222,6 +245,186 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       ),
                     );
                   },
+                ),
+              ),
+
+              // زر حذف الشكوى أسفل الصفحة
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    icon:
+                        const Icon(Icons.delete_outline, size: 18),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDC2626),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(16),
+                            ),
+                            title: const Text(
+                              'تأكيد الحذف',
+                              textAlign: TextAlign.center,
+                            ),
+                            content: const Text(
+                              'هل أنت متأكد من حذف هذه الشكوى بشكل نهائي؟',
+                              textAlign: TextAlign.center,
+                            ),
+                            actionsAlignment:
+                                MainAxisAlignment.center,
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(ctx, false),
+                                child: const Text('إلغاء'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(ctx, true),
+                                child: const Text(
+                                  'حذف',
+                                  style: TextStyle(
+                                      color: Color(0xFFDC2626)),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirm != true) return;
+
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('complaints')
+                            .doc(complaintId)
+                            .delete();
+
+                        if (context.mounted) {
+                          await showDialog<void>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (ctx) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(18),
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(
+                                        24, 24, 24, 8),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Color(0xFF16A34A),
+                                      size: 48,
+                                    ),
+                                    SizedBox(height: 12),
+                                    Text(
+                                      'تم حذف الشكوى بنجاح',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight:
+                                            FontWeight.w700,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'تمت إزالة الشكوى من سجلك في النظام.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actionsAlignment:
+                                    MainAxisAlignment.center,
+                                actions: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.only(
+                                            bottom: 8),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton
+                                            .styleFrom(
+                                          backgroundColor:
+                                              const Color(
+                                                  0xFF2563EB),
+                                          foregroundColor:
+                                              Colors.white,
+                                          shape:
+                                              RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius
+                                                    .circular(10),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.of(ctx).pop();
+                                        },
+                                        child: const Text(
+                                          'حسنًا',
+                                          style: TextStyle(
+                                            fontWeight:
+                                                FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'فشل حذف الشكوى: $e'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    label: const Text(
+                      'حذف الشكوى',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -240,6 +443,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required Color statusColor,
     required String ministry,
     required String? createdAt,
+    required List<String> attachments,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +464,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(999),
@@ -368,33 +573,67 @@ class ComplaintDetailsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: const Row(
-            children: [
-              Icon(
-                Icons.attach_file,
-                size: 16,
-                color: Color(0xFF9CA3AF),
-              ),
-              SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'لا توجد مرفقات مضافة لهذه الشكوى.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9CA3AF),
+        if (attachments.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  size: 16,
+                  color: Color(0xFF9CA3AF),
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'لا توجد مرفقات مضافة لهذه الشكوى.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF9CA3AF),
+                    ),
                   ),
                 ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: SizedBox(
+              height: 80,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: attachments.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final url = attachments[index];
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      url,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                },
               ),
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -433,7 +672,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     hasName ? contactName : 'مستخدم التطبيق',
@@ -491,7 +731,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10),
             ),
             child: const Text(
               'عرض الملف الشخصي',
@@ -508,9 +749,9 @@ class ComplaintDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildInternalCommentsSection() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'ملاحظة',
           style: TextStyle(
@@ -573,7 +814,8 @@ class _InternalCommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(right: 10, left: 8, top: 8, bottom: 8),
+      padding: const EdgeInsets.only(
+          right: 10, left: 8, top: 8, bottom: 8),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -584,10 +826,12 @@ class _InternalCommentCard extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 author,

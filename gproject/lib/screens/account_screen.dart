@@ -1,8 +1,16 @@
 // ignore_for_file: unused_local_variable, deprecated_member_use, use_build_context_synchronously
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+// باكدجات حفظ الملف واختيار الصورة من المعرض
+import 'package:image_picker/image_picker.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'user_complaints_list_screen.dart';
 
@@ -44,6 +52,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Map<String, dynamic> _userData = {};
   UserComplaintStats? _stats;
+
+  // مسار الصورة المخزنة محليًا
+  String _avatarPath = '';
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -151,6 +164,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nationalIdController.text =
         (data['nationalId'] as String? ?? '').toString();
 
+    // تحميل مسار الصورة من Firestore إذا موجود
+    _avatarPath =
+        (data['avatarPath'] as String? ?? '').toString();
+
     return {
       'userData': data,
       'stats': stats,
@@ -220,6 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'email': email,
           'phone': phone,
           'nationalId': nationalId,
+          // نخزن مسار الصورة المحلية
+          'avatarPath': _avatarPath,
         },
         SetOptions(merge: true),
       );
@@ -295,6 +314,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// اختيار صورة من المعرض وحفظها في مجلد التطبيق وتحديث Firestore
+  Future<void> _pickAndSaveAvatar() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final XFile? picked =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (picked == null) {
+        return;
+      }
+
+      // مسار مجلد التطبيق
+      final dir = await getApplicationDocumentsDirectory(); // [web:297][web:299][web:303]
+      final ext = p.extension(picked.path);
+      final fileName = 'avatar_${user.uid}$ext';
+      final savedFile = await File(picked.path)
+          .copy(p.join(dir.path, fileName)); // [web:299][web:302][web:300]
+
+      setState(() {
+        _avatarPath = savedFile.path;
+      });
+
+      // تحديث Firestore بحقل avatarPath
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'avatarPath': _avatarPath,
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      await _showAlert('حدث خطأ أثناء اختيار الصورة: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -306,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // الهيدر بدون أيقونة الإعدادات + شادو بسيط مثل باقي الصفحات
+              // الهيدر
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -357,7 +414,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    // مكان أيقونة الإعدادات سابقًا (فراغ للحفاظ على الترتيب)
                     const SizedBox(
                       height: 40,
                       width: 40,
@@ -429,9 +485,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           final city =
                               (data['city'] as String? ?? 'غير محددة')
                                   .toString();
-                          final avatarUrl =
-                              (data['avatarUrl'] as String? ?? '')
-                                  .toString();
 
                           final activeComplaints = stats.activeCount;
                           final resolvedComplaints = stats.resolvedCount;
@@ -471,17 +524,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     ],
                                                     color: const Color(
                                                         0xFFD1D5DB),
-                                                    image: avatarUrl.isNotEmpty
+                                                    image: _avatarPath
+                                                            .isNotEmpty
                                                         ? DecorationImage(
-                                                            image:
-                                                                NetworkImage(
-                                                              avatarUrl,
+                                                            image: FileImage(
+                                                              File(_avatarPath),
                                                             ),
                                                             fit: BoxFit.cover,
                                                           )
                                                         : null,
                                                   ),
-                                                  child: avatarUrl.isEmpty
+                                                  child: _avatarPath.isEmpty
                                                       ? const Icon(
                                                           Icons.person,
                                                           size: 60,
@@ -492,33 +545,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 Positioned(
                                                   bottom: 0,
                                                   right: 0,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            6),
-                                                    decoration: BoxDecoration(
-                                                      color: ProfileScreen
-                                                          .primary,
-                                                      shape: BoxShape.circle,
-                                                      border: Border.all(
-                                                        color: Colors.white,
-                                                        width: 2,
-                                                      ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                                  0.15),
-                                                          blurRadius: 4,
-                                                          offset:
-                                                              const Offset(0, 2),
+                                                  child: InkWell(
+                                                    onTap: _pickAndSaveAvatar,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            24),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              6),
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color: ProfileScreen
+                                                            .primary,
+                                                        shape:
+                                                            BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 2,
                                                         ),
-                                                      ],
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.photo_camera,
-                                                      size: 16,
-                                                      color: Colors.white,
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.15),
+                                                            blurRadius: 4,
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.photo_camera,
+                                                        size: 16,
+                                                        color: Colors.white,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -851,8 +913,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   _ProfileField(
                                                     label:
                                                         'رقم البطاقة الوطنية',
-                                                    icon: Icons
-                                                        .badge_outlined,
+                                                    icon:
+                                                        Icons.badge_outlined,
                                                     controller:
                                                         _nationalIdController,
                                                     keyboardType:
@@ -871,8 +933,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (_isEditing) ...[
                                         const SizedBox(height: 12),
                                         Padding(
-                                          padding:
-                                              const EdgeInsets.symmetric(
+                                          padding: const EdgeInsets.symmetric(
                                             horizontal: 16,
                                             vertical: 4,
                                           ),
@@ -881,9 +942,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               const Padding(
-                                                padding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 4),
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 4),
                                                 child: Text(
                                                   'تغيير كلمة المرور',
                                                   style: TextStyle(
@@ -891,8 +951,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     fontWeight:
                                                         FontWeight.w700,
                                                     letterSpacing: 0.8,
-                                                    color:
-                                                        Color(0xFF0F172A),
+                                                    color: Color(0xFF0F172A),
                                                   ),
                                                 ),
                                               ),
@@ -914,8 +973,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       color: Colors.black
                                                           .withOpacity(0.03),
                                                       blurRadius: 4,
-                                                      offset: const Offset(
-                                                          0, 2),
+                                                      offset:
+                                                          const Offset(0, 2),
                                                     ),
                                                   ],
                                                 ),
@@ -924,8 +983,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     _PasswordField(
                                                       label:
                                                           'كلمة المرور الحالية',
-                                                      icon: Icons
-                                                          .lock_outline,
+                                                      icon: Icons.lock_outline,
                                                       controller:
                                                           _currentPasswordController,
                                                     ),
@@ -944,8 +1002,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     _PasswordField(
                                                       label:
                                                           'تأكيد كلمة المرور الجديدة',
-                                                      icon: Icons
-                                                          .lock_outline,
+                                                      icon: Icons.lock_outline,
                                                       controller:
                                                           _confirmPasswordController,
                                                     ),
@@ -1021,9 +1078,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   BorderRadius.circular(16),
                                             ),
                                             elevation: 4,
-                                            shadowColor:
-                                                ProfileScreen.primary
-                                                    .withOpacity(0.3),
+                                            shadowColor: ProfileScreen.primary
+                                                .withOpacity(0.3),
                                           ),
                                         ),
                                       ),

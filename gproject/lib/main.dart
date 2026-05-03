@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'firebase_options.dart';
 
@@ -20,13 +22,32 @@ import '../screens/complaint_screen.dart';
 import '../screens/education_complaint_screen.dart';
 import '../screens/map_report_screen.dart';
 import '../screens/main_shell_screen.dart';
+import '../screens/my_complaints_screen.dart';
+
+// هاندلر للإشعارات في الخلفية (مطلوب من FCM)
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // ممكن تضيف لوجيك هنا لو تحتاج
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // تهيئة Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // تهيئة Supabase
+  await Supabase.initialize(
+    url: 'https://mdtjrogdfggahrdcvyvr.supabase.co', // بدون /rest/v1/
+    anonKey: 'sb_publishable_YX6LQOG-K45iuKdvdGSaUg_8jkN2zR3',
+  );
+
+  // تهيئة الهاندلر للإشعارات في الخلفية
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
 }
@@ -73,6 +94,8 @@ class MyApp extends StatelessWidget {
             const EducationComplaintScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
+
+        '/my-complaints': (context) => const MyComplaintsScreen(),
 
         // صفحات المسؤول
         '/admin-login': (context) => const AdminLoginScreen(),

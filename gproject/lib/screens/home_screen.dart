@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// ignore: unused_import
+import '../screens/my_complaints_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -45,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -54,42 +59,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: HomeScreen.backgroundLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
-            // الهيدر العلوي مع العنوان وأكشن بسيط
-            // الهيدر العلوي مع العنوان
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Color(0xFFE5E7EB),
-                    width: 1,
+              // الهيدر العلوي مع العنوان
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor, // يتبع الثيم
+                  border: const Border(
+                    bottom: BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'صوت المواطن',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x12000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
-              child: const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'صوت المواطن',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF020617),
-                  ),
-                ),
-              ),
-            ),
 
               Expanded(
                 child: SingleChildScrollView(
@@ -150,21 +155,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             horizontal: 16, vertical: 4),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'صوتك من أجل عراق أفضل',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               'قدّم شكوى، بلّغ عن مشكلة خدمية، وساهم بتحسين أداء المؤسسات الحكومية.',
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 13,
-                                color: Color(0xFF6B7280),
                               ),
                             ),
                           ],
@@ -173,17 +176,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       const SizedBox(height: 16),
 
-                      // عنوان كيف يعمل التطبيق
+                      // عنوان ما الذي تريد القيام به؟
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const Align(
+                        child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
                             'ما الذي تريد القيام به؟',
-                            style: TextStyle(
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF020617),
                             ),
                           ),
                         ),
@@ -221,6 +223,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                             ),
+                            _FeatureCard(
+                              icon: Icons.rule_folder_outlined,
+                              title: 'شكاواي',
+                              description:
+                                  'استعرض شكاواك السابقة وتابع حالة كل شكوى والتحديثات عليها.',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/my-complaints',
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ),
@@ -235,8 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
               if (!_isLoggedIn)
                 Container(
                   decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: Colors.white.withOpacity(0.98),
+                    color:
+                        // ignore: deprecated_member_use
+                        theme.cardColor.withOpacity(0.98), // بدل Colors.white
                     border: const Border(
                       top: BorderSide(
                         color: Color(0xFFE5E7EB),
@@ -345,6 +360,7 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final double cardWidth =
         (MediaQuery.of(context).size.width - 16 * 2 - 10) / 2;
 
@@ -357,7 +373,7 @@ class _FeatureCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor, // بدل Colors.white
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: const Color(0xFFE5E7EB),
@@ -381,19 +397,17 @@ class _FeatureCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: theme.textTheme.bodyLarge?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF020617),
                 ),
               ),
               const SizedBox(height: 4),
               Expanded(
                 child: Text(
                   description,
-                  style: const TextStyle(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
-                    color: Color(0xFF6B7280),
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,

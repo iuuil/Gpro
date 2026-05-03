@@ -59,19 +59,113 @@ class AdminComplaintDetailsScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _showAlert(
+    BuildContext context, {
+    required String message,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF111827),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'حسنًا',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _updateStatus(
     BuildContext context, {
     required String newStatus,
   }) async {
-    await FirebaseFirestore.instance
+    final docRef = FirebaseFirestore.instance
         .collection('complaints')
-        .doc(complaintDocId)
-        .update({'status': newStatus});
+        .doc(complaintDocId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم تحديث حالة الشكوى إلى: ${_statusLabel(newStatus)}'),
-      ),
+    final snapshot = await docRef.get();
+    if (!snapshot.exists) {
+      await _showAlert(
+        context,
+        message: 'الشكوى غير موجودة.',
+      );
+      return;
+    }
+
+    final data = snapshot.data() as Map<String, dynamic>;
+    final oldStatus = (data['status'] ?? '').toString();
+    final userId = (data['userId'] ?? '').toString();
+    final title = (data['title'] ?? '').toString();
+
+    if (oldStatus == newStatus) {
+      await _showAlert(
+        context,
+        message:
+            'الحالة الحالية للشكوى هي بالفعل: ${_statusLabel(newStatus)}',
+      );
+      return;
+    }
+
+    await docRef.update({'status': newStatus});
+
+    if (userId.isNotEmpty && oldStatus.isNotEmpty) {
+      String statusLabelLocal(String status) {
+        switch (status) {
+          case 'pending':
+            return 'قيد المراجعة';
+          case 'resolved':
+            return 'تم الحل';
+          case 'rejected':
+            return 'مرفوضة';
+          case 'new':
+          case 'neww':
+            return 'جديدة';
+          default:
+            return 'غير محدد';
+        }
+      }
+
+      final notifTitle = 'تحديث حالة الشكوى';
+      final notifBody =
+          'تم تحديث حالة الشكوى "${title.isEmpty ? 'بدون عنوان' : title}" '
+          'من ${statusLabelLocal(oldStatus)} إلى ${statusLabelLocal(newStatus)}.';
+
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'title': notifTitle,
+        'body': notifBody,
+        'type': 'complaint_status',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await _showAlert(
+      context,
+      message: 'تم تحديث حالة الشكوى إلى: ${_statusLabel(newStatus)}',
     );
   }
 
@@ -338,7 +432,7 @@ class AdminComplaintDetailsScreen extends StatelessWidget {
                                   ? 'لا يوجد نص مرفق لهذه الشكوى.'
                                   : text,
                               style: const TextStyle(
-                                fontSize: 13, 
+                                fontSize: 13,
                                 color: Color(0xFF4B5563),
                                 height: 1.5,
                               ),
@@ -436,8 +530,7 @@ class AdminComplaintDetailsScreen extends StatelessWidget {
                             style: TextStyle(fontSize: 12),
                           ),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             side: const BorderSide(
                               color: Color(0xFFDC2626),
                             ),

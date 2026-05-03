@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,6 +17,44 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _checkUserRoleAndNavigate();
+  }
+
+  Future<void> _saveUserFcmTokenIfNeeded(User user, {required bool isAdmin}) async {
+    if (isAdmin) {
+      // المسؤول ما يحتاج fcmToken هنا (لو تحب تقدر تخزنه بمكان ثاني)
+      return;
+    }
+
+    final messaging = FirebaseMessaging.instance;
+
+    // طلب صلاحية الإشعارات (مهم في iOS، في أندرويد تمشي بدون بس عادي تطلبها)
+    await messaging.requestPermission();
+
+    final token = await messaging.getToken();
+    if (token == null) return;
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .set(
+      {
+        'fcmToken': token,
+      },
+      SetOptions(merge: true),
+    );
+
+    // تحديث الـ token إذا تغيّر أثناء عمل التطبيق
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'fcmToken': newToken,
+        },
+        SetOptions(merge: true),
+      );
+    });
   }
 
   Future<void> _checkUserRoleAndNavigate() async {
@@ -42,10 +81,12 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       if (adminDoc.exists) {
-        // يرجع كمسؤول
+        // مسؤول → ما نخزن fcmToken في users الآن (إلا إذا تريد إشعارات للمسؤولين بعدين)
         Navigator.pushReplacementNamed(context, '/admin-dashboard');
       } else {
-        // مستخدم عادي
+        // مستخدم عادي → نخزن fcmToken في users ثم نوديه للمين شيل
+        await _saveUserFcmTokenIfNeeded(user, isAdmin: false);
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/main-shell');
       }
     } catch (e) {

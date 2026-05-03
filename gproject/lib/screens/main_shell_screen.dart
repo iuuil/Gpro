@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'home_screen.dart';
 import 'ministries_screen.dart';
 import 'complaints_center_screen.dart';
@@ -22,11 +23,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeScreen(),               // 0: الرئيسية
-    const MinistriesScreen(),         // 1: الوزارات
-    const ComplaintsCenterScreen(),   // 2: الشكاوى
-    const SettingsScreen(),           // 3: الإعدادات
-    const ProfileScreen(),            // 4: الحساب
+    const HomeScreen(),              // 0: الرئيسية
+    const MinistriesScreen(),        // 1: الوزارات
+    const ComplaintsCenterScreen(),  // 2: الشكاوى
+    const SettingsScreen(),          // 3: الإعدادات
+    const ProfileScreen(),           // 4: الحساب
   ];
 
   void _onBottomNavTap(int index) {

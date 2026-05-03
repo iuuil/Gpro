@@ -1,11 +1,15 @@
 // ignore_for_file: duplicate_ignore, deprecated_member_use, use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // NEW
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MapReportScreen extends StatefulWidget {
   const MapReportScreen({super.key});
@@ -27,6 +31,7 @@ class _MapReportScreenState extends State<MapReportScreen> {
   bool _isLoadingLocation = false;
   bool _isSubmitting = false;
 
+  // نوع البلاغ السريع
   String _selectedCategory = 'حادث مروري';
   final TextEditingController _detailsController = TextEditingController();
 
@@ -39,15 +44,178 @@ class _MapReportScreenState extends State<MapReportScreen> {
     'ازدحام شديد',
   ];
 
+  // معلومات التواصل
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  // المرفقات (صور)
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _pickedImages = [];
+
+  @override
+  void dispose() {
+    _detailsController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  // حوار موحّد لعرض الرسائل للمستخدم
+  Future<void> _showMessageDialog({
+    required String title,
+    required String message,
+    bool isError = false,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.info_outline,
+                color: isError ? const Color(0xFFDC2626) : primary,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: Color(0xFF4B5563),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isError ? const Color(0xFFDC2626) : primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text(
+                  'حسنًا',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // اختيار عدة صور
+  Future<void> _pickImages() async {
+    try {
+      final images = await _picker.pickMultiImage(
+        imageQuality: 80,
+      );
+
+      if (images.isEmpty) return;
+
+      setState(() {
+        const maxImages = 5;
+        final combined = [..._pickedImages, ...images];
+        if (combined.length <= maxImages) {
+          _pickedImages
+            ..clear()
+            ..addAll(combined);
+        } else {
+          _pickedImages
+            ..clear()
+            ..addAll(combined.take(maxImages));
+          _showMessageDialog(
+            title: 'تنبيه',
+            message: 'تم تحديد الحد الأقصى لعدد الصور (5 صور).',
+          );
+        }
+      });
+    } catch (e) {
+      await _showMessageDialog(
+        title: 'خطأ في اختيار الصور',
+        message: 'تعذر اختيار الصور: $e',
+        isError: true,
+      );
+    }
+  }
+
+  // رفع الصور إلى Supabase Storage وإرجاع روابطها
+  Future<List<String>> _uploadImages(String complaintId) async {
+    final List<String> downloadUrls = [];
+    final client = Supabase.instance.client;
+
+    const bucketName = 'complaints';
+
+    for (int i = 0; i < _pickedImages.length; i++) {
+      try {
+        final XFile img = _pickedImages[i];
+        final File file = File(img.path);
+
+        final String path =
+            'complaint_attachments/$complaintId/img_${i}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        await client.storage.from(bucketName).upload(
+              path,
+              file,
+            ); // [web:539]
+
+        final String publicUrl =
+            client.storage.from(bucketName).getPublicUrl(path); // [web:564]
+
+        downloadUrls.add(publicUrl);
+      } catch (e) {
+        debugPrint('Upload error for image $i: $e');
+        await _showMessageDialog(
+          title: 'خطأ في رفع الصور',
+          message: 'فشل رفع صورة رقم ${i + 1}:\n$e',
+          isError: true,
+        );
+      }
+    }
+
+    return downloadUrls;
+  }
+
   // حفظ البلاغ في Firestore
   Future<void> _submitReport() async {
     if (_isSubmitting) return;
+
     setState(() => _isSubmitting = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
 
-      // نبني داتا موحّدة مع الشكاوى العادية
       final Map<String, dynamic> data = {
         'lat': _cameraTarget.latitude,
         'lng': _cameraTarget.longitude,
@@ -55,35 +223,53 @@ class _MapReportScreenState extends State<MapReportScreen> {
           'lat': _cameraTarget.latitude,
           'lng': _cameraTarget.longitude,
         },
-        'category': _selectedCategory,                     // للاستخدام العام
-        'quickType': _selectedCategory,                    // نوع البلاغ السريع (للمسؤول)
-        'title': 'بلاغ سريع - $_selectedCategory',         // عنوان مختصر
-        'description': _detailsController.text.trim(),     // وصف إضافي
+        'category': _selectedCategory, // نوع البلاغ السريع
+        'quickType': _selectedCategory,
+        'title': 'بلاغ سريع - $_selectedCategory',
+        'description': _detailsController.text.trim(),
         'status': 'pending',
-        'source': 'map',                                   // مهم: جاي من صفحة الخريطة
-        'ministry': 'بلاغ سريع من الموقع',                // يظهر في شاشة المسؤول كـ جهة
+        'source': 'map',
+        'ministry': 'بلاغ سريع من الموقع',
         'createdAt': FieldValue.serverTimestamp(),
+        'contactName': _nameController.text.trim(),
+        'contactPhone': _phoneController.text.trim(),
+        'attachments': [],
       };
 
-      // لو المستخدم مسجل، نخزن معلوماته (حتى شاشة المسؤول تستفيد)
       if (user != null) {
         data['userId'] = user.uid;
         data['citizenName'] = user.displayName ?? '';
         data['citizenEmail'] = user.email ?? '';
       }
 
-      await FirebaseFirestore.instance.collection('complaints').add(data);
+      final docRef =
+          await FirebaseFirestore.instance.collection('complaints').add(data);
+
+      // رفع المرفقات إن وُجدت
+      List<String> attachmentUrls = [];
+      if (_pickedImages.isNotEmpty) {
+        attachmentUrls = await _uploadImages(docRef.id);
+        if (attachmentUrls.isNotEmpty) {
+          await docRef.update({'attachments': attachmentUrls});
+        }
+      }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إرسال البلاغ بنجاح')),
+
+      await _showMessageDialog(
+        title: 'تم إرسال البلاغ',
+        message: attachmentUrls.isEmpty
+            ? 'تم إرسال البلاغ بنجاح وسيتم عرضه للجهة المختصة مع موقعه على الخريطة.'
+            : 'تم إرسال البلاغ مع ${attachmentUrls.length} مرفق/مرفقات وسيتم عرضه للجهة المختصة مع موقعه على الخريطة.',
       );
 
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في إرسال البلاغ: $e')),
+      await _showMessageDialog(
+        title: 'خطأ في إرسال البلاغ',
+        message: 'فشل في إرسال البلاغ:\n$e',
+        isError: true,
       );
     } finally {
       // ignore: control_flow_in_finally
@@ -147,7 +333,7 @@ class _MapReportScreenState extends State<MapReportScreen> {
 
               // الخريطة
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.55,
+                height: MediaQuery.of(context).size.height * 0.45,
                 child: Stack(
                   children: [
                     GoogleMap(
@@ -417,14 +603,14 @@ class _MapReportScreenState extends State<MapReportScreen> {
 
                         const SizedBox(height: 16),
 
-                        // نوع البلاغ
+                        // نوع البلاغ السريع
                         Align(
                           alignment: Alignment.centerRight,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'نوع البلاغ',
+                                'نوع البلاغ السريع',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -520,6 +706,182 @@ class _MapReportScreenState extends State<MapReportScreen> {
                           ),
                         ),
 
+                        const SizedBox(height: 16),
+
+                        // المرفقات (صور)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'المرفقات (صور المشكلة)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: const Color(0xFFCBD5E1),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: _pickImages,
+                                          style: ElevatedButton.styleFrom(
+                                            elevation: 0,
+                                            backgroundColor:
+                                                const Color(0xFFF1F5F9),
+                                            foregroundColor:
+                                                const Color(0xFF0F172A),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.attach_file,
+                                            size: 18,
+                                          ),
+                                          label: const Text(
+                                            'إرفاق صور',
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _pickedImages.isEmpty
+                                                ? 'يمكنك إرفاق حتى 5 صور لدعم البلاغ (اختياري).'
+                                                : 'تم اختيار ${_pickedImages.length} صورة.',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (_pickedImages.isNotEmpty)
+                                      SizedBox(
+                                        height: 80,
+                                        child: ListView.separated(
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: _pickedImages.length,
+                                          separatorBuilder: (_, __) =>
+                                              const SizedBox(width: 8),
+                                          itemBuilder: (context, index) {
+                                            final img = _pickedImages[index];
+                                            return Stack(
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8),
+                                                  child: Image.file(
+                                                    File(img.path),
+                                                    width: 80,
+                                                    height: 80,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                                Positioned(
+                                                  top: 2,
+                                                  left: 2,
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        _pickedImages
+                                                            .removeAt(index);
+                                                      });
+                                                    },
+                                                    child: Container(
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color:
+                                                            Colors.black54,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              2),
+                                                      child: const Icon(
+                                                        Icons.close,
+                                                        size: 14,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // معلومات التواصل
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'معلومات التواصل الخاصة بك',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _editableField(
+                                      label: 'الاسم الكامل',
+                                      icon: Icons.person_outline,
+                                      controller: _nameController,
+                                      keyboardType: TextInputType.name,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _editableField(
+                                      label: 'رقم الهاتف',
+                                      icon: Icons.phone_outlined,
+                                      controller: _phoneController,
+                                      keyboardType: TextInputType.phone,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
                         const SizedBox(height: 20),
 
                         // زر تأكيد الموقع وتقديم البلاغ
@@ -568,6 +930,57 @@ class _MapReportScreenState extends State<MapReportScreen> {
     );
   }
 
+  Widget _editableField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: const Color(0xFFCBD5E1),
+            ),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   // دالة تجيب موقع المستخدم وتحرك الكاميرا
   Future<void> _goToUserLocation() async {
     try {
@@ -588,6 +1001,12 @@ class _MapReportScreenState extends State<MapReportScreen> {
         if (permission == LocationPermission.denied) {
           if (!mounted) return;
           setState(() => _isLoadingLocation = false);
+          await _showMessageDialog(
+            title: 'صلاحيات الموقع',
+            message:
+                'لم يتم منح صلاحية الوصول إلى الموقع. يرجى تفعيلها من الإعدادات لاستخدام هذه الميزة.',
+            isError: true,
+          );
           return;
         }
       }
@@ -595,6 +1014,12 @@ class _MapReportScreenState extends State<MapReportScreen> {
       if (permission == LocationPermission.deniedForever) {
         if (!mounted) return;
         setState(() => _isLoadingLocation = false);
+        await _showMessageDialog(
+          title: 'صلاحيات الموقع',
+          message:
+              'تم رفض صلاحية الموقع نهائياً. الرجاء تفعيلها يدوياً من إعدادات النظام.',
+          isError: true,
+        );
         return;
       }
 
@@ -618,10 +1043,10 @@ class _MapReportScreenState extends State<MapReportScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoadingLocation = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تعذر الحصول على موقعك الحالي: $e'),
-        ),
+      await _showMessageDialog(
+        title: 'خطأ في الموقع',
+        message: 'تعذر الحصول على موقعك الحالي:\n$e',
+        isError: true,
       );
       return;
     }

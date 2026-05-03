@@ -3,7 +3,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'change_password_screen.dart';
+import 'notifications_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -174,7 +176,9 @@ class SettingsScreen extends StatelessWidget {
                   // Header
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       border: Border(
@@ -231,8 +235,7 @@ class SettingsScreen extends StatelessWidget {
 
                           // Profile Quick View
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Column(
                               children: [
                                 Stack(
@@ -250,8 +253,7 @@ class SettingsScreen extends StatelessWidget {
                                         ),
                                         image: photoUrl.isNotEmpty
                                             ? DecorationImage(
-                                                image:
-                                                    NetworkImage(photoUrl),
+                                                image: NetworkImage(photoUrl),
                                                 fit: BoxFit.cover,
                                               )
                                             : null,
@@ -312,8 +314,7 @@ class SettingsScreen extends StatelessWidget {
                           // إعدادات الحساب
                           const _SectionHeader(title: 'إعدادات الحساب'),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -323,8 +324,7 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color:
-                                        Colors.black.withOpacity(0.02),
+                                    color: Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -337,7 +337,15 @@ class SettingsScreen extends StatelessWidget {
                                     iconBgColor: const Color(0x1F137FEC),
                                     title: 'تفضيلات الإشعارات',
                                     showDivider: true,
-                                    onTap: () {},
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const NotificationsScreen(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                   _SettingsTile(
                                     icon: Icons.lock_outline,
@@ -363,8 +371,7 @@ class SettingsScreen extends StatelessWidget {
                           // إعدادات التطبيق
                           const _SectionHeader(title: 'إعدادات التطبيق'),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -374,8 +381,7 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color:
-                                        Colors.black.withOpacity(0.02),
+                                    color: Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -386,7 +392,9 @@ class SettingsScreen extends StatelessWidget {
                                   // اللغة (قائمة منسدلة)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 10),
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                     child: Row(
                                       children: [
                                         const _IconBox(
@@ -404,8 +412,7 @@ class SettingsScreen extends StatelessWidget {
                                                 'اللغة',
                                                 style: TextStyle(
                                                   fontSize: 14,
-                                                  fontWeight:
-                                                      FontWeight.w500,
+                                                  fontWeight: FontWeight.w500,
                                                   color: Color(0xFF0F172A),
                                                 ),
                                               ),
@@ -431,15 +438,15 @@ class SettingsScreen extends StatelessWidget {
                                   // الوضع الليلي (سويتش شكلي)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 10),
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                     child: Row(
                                       children: [
                                         const _IconBox(
-                                          icon:
-                                              Icons.dark_mode_outlined,
+                                          icon: Icons.dark_mode_outlined,
                                           bgColor: Color(0x1F137FEC),
-                                          iconColor:
-                                              SettingsScreen.primary,
+                                          iconColor: SettingsScreen.primary,
                                         ),
                                         const SizedBox(width: 12),
                                         const Expanded(
@@ -447,8 +454,7 @@ class SettingsScreen extends StatelessWidget {
                                             'الوضع الليلي',
                                             style: TextStyle(
                                               fontSize: 14,
-                                              fontWeight:
-                                                  FontWeight.w500,
+                                              fontWeight: FontWeight.w500,
                                               color: Color(0xFF0F172A),
                                             ),
                                           ),
@@ -458,31 +464,28 @@ class SettingsScreen extends StatelessWidget {
                                           height: 24,
                                           decoration: BoxDecoration(
                                             borderRadius:
-                                                BorderRadius.circular(
-                                                    999),
-                                            color:
-                                                const Color(0xFFE5E7EB),
+                                                BorderRadius.circular(999),
+                                            color: const Color(0xFFE5E7EB),
                                           ),
-                                          alignment:
-                                              Alignment.centerLeft,
-                                          padding:
-                                              const EdgeInsets.only(
-                                                  left: 3, right: 3),
+                                          alignment: Alignment.centerLeft,
+                                          padding: const EdgeInsets.only(
+                                            left: 3,
+                                            right: 3,
+                                          ),
                                           child: Container(
                                             width: 18,
                                             height: 18,
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                      999),
+                                                  BorderRadius.circular(999),
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.black
                                                       .withOpacity(0.1),
                                                   blurRadius: 3,
-                                                  offset: const Offset(
-                                                      0, 1),
+                                                  offset:
+                                                      const Offset(0, 1),
                                                 ),
                                               ],
                                             ),
@@ -501,8 +504,7 @@ class SettingsScreen extends StatelessWidget {
                           // معلومات
                           const _SectionHeader(title: 'معلومات'),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -512,8 +514,7 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color:
-                                        Colors.black.withOpacity(0.02),
+                                    color: Colors.black.withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -529,8 +530,7 @@ class SettingsScreen extends StatelessWidget {
                                     onTap: () => _showAboutDialog(context),
                                   ),
                                   _SettingsTile(
-                                    icon:
-                                        Icons.verified_user_outlined,
+                                    icon: Icons.verified_user_outlined,
                                     iconBgColor: const Color(0x1F137FEC),
                                     title: 'سياسة الخصوصية',
                                     showDivider: true,
@@ -551,8 +551,7 @@ class SettingsScreen extends StatelessWidget {
 
                           // زر تسجيل الخروج
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(
@@ -572,13 +571,12 @@ class SettingsScreen extends StatelessWidget {
                                   side: const BorderSide(
                                     color: Color(0xFFFCA5A5),
                                   ),
-                                  backgroundColor:
-                                      const Color(0xFFFFF1F2),
+                                  backgroundColor: const Color(0xFFFFF1F2),
                                   padding: const EdgeInsets.symmetric(
-                                      vertical: 12),
+                                    vertical: 12,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
                               ),
@@ -613,6 +611,7 @@ class SettingsScreen extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
+
   const _SectionHeader({required this.title});
 
   @override
@@ -683,8 +682,10 @@ class _SettingsTile extends StatelessWidget {
     final tile = InkWell(
       onTap: onTap,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         child: Row(
           children: [
             _IconBox(

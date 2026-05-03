@@ -64,7 +64,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final hasLetter = password.contains(RegExp(r'[A-Za-z]'));
     final hasDigit = password.contains(RegExp(r'[0-9]'));
     final hasSpecial =
-        password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>_\-]'));
+        password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>_\\-]'));
 
     return hasLetter && hasDigit && hasSpecial;
   }
@@ -562,9 +562,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                           trendColor:
                                               const Color(0xFF059669),
                                           title: 'الشكاوى المعالجة',
-                                          value:
-                                              _resolvedComplaintsCount
-                                                  .toString(),
+                                          value: _resolvedComplaintsCount
+                                              .toString(),
                                         ),
                                       ),
                                     ),
@@ -598,9 +597,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                           trendColor:
                                               const Color(0xFF059669),
                                           title: 'الشكاوى المعلقة',
-                                          value:
-                                              _pendingComplaintsCount
-                                                  .toString(),
+                                          value: _pendingComplaintsCount
+                                              .toString(),
                                         ),
                                       ),
                                     ),
@@ -692,8 +690,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 _PasswordField(
                                   label: 'كلمة المرور الحالية',
                                   icon: Icons.lock_outline,
-                                  controller:
-                                      _currentPasswordController,
+                                  controller: _currentPasswordController,
                                 ),
                                 _PasswordField(
                                   label: 'كلمة المرور الجديدة',
@@ -703,8 +700,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 _PasswordField(
                                   label: 'تأكيد كلمة المرور الجديدة',
                                   icon: Icons.lock_outline,
-                                  controller:
-                                      _confirmPasswordController,
+                                  controller: _confirmPasswordController,
                                 ),
                               ],
                             ],
@@ -726,8 +722,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   backgroundColor:
                                       AdminProfileScreen.primary,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -736,9 +731,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   ),
                                   elevation: 4,
                                   // ignore: deprecated_member_use
-                                  shadowColor:
-                                      AdminProfileScreen.primary
-                                          .withOpacity(0.3),
+                                  shadowColor: AdminProfileScreen.primary
+                                      .withOpacity(0.3),
                                 ),
                                 icon: Icon(
                                   _isEditing
