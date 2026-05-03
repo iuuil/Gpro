@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -116,6 +116,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   Widget _buildPasswordField({
+    required BuildContext context,
     required String label,
     required String hint,
     required TextEditingController controller,
@@ -123,32 +124,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     required VoidCallback onToggleVisibility,
     required IconData prefixIcon,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF4B5563),
+            color: theme.hintColor,
           ),
         ),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
-              BoxShadow(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
             ],
             border: Border.all(
-              color: const Color(0xFFE5E7EB),
+              color: theme.dividerColor,
             ),
           ),
           child: Row(
@@ -157,7 +161,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Icon(
                 prefixIcon,
                 size: 18,
-                color: const Color(0xFF9CA3AF),
+                color: theme.iconTheme.color?.withOpacity(0.6) ??
+                    const Color(0xFF9CA3AF),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -166,6 +171,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   obscureText: obscured,
                   decoration: InputDecoration(
                     hintText: hint,
+                    hintStyle: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
                     border: InputBorder.none,
                     isCollapsed: true,
                     contentPadding: const EdgeInsets.symmetric(
@@ -181,7 +189,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   size: 18,
-                  color: const Color(0xFF9CA3AF),
+                  color: theme.iconTheme.color?.withOpacity(0.6) ??
+                      const Color(0xFF9CA3AF),
                 ),
               ),
             ],
@@ -193,10 +202,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: ChangePasswordScreen.backgroundLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -204,20 +216,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                       width: 1,
                     ),
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
                 ),
                 child: Row(
@@ -228,21 +242,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF4B5563),
+                          color: theme.appBarTheme.foregroundColor ??
+                              theme.iconTheme.color ??
+                              const Color(0xFF4B5563),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'تغيير كلمة المرور',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color: theme.appBarTheme.foregroundColor ??
+                              theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -257,24 +274,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // المحتوى
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 20, 16, 20),
                   child: Container(
                     constraints:
                         const BoxConstraints(maxWidth: 520),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'لأمان حسابك، الرجاء إدخال كلمة المرور الحالية ثم تعيين كلمة مرور جديدة.',
-                          style: TextStyle(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 13,
-                            color: Color(0xFF6B7280),
+                            color: theme.hintColor,
                             height: 1.6,
                           ),
                         ),
                         const SizedBox(height: 20),
 
                         _buildPasswordField(
+                          context: context,
                           label: 'كلمة المرور الحالية',
                           hint: 'أدخل كلمة المرور الحالية',
                           controller: _currentController,
@@ -289,6 +308,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         const SizedBox(height: 16),
 
                         _buildPasswordField(
+                          context: context,
                           label: 'كلمة المرور الجديدة',
                           hint: 'أدخل كلمة المرور الجديدة',
                           controller: _newController,
@@ -303,6 +323,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         const SizedBox(height: 16),
 
                         _buildPasswordField(
+                          context: context,
                           label: 'تأكيد كلمة المرور الجديدة',
                           hint: 'أعد إدخال كلمة المرور الجديدة',
                           controller: _confirmController,
@@ -323,9 +344,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 const EdgeInsets.only(bottom: 8),
                             child: Text(
                               _errorText!,
-                              style: const TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
-                                color: Color(0xFFB91C1C),
+                                color: theme.colorScheme.error,
                               ),
                             ),
                           ),
@@ -350,21 +371,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     height: 52,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _changePassword,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ChangePasswordScreen.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                      ),
                       child: _isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: theme.colorScheme.onPrimary,
                               ),
                             )
                           : const Text(
@@ -374,6 +387,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 fontSize: 15,
                               ),
                             ),
+                      // الألوان من ElevatedButtonTheme في AppTheme
                     ),
                   ),
                 ),

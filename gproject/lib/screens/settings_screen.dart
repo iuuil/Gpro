@@ -3,7 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import '../main.dart'; // مهم: حتى نستخدم MyApp.of(context)
 import 'change_password_screen.dart';
 import 'notifications_screen.dart';
 
@@ -39,7 +39,6 @@ class SettingsScreen extends StatelessWidget {
     await user.reload();
     final refreshed = FirebaseAuth.instance.currentUser;
 
-    // قراءة وثيقة المستخدم من Firestore
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(refreshed!.uid)
@@ -64,26 +63,33 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _showAboutDialog(BuildContext context) async {
+    final theme = Theme.of(context);
     await showDialog(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'حول التطبيق',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.titleMedium,
           ),
-          content: const Text(
+          content: Text(
             'تطبيق صوت المواطن يسهّل على المواطنين تقديم الشكاوى والمتابعة مع الجهات الحكومية المختصة بطريقة منظمة وآمنة، مع عرض حالة الشكوى وتحديثاتها بشكل مستمر.',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.bodyMedium,
           ),
           actionsAlignment: MainAxisAlignment.end,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('حسنًا'),
+              child: Text(
+                'حسنًا',
+                style: theme.textTheme.bodyMedium,
+              ),
             ),
           ],
         );
@@ -92,26 +98,33 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _showPrivacyDialog(BuildContext context) async {
+    final theme = Theme.of(context);
     await showDialog(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'سياسة الخصوصية',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.titleMedium,
           ),
-          content: const Text(
+          content: Text(
             'نقوم باستخدام بياناتك لتقديم خدمة تقديم الشكاوى فقط، ولا نشارك معلوماتك الشخصية مع أي جهة غير مخوّلة. قد نستخدم بعض البيانات الإحصائية لتحسين أداء التطبيق وتجربة المستخدم دون الكشف عن هويتك.',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.bodyMedium,
           ),
           actionsAlignment: MainAxisAlignment.end,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('حسنًا'),
+              child: Text(
+                'حسنًا',
+                style: theme.textTheme.bodyMedium,
+              ),
             ),
           ],
         );
@@ -120,26 +133,33 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _showTermsDialog(BuildContext context) async {
+    final theme = Theme.of(context);
     await showDialog(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'شروط الخدمة',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.titleMedium,
           ),
-          content: const Text(
+          content: Text(
             'باستخدامك لتطبيق صوت المواطن، فإنك تتعهد بإدخال بيانات صحيحة وتجنّب تقديم بلاغات كيدية أو مضللة. يحتفظ فريق التطبيق بحق مراجعة أو إلغاء أي شكوى مخالفة والقيام بالتعديلات اللازمة على الخدمة متى ما دعت الحاجة.',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.bodyMedium,
           ),
           actionsAlignment: MainAxisAlignment.end,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('حسنًا'),
+              child: Text(
+                'حسنًا',
+                style: theme.textTheme.bodyMedium,
+              ),
             ),
           ],
         );
@@ -149,6 +169,10 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // نحدد إذا الوضع الحالي Dark أو لا من الـ Theme
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+
     return FutureBuilder<Map<String, dynamic>?>(
       future: _loadUserProfile(),
       builder: (context, snapshot) {
@@ -169,20 +193,20 @@ class SettingsScreen extends StatelessWidget {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
-            backgroundColor: backgroundLight,
+            backgroundColor: theme.scaffoldBackgroundColor,
             body: SafeArea(
               child: Column(
                 children: [
                   // Header
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
                       border: Border(
-                        bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                        bottom: BorderSide(
+                          color: theme.dividerColor,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -199,21 +223,21 @@ class SettingsScreen extends StatelessWidget {
                               );
                             },
                             padding: EdgeInsets.zero,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_back_ios_new,
                               size: 20,
-                              color: Color(0xFF4B5563),
+                              color: theme.iconTheme.color ??
+                                  const Color(0xFF4B5563),
                             ),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'الإعدادات',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -253,7 +277,8 @@ class SettingsScreen extends StatelessWidget {
                                         ),
                                         image: photoUrl.isNotEmpty
                                             ? DecorationImage(
-                                                image: NetworkImage(photoUrl),
+                                                image:
+                                                    NetworkImage(photoUrl),
                                                 fit: BoxFit.cover,
                                               )
                                             : null,
@@ -291,18 +316,18 @@ class SettingsScreen extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 Text(
                                   displayName,
-                                  style: const TextStyle(
+                                  style:
+                                      theme.textTheme.bodyLarge?.copyWith(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   email,
-                                  style: const TextStyle(
+                                  style:
+                                      theme.textTheme.bodySmall?.copyWith(
                                     fontSize: 13,
-                                    color: Color(0xFF6B7280),
                                   ),
                                 ),
                               ],
@@ -314,13 +339,14 @@ class SettingsScreen extends StatelessWidget {
                           // إعدادات الحساب
                           const _SectionHeader(title: 'إعدادات الحساب'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: theme.dividerColor,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -371,13 +397,14 @@ class SettingsScreen extends StatelessWidget {
                           // إعدادات التطبيق
                           const _SectionHeader(title: 'إعدادات التطبيق'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: theme.dividerColor,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -389,12 +416,10 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               child: Column(
                                 children: [
-                                  // اللغة (قائمة منسدلة)
+                                  // اللغة
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
+                                        horizontal: 12, vertical: 10),
                                     child: Row(
                                       children: [
                                         const _IconBox(
@@ -407,21 +432,24 @@ class SettingsScreen extends StatelessWidget {
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
-                                            children: const [
+                                            children: [
                                               Text(
                                                 'اللغة',
-                                                style: TextStyle(
+                                                style: theme
+                                                    .textTheme.bodyMedium
+                                                    ?.copyWith(
                                                   fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF0F172A),
+                                                  fontWeight:
+                                                      FontWeight.w500,
                                                 ),
                                               ),
-                                              SizedBox(height: 2),
+                                              const SizedBox(height: 2),
                                               Text(
                                                 'العربية',
-                                                style: TextStyle(
+                                                style: theme
+                                                    .textTheme.bodySmall
+                                                    ?.copyWith(
                                                   fontSize: 11,
-                                                  color: Color(0xFF6B7280),
                                                 ),
                                               ),
                                             ],
@@ -431,16 +459,14 @@ class SettingsScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  const Divider(
+                                  Divider(
                                     height: 1,
-                                    color: Color(0xFFE5E7EB),
+                                    color: theme.dividerColor,
                                   ),
-                                  // الوضع الليلي (سويتش شكلي)
+                                  // الوضع الليلي
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
+                                        horizontal: 12, vertical: 10),
                                     child: Row(
                                       children: [
                                         const _IconBox(
@@ -449,47 +475,32 @@ class SettingsScreen extends StatelessWidget {
                                           iconColor: SettingsScreen.primary,
                                         ),
                                         const SizedBox(width: 12),
-                                        const Expanded(
+                                        Expanded(
                                           child: Text(
                                             'الوضع الليلي',
-                                            style: TextStyle(
+                                            style: theme
+                                                .textTheme.bodyMedium
+                                                ?.copyWith(
                                               fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color(0xFF0F172A),
+                                              fontWeight:
+                                                  FontWeight.w500,
                                             ),
                                           ),
                                         ),
-                                        Container(
-                                          width: 44,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(999),
-                                            color: const Color(0xFFE5E7EB),
-                                          ),
-                                          alignment: Alignment.centerLeft,
-                                          padding: const EdgeInsets.only(
-                                            left: 3,
-                                            right: 3,
-                                          ),
-                                          child: Container(
-                                            width: 18,
-                                            height: 18,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(999),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 3,
-                                                  offset:
-                                                      const Offset(0, 1),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                        Switch(
+                                          value: isDarkTheme,
+                                          activeColor: primary,
+                                          onChanged: (val) {
+                                            final appState =
+                                                MyApp.of(context);
+                                            if (appState == null) return;
+
+                                            appState.setThemeMode(
+                                              val
+                                                  ? ThemeMode.dark
+                                                  : ThemeMode.light,
+                                            );
+                                          },
                                         ),
                                       ],
                                     ),
@@ -504,13 +515,14 @@ class SettingsScreen extends StatelessWidget {
                           // معلومات
                           const _SectionHeader(title: 'معلومات'),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: theme.dividerColor,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -530,11 +542,13 @@ class SettingsScreen extends StatelessWidget {
                                     onTap: () => _showAboutDialog(context),
                                   ),
                                   _SettingsTile(
-                                    icon: Icons.verified_user_outlined,
+                                    icon:
+                                        Icons.verified_user_outlined,
                                     iconBgColor: const Color(0x1F137FEC),
                                     title: 'سياسة الخصوصية',
                                     showDivider: true,
-                                    onTap: () => _showPrivacyDialog(context),
+                                    onTap: () =>
+                                        _showPrivacyDialog(context),
                                   ),
                                   _SettingsTile(
                                     icon: Icons.description_outlined,
@@ -551,7 +565,8 @@ class SettingsScreen extends StatelessWidget {
 
                           // زر تسجيل الخروج
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
                             child: SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(
@@ -571,12 +586,14 @@ class SettingsScreen extends StatelessWidget {
                                   side: const BorderSide(
                                     color: Color(0xFFFCA5A5),
                                   ),
-                                  backgroundColor: const Color(0xFFFFF1F2),
+                                  backgroundColor:
+                                      const Color(0xFFFFF1F2),
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 12,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius:
+                                        BorderRadius.circular(16),
                                   ),
                                 ),
                               ),
@@ -585,11 +602,10 @@ class SettingsScreen extends StatelessWidget {
 
                           const SizedBox(height: 16),
 
-                          const Text(
+                          Text(
                             'صوت المواطن - الإصدار 2.4.0',
-                            style: TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 11,
-                              color: Color(0xFF9CA3AF),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -611,21 +627,20 @@ class SettingsScreen extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-
   const _SectionHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(right: 20, left: 20, bottom: 6),
       child: Align(
         alignment: Alignment.centerRight,
         child: Text(
           title.toUpperCase(),
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF6B7280),
             letterSpacing: 0.8,
           ),
         ),
@@ -679,13 +694,13 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final tile = InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
             _IconBox(
@@ -697,16 +712,16 @@ class _SettingsTile extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F172A),
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: Color(0xFF9CA3AF),
+              color: theme.iconTheme.color?.withOpacity(0.4) ??
+                  const Color(0xFF9CA3AF),
             ),
           ],
         ),
@@ -718,9 +733,9 @@ class _SettingsTile extends StatelessWidget {
     return Column(
       children: [
         tile,
-        const Divider(
+        Divider(
           height: 1,
-          color: Color(0xFFE5E7EB),
+          color: Theme.of(context).dividerColor,
         ),
       ],
     );
@@ -746,19 +761,21 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         value: _selected,
-        icon: const Icon(
+        icon: Icon(
           Icons.expand_more,
-          color: Color(0xFF9CA3AF),
+          color: theme.iconTheme.color?.withOpacity(0.6) ??
+              const Color(0xFF9CA3AF),
         ),
-        style: const TextStyle(
+        style: theme.textTheme.bodyMedium?.copyWith(
           fontSize: 13,
-          color: Color(0xFF0F172A),
         ),
         borderRadius: BorderRadius.circular(12),
-        dropdownColor: Colors.white,
+        dropdownColor: theme.cardColor,
         items: _items.map((lang) {
           return DropdownMenuItem<String>(
             value: lang,
@@ -776,17 +793,20 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
             await showDialog(
               context: context,
               builder: (ctx) {
+                final dialogTheme = Theme.of(ctx);
                 return AlertDialog(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  title: const Text(
+                  title: Text(
                     'اللغة غير متوفرة',
                     textDirection: TextDirection.rtl,
+                    style: dialogTheme.textTheme.titleMedium,
                   ),
-                  content: const Text(
+                  content: Text(
                     'سيتم إضافة هذه اللغة قريبًا في التحديثات القادمة.',
                     textDirection: TextDirection.rtl,
+                    style: dialogTheme.textTheme.bodyMedium,
                   ),
                   actionsAlignment: MainAxisAlignment.end,
                   actions: [
@@ -794,7 +814,10 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
                       onPressed: () {
                         Navigator.of(ctx).pop();
                       },
-                      child: const Text('حسنًا'),
+                      child: Text(
+                        'حسنًا',
+                        style: dialogTheme.textTheme.bodyMedium,
+                      ),
                     ),
                   ],
                 );

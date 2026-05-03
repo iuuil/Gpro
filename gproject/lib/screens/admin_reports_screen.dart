@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import, duplicate_ignore, deprecated_member_use, use_build_context_synchronously
+// ignore_for_file: unused_import, unused_local_variable, deprecated_member_use
 
 import 'dart:math';
 
@@ -9,15 +9,15 @@ import 'package:flutter/material.dart';
 class AdminReportsScreen extends StatefulWidget {
   const AdminReportsScreen({super.key});
 
-  static const Color primaryColor = Color(0xFF2563EB);
-  static const Color bgColor = Color(0xFFF8FAFC);
   static const double contentMaxWidth = 520;
 
   @override
-  State<AdminReportsScreen> createState() => _AdminReportsScreenState();
+  State<AdminReportsScreen> createState() =>
+      _AdminReportsScreenState();
 }
 
-class _AdminReportsScreenState extends State<AdminReportsScreen> {
+class _AdminReportsScreenState
+    extends State<AdminReportsScreen> {
   // فلاتر الواجهة
   DateTime? startDate;
   DateTime? endDate;
@@ -34,6 +34,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final complaintsRef =
         FirebaseFirestore.instance.collection('complaints');
 
@@ -43,7 +46,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AdminReportsScreen.bgColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -53,39 +56,43 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                       width: 1,
                     ),
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF0F172A),
+                        color: theme.iconTheme.color ??
+                            const Color(0xFF0F172A),
                         size: 20,
                       ),
                     ),
-                    const Text(
+                    Text(
                       'التقارير والإحصائيات',
-                      style: TextStyle(
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F2937),
                       ),
                     ),
                     const SizedBox(width: 48),
@@ -105,10 +112,18 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text(
-                          'خطأ في تحميل البيانات: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 13),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'خطأ في تحميل البيانات: ${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(
+                              fontSize: 13,
+                              color: theme
+                                  .colorScheme.error,
+                            ),
+                          ),
                         ),
                       );
                     }
@@ -117,37 +132,41 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
                     // ===== تطبيق الفلاتر المطبقة =====
 
-                    if (appliedType != null && appliedType != 'all') {
+                    if (appliedType != null &&
+                        appliedType != 'all') {
                       docs = docs.where((d) {
-                        final data =
-                            d.data() as Map<String, dynamic>;
+                        final data = d.data()
+                            as Map<String, dynamic>;
                         return data['type'] == appliedType;
                       }).toList();
                     }
 
-                    if (appliedRegion != null && appliedRegion != 'all') {
+                    if (appliedRegion != null &&
+                        appliedRegion != 'all') {
                       docs = docs.where((d) {
-                        final data =
-                            d.data() as Map<String, dynamic>;
-                        return data['region'] == appliedRegion;
+                        final data = d.data()
+                            as Map<String, dynamic>;
+                        return data['region'] ==
+                            appliedRegion;
                       }).toList();
                     }
 
                     if (appliedMinistry != null &&
                         appliedMinistry != 'all') {
                       docs = docs.where((d) {
-                        final data =
-                            d.data() as Map<String, dynamic>;
-                        return data['ministry'] == appliedMinistry;
+                        final data = d.data()
+                            as Map<String, dynamic>;
+                        return data['ministry'] ==
+                            appliedMinistry;
                       }).toList();
                     }
 
                     if (appliedStartDate != null) {
                       docs = docs.where((d) {
-                        final data =
-                            d.data() as Map<String, dynamic>;
-                        final ts =
-                            data['createdAt'] as Timestamp?;
+                        final data = d.data()
+                            as Map<String, dynamic>;
+                        final ts = data['createdAt']
+                            as Timestamp?;
                         if (ts == null) return false;
                         final dt = ts.toDate();
                         final from = DateTime(
@@ -162,10 +181,10 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
                     if (appliedEndDate != null) {
                       docs = docs.where((d) {
-                        final data =
-                            d.data() as Map<String, dynamic>;
-                        final ts =
-                            data['createdAt'] as Timestamp?;
+                        final data = d.data()
+                            as Map<String, dynamic>;
+                        final ts = data['createdAt']
+                            as Timestamp?;
                         if (ts == null) return false;
                         final dt = ts.toDate();
                         final to = DateTime(
@@ -198,18 +217,21 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       final data =
                           d.data() as Map<String, dynamic>;
                       final status =
-                          (data['status'] ?? 'open').toString();
+                          (data['status'] ?? 'open')
+                              .toString();
                       final type =
-                          (data['type'] ?? 'unknown').toString();
-                      final ministry = (data['ministry'] ??
-                              'غير محدد')
-                          .toString();
+                          (data['type'] ?? 'unknown')
+                              .toString();
+                      final ministry =
+                          (data['ministry'] ?? 'غير محدد')
+                              .toString();
                       final createdAt =
                           data['createdAt'] as Timestamp?;
                       final resolvedAt =
                           data['resolvedAt'] as Timestamp?;
 
-                      byType[type] = (byType[type] ?? 0) + 1;
+                      byType[type] =
+                          (byType[type] ?? 0) + 1;
                       byMinistry[ministry] =
                           (byMinistry[ministry] ?? 0) + 1;
 
@@ -228,7 +250,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                             resolvedAt != null) {
                           final diff = resolvedAt
                               .toDate()
-                              .difference(createdAt.toDate())
+                              .difference(
+                                  createdAt.toDate())
                               .inHours;
                           totalResolutionDays +=
                               (diff / 24).round();
@@ -259,9 +282,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: AdminReportsScreen
-                                .contentMaxWidth,
+                          constraints:
+                              const BoxConstraints(
+                            maxWidth:
+                                AdminReportsScreen
+                                    .contentMaxWidth,
                           ),
                           child: Column(
                             crossAxisAlignment:
@@ -270,32 +295,46 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                               _FilterSection(
                                 startDate: startDate,
                                 endDate: endDate,
-                                selectedType: selectedType,
-                                selectedRegion: selectedRegion,
-                                selectedMinistry: selectedMinistry,
-                                onPickStartDate: () async {
-                                  final picked =
-                                      await showDatePicker(
-                                    context: context,
-                                    initialDate: startDate ??
-                                        DateTime.now(),
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      startDate = picked;
-                                    });
-                                  }
-                                },
-                                onPickEndDate: () async {
+                                selectedType:
+                                    selectedType,
+                                selectedRegion:
+                                    selectedRegion,
+                                selectedMinistry:
+                                    selectedMinistry,
+                                onPickStartDate:
+                                    () async {
                                   final picked =
                                       await showDatePicker(
                                     context: context,
                                     initialDate:
-                                        endDate ?? DateTime.now(),
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime(2100),
+                                        startDate ??
+                                            DateTime
+                                                .now(),
+                                    firstDate:
+                                        DateTime(2020),
+                                    lastDate:
+                                        DateTime(2100),
+                                  );
+                                  if (picked != null) {
+                                    setState(() {
+                                      startDate =
+                                          picked;
+                                    });
+                                  }
+                                },
+                                onPickEndDate:
+                                    () async {
+                                  final picked =
+                                      await showDatePicker(
+                                    context: context,
+                                    initialDate:
+                                        endDate ??
+                                            DateTime
+                                                .now(),
+                                    firstDate:
+                                        DateTime(2020),
+                                    lastDate:
+                                        DateTime(2100),
                                   );
                                   if (picked != null) {
                                     setState(() {
@@ -310,20 +349,27 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 },
                                 onRegionChanged: (v) {
                                   setState(() {
-                                    selectedRegion = v;
+                                    selectedRegion =
+                                        v;
                                   });
                                 },
-                                onMinistryChanged: (v) {
+                                onMinistryChanged:
+                                    (v) {
                                   setState(() {
-                                    selectedMinistry = v;
+                                    selectedMinistry =
+                                        v;
                                   });
                                 },
                                 onApplyFilters: () {
                                   setState(() {
-                                    appliedStartDate = startDate;
-                                    appliedEndDate = endDate;
-                                    appliedType = selectedType;
-                                    appliedRegion = selectedRegion;
+                                    appliedStartDate =
+                                        startDate;
+                                    appliedEndDate =
+                                        endDate;
+                                    appliedType =
+                                        selectedType;
+                                    appliedRegion =
+                                        selectedRegion;
                                     appliedMinistry =
                                         selectedMinistry;
                                   });
@@ -332,46 +378,68 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                   setState(() {
                                     startDate = null;
                                     endDate = null;
-                                    selectedType = 'all';
-                                    selectedRegion = 'all';
-                                    selectedMinistry = 'all';
+                                    selectedType =
+                                        'all';
+                                    selectedRegion =
+                                        'all';
+                                    selectedMinistry =
+                                        'all';
 
-                                    appliedStartDate = null;
-                                    appliedEndDate = null;
-                                    appliedType = 'all';
-                                    appliedRegion = 'all';
-                                    appliedMinistry = 'all';
+                                    appliedStartDate =
+                                        null;
+                                    appliedEndDate =
+                                        null;
+                                    appliedType =
+                                        'all';
+                                    appliedRegion =
+                                        'all';
+                                    appliedMinistry =
+                                        'all';
                                   });
                                 },
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
+                              const SizedBox(
+                                  height: 16),
+                              Text(
                                 'ملخص عام',
-                                style: TextStyle(
+                                style: theme
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF111827),
+                                  fontWeight:
+                                      FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(
+                                  height: 8),
                               _SummaryGrid(
-                                totalComplaints: totalComplaints,
-                                resolvedCount: resolvedCount,
+                                totalComplaints:
+                                    totalComplaints,
+                                resolvedCount:
+                                    resolvedCount,
                                 openCount: openCount,
                                 avgResolutionDays:
                                     avgResolutionDays,
-                                resolvedPercent: resolvedPercent,
+                                resolvedPercent:
+                                    resolvedPercent,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(
+                                  height: 16),
                               _ComplaintsByMinistrySection(
-                                totalComplaints: totalComplaints,
-                                byMinistry: byMinistry,
+                                totalComplaints:
+                                    totalComplaints,
+                                byMinistry:
+                                    byMinistry,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(
+                                  height: 16),
                               _ComplaintsOverTimeSection(
-                                countsByMonth: countsByMonth,
+                                countsByMonth:
+                                    countsByMonth,
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(
+                                  height: 16),
                             ],
                           ),
                         ),
@@ -421,6 +489,10 @@ class _FilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     String startLabel = 'غير محدد';
     String endLabel = 'غير محدد';
 
@@ -433,32 +505,63 @@ class _FilterSection extends StatelessWidget {
           '${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}';
     }
 
+    final baseDecoration = InputDecoration(
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 10,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: theme.dividerColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: theme.dividerColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: primary,
+          width: 1.5,
+        ),
+      ),
+      fillColor: theme.cardColor,
+      filled: true,
+      hintStyle: theme.textTheme.bodySmall?.copyWith(
+        fontSize: 13,
+        color: theme.hintColor,
+      ),
+    );
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+        border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 360;
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'تصفية التقارير',
-                style: TextStyle(
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 12),
@@ -475,7 +578,8 @@ class _FilterSection extends StatelessWidget {
                       child: TextField(
                         readOnly: true,
                         onTap: onPickStartDate,
-                        decoration: _inputDecoration.copyWith(
+                        decoration:
+                            baseDecoration.copyWith(
                           hintText: startLabel,
                         ),
                       ),
@@ -490,7 +594,8 @@ class _FilterSection extends StatelessWidget {
                       child: TextField(
                         readOnly: true,
                         onTap: onPickEndDate,
-                        decoration: _inputDecoration.copyWith(
+                        decoration:
+                            baseDecoration.copyWith(
                           hintText: endLabel,
                         ),
                       ),
@@ -502,7 +607,8 @@ class _FilterSection extends StatelessWidget {
                         : constraints.maxWidth,
                     child: _LabeledField(
                       label: 'نوع الشكوى',
-                      child: DropdownButtonFormField<String>(
+                      child: DropdownButtonFormField<
+                          String>(
                         items: const [
                           DropdownMenuItem(
                             value: 'all',
@@ -526,7 +632,7 @@ class _FilterSection extends StatelessWidget {
                           ),
                         ],
                         onChanged: onTypeChanged,
-                        decoration: _inputDecoration,
+                        decoration: baseDecoration,
                         value: selectedType ?? 'all',
                       ),
                     ),
@@ -537,7 +643,8 @@ class _FilterSection extends StatelessWidget {
                         : constraints.maxWidth,
                     child: _LabeledField(
                       label: 'المنطقة',
-                      child: DropdownButtonFormField<String>(
+                      child:
+                          DropdownButtonFormField<String>(
                         items: const [
                           DropdownMenuItem(
                             value: 'all',
@@ -565,7 +672,7 @@ class _FilterSection extends StatelessWidget {
                           ),
                         ],
                         onChanged: onRegionChanged,
-                        decoration: _inputDecoration,
+                        decoration: baseDecoration,
                         value: selectedRegion ?? 'all',
                       ),
                     ),
@@ -574,7 +681,8 @@ class _FilterSection extends StatelessWidget {
                     width: constraints.maxWidth,
                     child: _LabeledField(
                       label: 'الوزارة',
-                      child: DropdownButtonFormField<String>(
+                      child:
+                          DropdownButtonFormField<String>(
                         items: const [
                           DropdownMenuItem(
                             value: 'all',
@@ -586,7 +694,8 @@ class _FilterSection extends StatelessWidget {
                           ),
                           DropdownMenuItem(
                             value: 'وزارة الموارد المائية',
-                            child: Text('وزارة الموارد المائية'),
+                            child:
+                                Text('وزارة الموارد المائية'),
                           ),
                           DropdownMenuItem(
                             value: 'وزارة الداخلية',
@@ -598,7 +707,7 @@ class _FilterSection extends StatelessWidget {
                           ),
                         ],
                         onChanged: onMinistryChanged,
-                        decoration: _inputDecoration,
+                        decoration: baseDecoration,
                         value: selectedMinistry ?? 'all',
                       ),
                     ),
@@ -611,14 +720,17 @@ class _FilterSection extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            AdminReportsScreen.primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: primary,
+                        foregroundColor:
+                            theme.colorScheme.onPrimary,
                         elevation: 0,
                         padding:
-                            const EdgeInsets.symmetric(vertical: 12),
+                            const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius:
+                              BorderRadius.circular(14),
                         ),
                       ),
                       onPressed: onApplyFilters,
@@ -634,22 +746,26 @@ class _FilterSection extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                            color: Color(0xFFE5E7EB)),
-                        padding: const EdgeInsets.symmetric(
+                        side: BorderSide(
+                            color: theme.dividerColor),
+                        padding:
+                            const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 12,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius:
+                              BorderRadius.circular(14),
                         ),
                       ),
                       onPressed: onResetFilters,
-                      child: const Text(
+                      child: Text(
                         'إعادة تعيين',
-                        style: TextStyle(
+                        style: theme
+                            .textTheme.bodyMedium
+                            ?.copyWith(
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF4B5563),
+                          color: theme.hintColor,
                         ),
                       ),
                     ),
@@ -664,30 +780,6 @@ class _FilterSection extends StatelessWidget {
   }
 }
 
-const InputDecoration _inputDecoration = InputDecoration(
-  isDense: true,
-  contentPadding:
-      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-  border: OutlineInputBorder(
-    borderRadius: BorderRadius.all(Radius.circular(10)),
-    borderSide: BorderSide(color: Color(0xFFE5E7EB)),
-  ),
-  enabledBorder: OutlineInputBorder(
-    borderRadius: BorderRadius.all(Radius.circular(10)),
-    borderSide: BorderSide(color: Color(0xFFE5E7EB)),
-  ),
-  focusedBorder: OutlineInputBorder(
-    borderRadius: BorderRadius.all(Radius.circular(10)),
-    borderSide: BorderSide(
-      color: AdminReportsScreen.primaryColor,
-      width: 1.5,
-    ),
-  ),
-  fillColor: Colors.white,
-  filled: true,
-  hintStyle: TextStyle(fontSize: 13),
-);
-
 class _LabeledField extends StatelessWidget {
   final String label;
   final Widget child;
@@ -699,15 +791,16 @@ class _LabeledField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 11,
-            color: Color(0xFF6B7280),
+            color: theme.hintColor,
           ),
         ),
         const SizedBox(height: 4),
@@ -736,49 +829,71 @@ class _SummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final avgText = avgResolutionDays.toStringAsFixed(1);
     final resolvedPercentText =
         resolvedPercent.toStringAsFixed(0);
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 2.4,
-      children: [
-        _SummaryCard(
-          label: 'إجمالي الشكاوى',
-          value: totalComplaints.toString(),
-          hint: 'حسب الفلاتر الحالية',
-          trendIcon: '●',
-          trendColor: const Color(0xFF2563EB),
-        ),
-        _SummaryCard(
-          label: 'تم حلها',
-          value: resolvedCount.toString(),
-          hint: '$resolvedPercentText% نسبة الحل',
-          trendIcon: '●',
-          trendColor: const Color(0xFF16A34A),
-        ),
-        _SummaryCard(
-          label: 'متوسط وقت الحل',
-          value: totalComplaints == 0
-              ? '-'
-              : '$avgText يوم',
-          hint: 'يُحسب من الفرق بين تاريخ الإنشاء والحل',
-          trendIcon: '●',
-          trendColor: const Color(0xFF2563EB),
-        ),
-        _SummaryCard(
-          label: 'شكاوى مفتوحة',
-          value: openCount.toString(),
-          hint: 'ما زالت قيد المتابعة',
-          trendIcon: '●',
-          trendColor: const Color(0xFF2563EB),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 360;
+        final cardWidth = isWide
+            ? (constraints.maxWidth - 8) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: _SummaryCard(
+                label: 'إجمالي الشكاوى',
+                value: totalComplaints.toString(),
+                hint: 'حسب الفلاتر الحالية',
+                trendIcon: '●',
+                trendColor:
+                    theme.colorScheme.primary,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SummaryCard(
+                label: 'تم حلها',
+                value: resolvedCount.toString(),
+                hint: '$resolvedPercentText% نسبة الحل',
+                trendIcon: '●',
+                trendColor: const Color(0xFF16A34A),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SummaryCard(
+                label: 'متوسط وقت الحل',
+                value: totalComplaints == 0
+                    ? '-'
+                    : '$avgText يوم',
+                hint:
+                    'يُحسب من الفرق بين تاريخ الإنشاء والحل',
+                trendIcon: '●',
+                trendColor:
+                    theme.colorScheme.primary,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SummaryCard(
+                label: 'شكاوى مفتوحة',
+                value: openCount.toString(),
+                hint: 'ما زالت قيد المتابعة',
+                trendIcon: '●',
+                trendColor:
+                    theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -800,23 +915,28 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          )
+        border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment:
@@ -824,9 +944,10 @@ class _SummaryCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style:
+                    theme.textTheme.bodySmall?.copyWith(
                   fontSize: 11,
-                  color: Color(0xFF6B7280),
+                  color: theme.hintColor,
                 ),
               ),
               Text(
@@ -842,18 +963,19 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: theme.textTheme.titleLarge
+                ?.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             hint,
-            style: const TextStyle(
+            style:
+                theme.textTheme.bodySmall?.copyWith(
               fontSize: 10,
-              color: Color(0xFF9CA3AF),
+              color: theme.hintColor,
             ),
           ),
         ],
@@ -864,7 +986,8 @@ class _SummaryCard extends StatelessWidget {
 
 // ====================== الشكاوى حسب الوزارة ======================
 
-class _ComplaintsByMinistrySection extends StatelessWidget {
+class _ComplaintsByMinistrySection
+    extends StatelessWidget {
   final int totalComplaints;
   final Map<String, int> byMinistry;
 
@@ -875,45 +998,54 @@ class _ComplaintsByMinistrySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = totalComplaints == 0 ? 1 : totalComplaints;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    final entries = byMinistry.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final top =
-        entries.length > 6 ? entries.sublist(0, 6) : entries;
+    final total =
+        totalComplaints == 0 ? 1 : totalComplaints;
+
+    final entries =
+        byMinistry.entries.toList()
+          ..sort((a, b) =>
+              b.value.compareTo(a.value));
+    final top = entries.length > 6
+        ? entries.sublist(0, 6)
+        : entries;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          )
+        border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'الشكاوى حسب الوزارة',
-            style: TextStyle(
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 15,
-              color: Color(0xFF111827),
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
+          Text(
             'توزيع الشكاوى على الوزارات المختلفة (حسب البيانات الفعلية)',
-            style: TextStyle(
+            style:
+                theme.textTheme.bodySmall?.copyWith(
               fontSize: 11,
-              color: Color(0xFF6B7280),
+              color: theme.hintColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -940,19 +1072,24 @@ class _ComplaintsByMinistrySection extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            totalComplaints.toString(),
-                            style: const TextStyle(
+                            totalComplaints
+                                .toString(),
+                            style: theme.textTheme
+                                .titleLarge
+                                ?.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
+                              fontWeight:
+                                  FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
+                          Text(
                             'إجمالي الشكاوى',
-                            style: TextStyle(
+                            style: theme
+                                .textTheme.bodySmall
+                                ?.copyWith(
                               fontSize: 10,
-                              color: Color(0xFF6B7280),
+                              color: theme.hintColor,
                             ),
                           ),
                         ],
@@ -997,16 +1134,22 @@ class _PieChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rect =
+        Rect.fromLTWH(0, 0, size.width, size.height);
     final center = rect.center;
-    final radius = min(size.width, size.height) / 2;
+    final radius =
+        min(size.width, size.height) / 2;
 
     double startRadian = -pi / 2;
 
-    for (int i = 0; i < entries.length; i++) {
-      final value = entries[i].value.toDouble();
+    for (int i = 0;
+        i < entries.length;
+        i++) {
+      final value =
+          entries[i].value.toDouble();
       if (value == 0) continue;
-      final sweepRadian = (value / total) * 2 * pi;
+      final sweepRadian =
+          (value / total) * 2 * pi;
 
       final paint = Paint()
         ..color = _colorForIndex(i)
@@ -1030,13 +1173,17 @@ class _PieChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) =>
+  bool shouldRepaint(
+          covariant CustomPainter
+              oldDelegate) =>
       true;
 }
 
-class _DynamicMinistryLegend extends StatelessWidget {
+class _DynamicMinistryLegend
+    extends StatelessWidget {
   final int total;
-  final List<MapEntry<String, int>> topMinistries;
+  final List<MapEntry<String, int>>
+      topMinistries;
 
   const _DynamicMinistryLegend({
     required this.total,
@@ -1057,10 +1204,12 @@ class _DynamicMinistryLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GridView.builder(
       itemCount: topMinistries.length,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics:
+          const NeverScrollableScrollPhysics(),
       gridDelegate:
           const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -1070,8 +1219,10 @@ class _DynamicMinistryLegend extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final entry = topMinistries[index];
-        final percent =
-            (entry.value * 100 / total).toStringAsFixed(0);
+        final percent = (entry.value *
+                100 /
+                total)
+            .toStringAsFixed(0);
         return _LegendItem(
           color: _colorForIndex(index),
           label: '${entry.key} ($percent%)',
@@ -1092,6 +1243,7 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
@@ -1099,16 +1251,18 @@ class _LegendItem extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius:
+                BorderRadius.circular(999),
           ),
         ),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style:
+                theme.textTheme.bodySmall?.copyWith(
               fontSize: 10,
-              color: Color(0xFF4B5563),
+              color: theme.hintColor,
             ),
           ),
         ),
@@ -1119,8 +1273,10 @@ class _LegendItem extends StatelessWidget {
 
 // ====================== الشكاوى بمرور الوقت ======================
 
-class _ComplaintsOverTimeSection extends StatelessWidget {
-  final Map<String, int> countsByMonth; // YYYY-MM -> count
+class _ComplaintsOverTimeSection
+    extends StatelessWidget {
+  final Map<String, int>
+      countsByMonth; // YYYY-MM -> count
 
   const _ComplaintsOverTimeSection({
     required this.countsByMonth,
@@ -1128,48 +1284,59 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = countsByMonth.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final theme = Theme.of(context);
+    final isDark = theme.brightness ==
+        Brightness.dark;
+
+    final entries =
+        countsByMonth.entries.toList()
+          ..sort((a, b) =>
+              a.key.compareTo(b.key));
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          )
+        border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'الشكاوى بمرور الوقت',
-            style: TextStyle(
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 15,
-              color: Color(0xFF111827),
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
+          Text(
             'عدد الشكاوى لكل شهر ',
-            style: TextStyle(
+            style:
+                theme.textTheme.bodySmall?.copyWith(
               fontSize: 11,
-              color: Color(0xFF6B7280),
+              color: theme.hintColor,
             ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             height: 150,
             child: CustomPaint(
-              size: const Size(double.infinity, 150),
+              size: const Size(
+                double.infinity,
+                150,
+              ),
               painter: _DynamicLineChartPainter(
                 entries: entries,
               ),
@@ -1178,15 +1345,25 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
           const SizedBox(height: 4),
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 4),
+                const EdgeInsets.symmetric(
+              horizontal: 4,
+            ),
             child: Row(
               mainAxisAlignment:
                   MainAxisAlignment.spaceBetween,
               children: entries.isEmpty
-                  ? const [
-                      Text('لا توجد بيانات كافية'),
+                  ? [
+                      Text(
+                        'لا توجد بيانات كافية',
+                        style: theme
+                            .textTheme.bodySmall
+                            ?.copyWith(
+                          fontSize: 11,
+                          color: theme.hintColor,
+                        ),
+                      ),
                     ]
-                  : _buildMonthLabels(entries),
+                  : _buildMonthLabels(entries, theme),
             ),
           ),
         ],
@@ -1195,13 +1372,20 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
   }
 
   List<Widget> _buildMonthLabels(
-      List<MapEntry<String, int>> entries) {
+    List<MapEntry<String, int>> entries,
+    ThemeData theme,
+  ) {
     const maxLabels = 6;
     final step =
-        (entries.length / maxLabels).ceil().clamp(1, 9999);
-    final selected = <MapEntry<String, int>>[];
+        (entries.length / maxLabels)
+            .ceil()
+            .clamp(1, 9999);
+    final selected =
+        <MapEntry<String, int>>[];
 
-    for (int i = 0; i < entries.length; i += step) {
+    for (int i = 0;
+        i < entries.length;
+        i += step) {
       selected.add(entries[i]);
     }
 
@@ -1209,9 +1393,10 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
         .map(
           (e) => Text(
             e.key,
-            style: const TextStyle(
+            style: theme.textTheme.bodySmall
+                ?.copyWith(
               fontSize: 10,
-              color: Color(0xFF9CA3AF),
+              color: theme.hintColor,
             ),
           ),
         )
@@ -1219,7 +1404,8 @@ class _ComplaintsOverTimeSection extends StatelessWidget {
   }
 }
 
-class _DynamicLineChartPainter extends CustomPainter {
+class _DynamicLineChartPainter
+    extends CustomPainter {
   final List<MapEntry<String, int>> entries;
 
   _DynamicLineChartPainter({required this.entries});
@@ -1248,7 +1434,8 @@ class _DynamicLineChartPainter extends CustomPainter {
         .map((e) => e.value)
         .reduce((a, b) => a < b ? a : b);
 
-    final range = (maxValue - minValue).clamp(1, 999999);
+    final range = (maxValue - minValue)
+        .clamp(1, 999999);
 
     final linePaint = Paint()
       ..color = const Color(0xFF3B82F6)
@@ -1259,10 +1446,14 @@ class _DynamicLineChartPainter extends CustomPainter {
 
     for (int i = 0; i < entries.length; i++) {
       final x = size.width *
-          (i / (entries.length - 1).clamp(1, 9999));
+          (i /
+              (entries.length - 1)
+                  .clamp(1, 9999));
       final normalized =
-          (entries[i].value - minValue) / range;
-      final y = size.height * (1 - normalized * 0.9);
+          (entries[i].value - minValue) /
+              range;
+      final y = size.height *
+          (1 - normalized * 0.9);
 
       if (i == 0) {
         path.moveTo(x, y);
@@ -1275,6 +1466,8 @@ class _DynamicLineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) =>
+  bool shouldRepaint(
+          covariant CustomPainter
+              oldDelegate) =>
       true;
 }

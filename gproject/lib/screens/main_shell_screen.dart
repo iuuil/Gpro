@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'home_screen.dart';
 import 'ministries_screen.dart';
 import 'complaints_center_screen.dart';
@@ -9,7 +8,6 @@ import 'settings_screen.dart';
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
 
-  // حتى نقدر نغيّر التاب من أي صفحة داخلية
   // ignore: library_private_types_in_public_api
   static _MainShellScreenState? of(BuildContext context) {
     return context.findAncestorStateOfType<_MainShellScreenState>();
@@ -21,38 +19,45 @@ class MainShellScreen extends StatefulWidget {
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
+  // ignore: prefer_final_fields, unused_field
+  bool _isDark = false;
 
-  final List<Widget> _pages = [
-    const HomeScreen(),              // 0: الرئيسية
-    const MinistriesScreen(),        // 1: الوزارات
-    const ComplaintsCenterScreen(),  // 2: الشكاوى
-    const SettingsScreen(),          // 3: الإعدادات
-    const ProfileScreen(),           // 4: الحساب
-  ];
+  List<Widget> get _pages => [
+        HomeScreen(),              // 0: الرئيسية
+        MinistriesScreen(),        // 1: الوزارات
+        ComplaintsCenterScreen(),  // 2: الشكاوى
+        SettingsScreen(),          // 3: الإعدادات
+        ProfileScreen(),           // 4: الحساب
+      ];
 
   void _onBottomNavTap(int index) {
     setState(() => _currentIndex = index);
   }
 
-  // نستخدمها من الصفحات الداخلية لتغيير التبويب
   void setTab(int index) {
     setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: _pages[_currentIndex],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onBottomNavTap,
-          selectedItemColor: HomeScreen.primaryColor,
-          unselectedItemColor: const Color(0xFF9CA3AF),
+          selectedItemColor:
+              theme.bottomNavigationBarTheme.selectedItemColor ??
+                  HomeScreen.primaryColor,
+          unselectedItemColor:
+              theme.bottomNavigationBarTheme.unselectedItemColor ??
+                  const Color(0xFF9CA3AF),
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(

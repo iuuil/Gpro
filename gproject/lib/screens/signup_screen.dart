@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,22 +58,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // 1) إنشاء مستخدم في Firebase Authentication
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
-      ); // ينشئ user جديد بالبريد وكلمة المرور[web:105][web:112]
+      ); // [web:133]
 
       final uid = credential.user!.uid;
 
-      // 2) حفظ بيانات إضافية للمستخدم في Firestore (users collection)
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'name': name,
+        'fullName': name, // توحيد الاسم مع شاشة البروفايل
         'email': email,
         'phone': phone,
         'createdAt': FieldValue.serverTimestamp(),
-      }); // تخزين ملف تعريف المستخدم في Firestore[web:43][web:108]
+      }); // [web:4]
 
       setState(() => _isSaving = false);
 
@@ -81,12 +81,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const SnackBar(content: Text('تم إنشاء الحساب بنجاح')),
       );
 
-      // بعد إنشاء الحساب، نوجهه لصفحة تسجيل الدخول أو الرئيسية
       Navigator.pushReplacementNamed(context, '/login');
-        } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       setState(() => _isSaving = false);
 
-      // اطبع تفاصيل الخطأ في الـconsole
       // ignore: avoid_print
       print('🔥 FirebaseAuthException code: ${e.code}');
       // ignore: avoid_print
@@ -124,50 +122,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // ignore: unused_local_variable
+    final isDark = theme.brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
-              // AppBar مخصص مثل HTML
+              // AppBar مخصص
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF6F7F8),
+                decoration: BoxDecoration(
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                 ),
                 child: Row(
                   children: [
                     InkWell(
                       onTap: () => Navigator.pop(context),
                       borderRadius: BorderRadius.circular(999),
-                      child: Container(
+                      child: SizedBox(
                         height: 40,
                         width: 40,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          textDirection: TextDirection.ltr,
-                          size: 20,
-                          color: Color(0xFF475569),
+                        child: Center(
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            textDirection: TextDirection.ltr,
+                            size: 20,
+                            color:
+                                theme.appBarTheme.foregroundColor ??
+                                    theme.iconTheme.color ??
+                                    const Color(0xFF475569),
+                          ),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.only(right: 10),
                         child: Text(
                           'إنشاء حساب جديد',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 18,
-
-                            color: Color(0xFF020617),
+                            color:
+                                theme.appBarTheme.foregroundColor ??
+                                    theme.textTheme.bodyLarge?.color,
                           ),
                         ),
                       ),
@@ -187,105 +192,116 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
 
                       // الاسم الكامل
-                      const Text(
+                      Text(
                         'الاسم الكامل',
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: Color(0xFF334155),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF6F7F8),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                           ),
                         ),
                         child: TextField(
                           controller: _nameController,
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 16),
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                                    horizontal: 15, vertical: 16),
                             hintText: 'مثال، علي حسن',
+                            hintStyle:
+                                theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
 
                       // البريد الإلكتروني
-                      const Text(
+                      Text(
                         'البريد الإلكتروني',
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: Color(0xFF334155),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF6F7F8),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                           ),
                         ),
                         child: TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 16),
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                                    horizontal: 15, vertical: 16),
                             hintText: 'مثال، example@email.com',
+                            hintStyle:
+                                theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
 
                       // رقم الهاتف
-                      const Text(
+                      Text(
                         'رقم الهاتف',
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: Color(0xFF334155),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF6F7F8),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                           ),
                         ),
                         child: Row(
                           children: [
                             Container(
                               height: double.infinity,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: const BoxDecoration(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12),
+                              decoration: BoxDecoration(
                                 border: Border(
                                   left: BorderSide(
-                                    color: Color(0xFFCBD5E1),
+                                    color: theme.dividerColor,
                                   ),
                                 ),
                               ),
                               alignment: Alignment.center,
-                              child: const Text(
+                              child: Text(
                                 '+964',
-                                style: TextStyle(
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(
                                   fontSize: 14,
-                                  color: Color(0xFF64748B),
+                                  color: theme.hintColor,
                                 ),
                               ),
                             ),
@@ -294,11 +310,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 controller: _phoneController,
                                 keyboardType: TextInputType.phone,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 16),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 16),
                                   hintText: '770 123 4567',
+                                  hintStyle: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ),
                             ),
@@ -308,21 +330,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // كلمة المرور
-                      const Text(
+                      Text(
                         'كلمة المرور',
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: Color(0xFF334155),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF6F7F8),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                           ),
                         ),
                         child: Row(
@@ -332,25 +354,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 16),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 16),
                                   hintText: 'أدخل كلمة مرور آمنة',
+                                  hintStyle: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ),
                             ),
                             IconButton(
                               onPressed: () {
                                 setState(() {
-                                  _obscurePassword = !_obscurePassword;
+                                  _obscurePassword =
+                                      !_obscurePassword;
                                 });
                               },
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: const Color(0xFF64748B),
+                                color: theme.iconTheme.color
+                                        ?.withOpacity(0.7) ??
+                                    const Color(0xFF64748B),
                               ),
                             ),
                           ],
@@ -362,33 +393,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // تأكيد كلمة المرور
                       Text(
                         'تأكيد كلمة المرور',
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: const Color(0xFF334155),
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF6F7F8),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: theme.dividerColor,
                           ),
                         ),
                         child: Row(
                           children: [
                             Expanded(
                               child: TextField(
-                                controller: _confirmPasswordController,
+                                controller:
+                                    _confirmPasswordController,
                                 obscureText: _obscureConfirmPassword,
                                 textInputAction: TextInputAction.done,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 16),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 16),
                                   hintText: 'أعد إدخال كلمة المرور',
+                                  hintStyle: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ),
                             ),
@@ -403,7 +441,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _obscureConfirmPassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: const Color(0xFF64748B),
+                                color: theme.iconTheme.color
+                                        ?.withOpacity(0.7) ??
+                                    const Color(0xFF64748B),
                               ),
                             ),
                           ],
@@ -413,14 +453,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 24),
 
                       Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 4),
                         child: Text(
                           'من خلال التسجيل، فإنك توافق على شروط الخدمة وسياسة الخصوصية.',
-                          // textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 12,
-                            color: Color(0xFF64748B),
+                            color: theme.hintColor,
                           ),
                         ),
                       ),
@@ -432,21 +471,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _saveAccount,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF137FEC),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
-                          ),
                           child: _isSaving
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 22,
                                   height: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color:
+                                        theme.colorScheme.onPrimary,
                                   ),
                                 )
                               : const Text(
@@ -455,6 +487,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     fontSize: 16,
                                   ),
                                 ),
+                          // الألوان من ElevatedButtonTheme في AppTheme
                         ),
                       ),
 
@@ -463,27 +496,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             'هل أنت مسؤول؟',
-                            style: TextStyle(
+                            style:
+                                theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
-                              color: Color(0xFF64748B),
+                              color: theme.hintColor,
                             ),
                           ),
                           const SizedBox(width: 4),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/admin-login');
+                              Navigator.pushNamed(
+                                  context, '/admin-login');
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: const Size(0, 0),
                             ),
-                            child: const Text(
+                            child: Text(
                               'تسجيل الدخول كمسؤول',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 14,
-                                color: Color(0xFF137FEC),
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ),

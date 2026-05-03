@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     if (_isLoading) {
       return const Scaffold(
@@ -69,10 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: theme.appBarTheme.backgroundColor ??
-                      theme.cardColor, // يتبع الثيم
-                  border: const Border(
+                      theme.cardColor,
+                  border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.12)
+                          : const Color(0xFFE5E7EB),
                       width: 1,
                     ),
                   ),
@@ -91,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
+                      color: theme.appBarTheme.foregroundColor ??
+                          theme.textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -100,12 +107,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // بانر علوي (كرت كبير)
+                      // بانر علوي (كرت كبير) – مهيّأ للوضعين
                       Container(
                         margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
+                          color: isDark
+                              ? const Color(0xFF020617)
+                              : const Color(0xFF0F172A),
                           borderRadius: BorderRadius.circular(16),
                           image: const DecorationImage(
                             image: NetworkImage(
@@ -127,21 +136,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            SizedBox(height: 8),
+                          children: [
+                            const SizedBox(height: 8),
                             Text(
                               'صوت المواطن',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 color: Colors.white,
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
                               'منصّة رقمية لعرض شكاوى المواطنين وربطها بالوزارات الحكومية المختصة.',
-                              style: TextStyle(
-                                color: Color(0xFFE5E7EB),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFFE5E7EB),
                                 fontSize: 13,
                               ),
                             ),
@@ -178,7 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // عنوان ما الذي تريد القيام به؟
                       Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        margin:
+                            const EdgeInsets.symmetric(horizontal: 16),
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
@@ -194,7 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // كروت الميزات
                       Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        margin:
+                            const EdgeInsets.symmetric(horizontal: 16),
                         child: Wrap(
                           spacing: 10,
                           runSpacing: 10,
@@ -249,12 +260,12 @@ class _HomeScreenState extends State<HomeScreen> {
               if (!_isLoggedIn)
                 Container(
                   decoration: BoxDecoration(
-                    color:
-                        // ignore: deprecated_member_use
-                        theme.cardColor.withOpacity(0.98), // بدل Colors.white
-                    border: const Border(
+                    color: theme.cardColor.withOpacity(0.98),
+                    border: Border(
                       top: BorderSide(
-                        color: Color(0xFFE5E7EB),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.12)
+                            : const Color(0xFFE5E7EB),
                       ),
                     ),
                     boxShadow: const [
@@ -322,11 +333,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: () {
                           Navigator.pushNamed(context, '/admin-login');
                         },
-                        child: const Text(
+                        child: Text(
                           'تسجيل الدخول كمسؤول',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF137FEC),
+                            color: theme.colorScheme.primary,
                             decoration: TextDecoration.underline,
                             fontWeight: FontWeight.w600,
                           ),
@@ -373,10 +384,10 @@ class _FeatureCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: theme.cardColor, // بدل Colors.white
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE5E7EB),
+              color: theme.dividerColor,
             ),
             boxShadow: const [
               BoxShadow(

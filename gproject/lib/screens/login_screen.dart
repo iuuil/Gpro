@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -30,11 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // تسجيل الدخول عبر Firebase Auth
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: inputEmail,
         password: inputPassword,
-      ); // يسجل الدخول بالمستخدم الذي أنشأته في صفحة التسجيل[web:105][web:125]
+      );
 
       setState(() => _isLoading = false);
 
@@ -44,12 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text('تم تسجيل الدخول بنجاح')),
       );
 
-      // توجيه المستخدم للصفحة الرئيسية (MainShell)
       Navigator.pushReplacementNamed(context, '/main-shell');
     } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
 
-      // لطباعة الكود في الـconsole أثناء التطوير
       // ignore: avoid_print
       print('🔥 FirebaseAuthException (login) code: ${e.code}');
 
@@ -85,10 +84,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -96,39 +98,43 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF6F7F8),
+                decoration: BoxDecoration(
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                 ),
                 child: Row(
                   children: [
                     InkWell(
                       onTap: () => Navigator.pop(context),
                       borderRadius: BorderRadius.circular(999),
-                      child: Container(
+                      child: SizedBox(
                         height: 40,
                         width: 40,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          textDirection: TextDirection.ltr,
-                          size: 20,
-                          color: Color(0xFF475569),
+                        child: Center(
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            textDirection: TextDirection.ltr,
+                            size: 20,
+                            color:
+                                theme.appBarTheme.foregroundColor ??
+                                    theme.iconTheme.color ??
+                                    const Color(0xFF475569),
+                          ),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.only(right: 10),
                         child: Text(
                           'تسجيل الدخول',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF020617),
+                            color:
+                                theme.appBarTheme.foregroundColor ??
+                                    theme.textTheme.bodyLarge?.color,
                           ),
                         ),
                       ),
@@ -155,55 +161,56 @@ class _LoginScreenState extends State<LoginScreen> {
                             margin: const EdgeInsets.only(
                                 bottom: 24, top: 16),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(999),
+                              color: theme.cardColor,
+                              borderRadius:
+                                  BorderRadius.circular(999),
                               boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      // ignore: deprecated_member_use
-                                      Colors.black.withOpacity(0.08),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
+                                if (!isDark)
+                                  BoxShadow(
+                                    color: Colors.black
+                                        .withOpacity(0.08),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
                               ],
                             ),
                             alignment: Alignment.center,
-                            child: const Icon(
+                            child: Icon(
                               Icons.account_balance,
                               size: 40,
-                              color: Color(0xFF137FEC),
+                              color: theme.colorScheme.primary,
                             ),
                           ),
 
-                          const Text(
+                          Text(
                             'بوابة شكاوى المواطنين',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.headlineSmall
+                                ?.copyWith(
                               fontSize: 28,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF020617),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'يرجى تسجيل الدخول للمتابعة',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
-                              color: Color(0xFF64748B),
+                              color: theme.hintColor,
                             ),
                           ),
                           const SizedBox(height: 28),
 
                           // حقل البريد الإلكتروني
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'البريد الإلكتروني',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF020617),
                               ),
                             ),
                           ),
@@ -211,18 +218,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           Container(
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
+                              color: theme.cardColor,
+                              borderRadius:
+                                  BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFCBD5F1),
+                                color: theme.dividerColor
+                                    .withOpacity(0.6),
                               ),
                             ),
                             child: Row(
                               children: [
                                 const SizedBox(width: 12),
-                                const Icon(
+                                Icon(
                                   Icons.person_outline,
-                                  color: Color(0xFF64748B),
+                                  color: theme.iconTheme.color
+                                          ?.withOpacity(0.7) ??
+                                      const Color(0xFF64748B),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -231,10 +242,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _emailOrUsernameController,
                                     keyboardType:
                                         TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText:
                                           'أدخل البريد الإلكتروني المسجل',
+                                      hintStyle: theme
+                                          .textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: theme.hintColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -245,14 +261,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 16),
 
                           // حقل كلمة المرور
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'كلمة المرور',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF020617),
                               ),
                             ),
                           ),
@@ -260,37 +276,49 @@ class _LoginScreenState extends State<LoginScreen> {
                           Container(
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
+                              color: theme.cardColor,
+                              borderRadius:
+                                  BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFCBD5F1),
+                                color: theme.dividerColor
+                                    .withOpacity(0.6),
                               ),
                             ),
                             child: Row(
                               children: [
                                 const SizedBox(width: 12),
-                                const Icon(
+                                Icon(
                                   Icons.lock_outline,
-                                  color: Color(0xFF64748B),
+                                  color: theme.iconTheme.color
+                                          ?.withOpacity(0.7) ??
+                                      const Color(0xFF64748B),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: TextField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText:
                                           'أدخل كلمة المرور الخاصة بك',
+                                      hintStyle: theme
+                                          .textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: theme.hintColor,
+                                      ),
                                     ),
                                   ),
                                 ),
                                 IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons.visibility_off_outlined
+                                        ? Icons
+                                            .visibility_off_outlined
                                         : Icons.visibility_outlined,
-                                    color: const Color(0xFF64748B),
+                                    color: theme.iconTheme.color
+                                            ?.withOpacity(0.7) ??
+                                        const Color(0xFF64748B),
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -314,11 +342,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 padding: EdgeInsets.zero,
                                 minimumSize: const Size(0, 0),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'هل نسيت كلمة المرور؟',
-                                style: TextStyle(
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(
                                   fontSize: 12,
-                                  color: Color(0xFF137FEC),
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -332,29 +361,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 56,
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _login,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color(0xFF137FEC),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(16),
-                                ),
-                                elevation: 2,
-                              ),
                               child: _isLoading
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child: CircularProgressIndicator(
+                                      child:
+                                          CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: theme.colorScheme
+                                            .onPrimary,
                                       ),
                                     )
                                   : const Text(
                                       'تسجيل الدخول',
                                       style: TextStyle(fontSize: 16),
                                     ),
+                              // الألوان من ElevatedButtonTheme في AppTheme
                             ),
                           ),
 
@@ -362,13 +384,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           // ليس لديك حساب
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
                             children: [
-                              const Text(
+                              Text(
                                 'ليس لديك حساب؟',
-                                style: TextStyle(
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(
                                   fontSize: 13,
-                                  color: Color(0xFF64748B),
+                                  color: theme.hintColor,
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -381,11 +405,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 0),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'إنشاء حساب',
-                                  style: TextStyle(
+                                  style: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
                                     fontSize: 13,
-                                    color: Color(0xFF137FEC),
+                                    color:
+                                        theme.colorScheme.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -403,11 +430,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: EdgeInsets.zero,
                               minimumSize: const Size(0, 0),
                             ),
-                            child: const Text(
+                            child: Text(
                               'تسجيل الدخول كمسؤول',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 14,
-                                color: Color(0xFF137FEC),
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

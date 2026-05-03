@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -15,21 +15,27 @@ class AdminUsersScreen extends StatefulWidget {
 class _AdminUsersScreenState extends State<AdminUsersScreen> {
   @override
   Widget build(BuildContext context) {
-    final usersQuery =
-        FirebaseFirestore.instance.collection('users').orderBy('createdAt', descending: true);
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final usersQuery = FirebaseFirestore.instance
+        .collection('users')
+        .orderBy('createdAt', descending: true);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ?? theme.cardColor,
           elevation: 0.5,
-          iconTheme: const IconThemeData(color: Color(0xFF020617)),
-          title: const Text(
+          iconTheme: theme.appBarTheme.iconTheme ??
+              IconThemeData(color: theme.iconTheme.color),
+          title: Text(
             'حسابات المستخدمين',
-            style: TextStyle(
-              color: Color(0xFF020617),
+            style: theme.textTheme.titleMedium?.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -39,16 +45,27 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: usersQuery.snapshots(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+            if (snapshot.connectionState ==
+                ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
 
             if (snapshot.hasError) {
               return Center(
-                child: Text(
-                  'خطأ في تحميل بيانات المستخدمين: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ),
+                  child: Text(
+                    'خطأ في تحميل بيانات المستخدمين:\n${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
                 ),
               );
             }
@@ -56,12 +73,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             final docs = snapshot.data?.docs ?? [];
 
             if (docs.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
                   'لا توجد حسابات مستخدمين حالياً.',
-                  style: TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 14,
-                    color: Color(0xFF64748B),
+                    color: theme.hintColor,
                   ),
                 ),
               );
@@ -70,49 +87,60 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             return ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: docs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final doc = docs[index];
                 final data = doc.data();
                 final userId = doc.id;
 
-                final fullName =
-                    (data['fullName'] ?? 'مستخدم بدون اسم').toString();
-                final email = (data['email'] ?? '').toString();
-                final status = (data['status'] ?? 'active').toString();
-                final createdAt = (data['createdAt'] as Timestamp?)
-                        ?.toDate()
-                        .toString()
-                        .split(' ')
-                        .first ??
-                    '';
+                final fullName = (data['fullName'] ??
+                        'مستخدم بدون اسم')
+                    .toString();
+                final email =
+                    (data['email'] ?? '').toString();
+                final status =
+                    (data['status'] ?? 'active').toString();
+                final createdAt =
+                    (data['createdAt'] as Timestamp?)
+                            ?.toDate()
+                            .toString()
+                            .split(' ')
+                            .first ??
+                        '';
 
-                final isSuspended = status == 'suspended';
+                final isSuspended =
+                    status == 'suspended';
                 final statusColor = isSuspended
-                    ? const Color(0xFFDC2626)
+                    ? theme.colorScheme.error
                     : const Color(0xFF16A34A);
                 final statusBg = isSuspended
-                    ? const Color(0xFFFFE2E5)
+                    ? theme.colorScheme.errorContainer
+                        .withOpacity(0.5)
                     : const Color(0xFFEFFDF3);
 
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    color: theme.cardColor,
+                    borderRadius:
+                        BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                     ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x08000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
+                    boxShadow: [
+                      if (!isDark)
+                        BoxShadow(
+                          color: Colors.black
+                              .withOpacity(0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
                     ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
@@ -120,34 +148,49 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             height: 40,
                             width: 40,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(12),
+                              color: theme
+                                  .colorScheme
+                                  .surfaceVariant
+                                  // ignore: duplicate_ignore
+                                  // ignore: deprecated_member_use
+                                  .withOpacity(0.5),
+                              borderRadius:
+                                  BorderRadius.circular(
+                                      12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.person_outline,
-                              color: Color(0xFF0F172A),
+                              color:
+                                  theme.iconTheme.color,
                               size: 22,
                             ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   fullName,
-                                  style: const TextStyle(
+                                  style: theme
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF020617),
+                                    fontWeight:
+                                        FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   email,
-                                  style: const TextStyle(
+                                  style: theme
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
                                     fontSize: 12,
-                                    color: Color(0xFF6B7280),
+                                    color: theme.hintColor,
                                   ),
                                 ),
                               ],
@@ -155,19 +198,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           ),
                           const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding:
+                                const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: statusBg,
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius:
+                                  BorderRadius.circular(
+                                      999),
                             ),
                             child: Text(
-                              isSuspended ? 'معلّق' : 'نشط',
+                              isSuspended
+                                  ? 'معلّق'
+                                  : 'نشط',
                               style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontWeight:
+                                    FontWeight.w600,
                                 color: statusColor,
                               ),
                             ),
@@ -176,21 +225,27 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       ),
                       const SizedBox(height: 8),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
-                              const Icon(
-                                Icons.calendar_today_outlined,
+                              Icon(
+                                Icons
+                                    .calendar_today_outlined,
                                 size: 14,
-                                color: Color(0xFF9CA3AF),
+                                color: theme.hintColor,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 createdAt,
-                                style: const TextStyle(
+                                style: theme
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                   fontSize: 11,
-                                  color: Color(0xFF6B7280),
+                                  color:
+                                      theme.hintColor,
                                 ),
                               ),
                             ],
@@ -199,62 +254,105 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             children: [
                               TextButton.icon(
                                 onPressed: () {
-                                  // فتح شاشة الشكاوى للمستخدم (فلترة حسب pending+suspended)
+                                  // فتح شاشة الشكاوى للمستخدم
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => CitizenDetailsScreen(
-                                        filterStatus: 'pending',
-                                        userDocId: userId,
+                                      builder: (_) =>
+                                          CitizenDetailsScreen(
+                                        filterStatus:
+                                            'pending',
+                                        userDocId:
+                                            userId,
                                       ),
                                     ),
                                   );
                                 },
-                                icon: const Icon(
-                                  Icons.report_problem_outlined,
+                                icon: Icon(
+                                  Icons
+                                      .report_problem_outlined,
                                   size: 18,
+                                  color: primary,
                                 ),
-                                label: const Text(
+                                label: Text(
                                   'عرض الشكاوى',
-                                  style: TextStyle(fontSize: 12),
+                                  style: theme
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                    fontSize: 12,
+                                    color: primary,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               TextButton.icon(
                                 onPressed: () async {
-                                  // تعليق / فك تعليق الحساب
-                                  final newStatus = isSuspended ? 'active' : 'suspended';
+                                  final newStatus =
+                                      isSuspended
+                                          ? 'active'
+                                          : 'suspended';
 
-                                  await FirebaseFirestore.instance
+                                  await FirebaseFirestore
+                                      .instance
                                       .collection('users')
                                       .doc(userId)
-                                      .update({'status': newStatus});
+                                      .update({
+                                    'status': newStatus,
+                                  });
 
-                                  // إظهار Alert Dialog بدلاً من SnackBar
-                                  if (!context.mounted) return;
+                                  if (!mounted) return;
 
                                   await showDialog(
                                     context: context,
                                     builder: (ctx) {
+                                      final dialogTheme =
+                                          Theme.of(ctx);
                                       return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                        shape:
+                                            RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius
+                                                  .circular(
+                                                      16),
                                         ),
-                                        title: const Text(
+                                        title: Text(
                                           'تمت العملية',
-                                          textDirection: TextDirection.rtl,
+                                          textDirection:
+                                              TextDirection
+                                                  .rtl,
+                                          style: dialogTheme
+                                              .textTheme
+                                              .titleMedium,
                                         ),
                                         content: Text(
-                                          isSuspended ? 'تم تفعيل الحساب بنجاح.' : 'تم تعليق الحساب بنجاح.',
-                                          textDirection: TextDirection.rtl,
+                                          isSuspended
+                                              ? 'تم تفعيل الحساب بنجاح.'
+                                              : 'تم تعليق الحساب بنجاح.',
+                                          textDirection:
+                                              TextDirection
+                                                  .rtl,
+                                          style: dialogTheme
+                                              .textTheme
+                                              .bodyMedium,
                                         ),
-                                        actionsAlignment: MainAxisAlignment.center,
+                                        actionsAlignment:
+                                            MainAxisAlignment
+                                                .center,
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.of(ctx).pop(),
+                                            onPressed: () =>
+                                                Navigator.of(
+                                                        ctx)
+                                                    .pop(),
                                             child: const Text(
                                               'حسنًا',
-                                              style: TextStyle(fontWeight: FontWeight.w700),
+                                              style:
+                                                  TextStyle(
+                                                fontWeight:
+                                                    FontWeight
+                                                        .w700,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -264,20 +362,32 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                 },
                                 icon: Icon(
                                   isSuspended
-                                      ? Icons.lock_open_outlined
-                                      : Icons.lock_outline,
+                                      ? Icons
+                                          .lock_open_outlined
+                                      : Icons
+                                          .lock_outline,
                                   size: 18,
                                   color: isSuspended
-                                      ? const Color(0xFF16A34A)
-                                      : const Color(0xFFDC2626),
+                                      ? const Color(
+                                          0xFF16A34A,
+                                        )
+                                      : const Color(
+                                          0xFFDC2626,
+                                        ),
                                 ),
                                 label: Text(
-                                  isSuspended ? 'فك التعليق' : 'تعليق الحساب',
+                                  isSuspended
+                                      ? 'فك التعليق'
+                                      : 'تعليق الحساب',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isSuspended
-                                        ? const Color(0xFF16A34A)
-                                        : const Color(0xFFDC2626),
+                                        ? const Color(
+                                            0xFF16A34A,
+                                          )
+                                        : const Color(
+                                            0xFFDC2626,
+                                          ),
                                   ),
                                 ),
                               ),

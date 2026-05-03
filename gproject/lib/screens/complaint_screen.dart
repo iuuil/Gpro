@@ -90,6 +90,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
   }
 
   Future<void> _showAlert(String message) async {
+    final theme = Theme.of(context);
+
     await showDialog<void>(
       context: context,
       builder: (ctx) {
@@ -101,20 +103,19 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
             ),
             content: Text(
               message,
-              style: const TextStyle(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 14,
-                color: Color(0xFF111827),
               ),
             ),
             actionsAlignment: MainAxisAlignment.center,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text(
+                child: Text(
                   'حسنًا',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF2563EB),
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -144,7 +145,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
     try {
       await FirebaseFirestore.instance.collection('complaints').add({
-        'userId': user.uid, // مهم للـ Cloud Function حتى تعرف صاحب الشكوى
+        'userId': user.uid,
         'ministry': widget.ministry,
         'complaintType': null,
         'title': title,
@@ -152,7 +153,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
         'contactName': null,
         'contactPhone': null,
         'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(), // ختم وقت من السيرفر [web:336][web:338]
+        'createdAt': FieldValue.serverTimestamp(),
         'attachments': [],
         'source': 'ministries_screen',
       });
@@ -163,11 +164,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
       await _showAlert('تم إرسال الشكوى بنجاح');
 
-      // بعد الإرسال: رجوع إلى صفحة الوزارات داخل MainShell
-      // 1) نسوي pop لهاي الصفحة
       Navigator.of(context).pop();
 
-      // 2) نضمن إن التب الحالي بالـ MainShell هو تب الوزارات (index 1)
       final shell = MainShellScreen.of(context);
       shell?.setTab(1);
     } catch (e) {
@@ -185,7 +183,9 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF137FEC);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
 
     final hotline = _hotlineFor(widget.ministry);
     final website = _websiteFor(widget.ministry);
@@ -194,7 +194,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Stack(
             children: [
@@ -202,17 +202,20 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 children: [
                   // هيدر مع رجوع لصفحة الوزارات
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.appBarTheme.backgroundColor ??
+                          theme.cardColor,
                       border: Border(
                         bottom: BorderSide(
-                          color: Color(0xFFE5E7EB),
+                          color: isDark
+                              ? Colors.white.withOpacity(0.12)
+                              : const Color(0xFFE5E7EB),
                           width: 1,
                         ),
                       ),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Color(0x12000000),
                           blurRadius: 4,
@@ -227,13 +230,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                           width: 40,
                           child: IconButton(
                             onPressed: () {
-                              Navigator.of(context).pop(); // يرجع مباشرة إلى الوزارات
+                              Navigator.of(context).pop();
                             },
                             padding: EdgeInsets.zero,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_back_ios_new_rounded,
                               size: 20,
-                              color: Color(0xFF4B5563),
+                              color: theme.appBarTheme.foregroundColor ??
+                                  const Color(0xFF4B5563),
                             ),
                           ),
                         ),
@@ -241,10 +245,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                           child: Text(
                             widget.ministry,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
+                              color: theme.appBarTheme.foregroundColor ??
+                                  theme.textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
@@ -274,10 +279,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: theme.dividerColor,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.02),
@@ -294,11 +300,12 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                     width: 72,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(16),
-                                      color: const Color(0xFFE5E7EB),
+                                      color: theme.colorScheme.primary
+                                          .withOpacity(0.08),
                                       image: widget.logoUrl != null
                                           ? DecorationImage(
-                                              image:
-                                                  NetworkImage(widget.logoUrl!),
+                                              image: NetworkImage(
+                                                  widget.logoUrl!),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
@@ -319,18 +326,20 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       children: [
                                         Text(
                                           widget.ministry,
-                                          style: const TextStyle(
+                                          style: theme
+                                              .textTheme.bodyLarge
+                                              ?.copyWith(
                                             fontSize: 20,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F172A),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           'الموقع الرسمي: $website',
-                                          style: const TextStyle(
+                                          style: theme
+                                              .textTheme.bodySmall
+                                              ?.copyWith(
                                             fontSize: 13,
-                                            color: Color(0xFF64748B),
                                           ),
                                         ),
                                       ],
@@ -345,10 +354,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: theme.dividerColor,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.02),
@@ -361,7 +371,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.phone,
                                         color: primaryColor,
                                         size: 20,
@@ -370,10 +380,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           'الخط الساخن: $hotline',
-                                          style: const TextStyle(
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,
-                                            color: Color(0xFF0F172A),
                                           ),
                                         ),
                                       ),
@@ -382,7 +393,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.language,
                                         color: primaryColor,
                                         size: 20,
@@ -391,10 +402,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           website,
-                                          style: const TextStyle(
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,
-                                            color: Color(0xFF0F172A),
                                           ),
                                         ),
                                       ),
@@ -405,7 +417,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.location_on,
                                         color: primaryColor,
                                         size: 20,
@@ -414,10 +426,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           address,
-                                          style: const TextStyle(
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,
-                                            color: Color(0xFF0F172A),
                                           ),
                                         ),
                                       ),
@@ -429,63 +442,63 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
                             const SizedBox(height: 16),
 
-                            const Text(
+                            Text(
                               'تقديم شكوى جديدة',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(height: 8),
 
-                            const Text(
+                            Text(
                               'عنوان الشكوى',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(height: 6),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFFCBD5E1),
+                                  color: theme.dividerColor,
                                 ),
                               ),
                               child: TextField(
                                 controller: _titleController,
                                 textAlign: TextAlign.right,
-                                decoration: const InputDecoration(
+                                style: theme.textTheme.bodyMedium,
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
                                     horizontal: 15,
                                     vertical: 12,
                                   ),
                                   hintText: 'أدخل عنوان شكواك',
+                                  hintStyle: theme.textTheme.bodySmall,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 12),
 
-                            const Text(
+                            Text(
                               'وصف تفصيلي',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(height: 6),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.cardColor,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFFCBD5E1),
+                                  color: theme.dividerColor,
                                 ),
                               ),
                               child: TextField(
@@ -493,14 +506,17 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                 textAlign: TextAlign.right,
                                 maxLines: 5,
                                 minLines: 4,
-                                decoration: const InputDecoration(
+                                style: theme.textTheme.bodyMedium,
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
                                     horizontal: 15,
                                     vertical: 12,
                                   ),
                                   hintText:
                                       'يرجى تقديم أكبر قدر ممكن من التفاصيل.',
+                                  hintStyle: theme.textTheme.bodySmall,
                                 ),
                               ),
                             ),
@@ -520,9 +536,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 bottom: 0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF6F7F8).withOpacity(0.96),
-                    border: const Border(
-                      top: BorderSide(color: Color(0xFFE2E8F0)),
+                    color: theme.cardColor.withOpacity(0.96),
+                    border: Border(
+                      top: BorderSide(
+                        color: theme.dividerColor,
+                      ),
                     ),
                   ),
                   padding: const EdgeInsets.symmetric(

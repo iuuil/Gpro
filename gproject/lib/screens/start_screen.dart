@@ -11,7 +11,6 @@ class StartScreen extends StatefulWidget {
 }
 
 class _StartScreenState extends State<StartScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -39,12 +38,15 @@ class _StartScreenState extends State<StartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // شاشة انتظار بسيطة أثناء الفحص
-    return const Scaffold(
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          color: theme.colorScheme.primary,
+        ),
       ),
     );
   }
 }
-

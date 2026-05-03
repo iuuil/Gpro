@@ -1,23 +1,31 @@
+// ignore_for_file: unused_element_parameter, use_super_parameters, deprecated_member_use
+
 import 'package:flutter/material.dart';
+
+// مهم: استورد main حتى نقدر نستخدم MyApp.of(context)
+import '../main.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({
-    super.key,
+    Key? key,
     this.onBackToDashboard,
-  });
-
-  static const Color primary = Color(0xFF137FEC);
-  static const Color bgLight = Color(0xFFF6F7F8);
+  }) : super(key: key);
 
   final VoidCallback? onBackToDashboard;
 
   @override
-  State<AdminSettingsScreen> createState() => _AdminSettingsScreenState();
+  State<AdminSettingsScreen> createState() =>
+      _AdminSettingsScreenState();
 }
 
-class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
+class _AdminSettingsScreenState
+    extends State<AdminSettingsScreen> {
   bool _isSearching = false;
   String _searchQuery = '';
+
+  // حالة الوضع الليلي
+  bool _isDarkMode = false;
+  bool _themeInitializedFromApp = false;
 
   String _appName = 'صوت المواطن';
   String _logoDescription = 'تعديل الشعار الرسمي والهوية';
@@ -26,8 +34,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     {'name': 'وزارة الداخلية', 'info': 'مسؤولة عن الأمن الداخلي'},
     {'name': 'وزارة الصحة', 'info': 'مسؤولة عن الخدمات الصحية'},
     {'name': 'وزارة التربية', 'info': 'مسؤولة عن التعليم المدرسي'},
-    {'name': 'وزارة التعليم العالي', 'info': 'مسؤولة عن الجامعات'},
-    {'name': 'وزارة الكهرباء', 'info': 'مسؤولة عن الطاقة الكهربائية'},
+    {
+      'name': 'وزارة التعليم العالي',
+      'info': 'مسؤولة عن الجامعات'
+    },
+    {
+      'name': 'وزارة الكهرباء',
+      'info': 'مسؤولة عن الطاقة الكهربائية'
+    },
   ];
 
   Future<void> _showAppNameDialog() async {
@@ -35,13 +49,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     await showDialog(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'تعديل اسم التطبيق',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.titleMedium,
           ),
           content: TextField(
             controller: controller,
@@ -73,17 +89,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Future<void> _showLogoDialog() async {
-    final controller = TextEditingController(text: _logoDescription);
+    final controller =
+        TextEditingController(text: _logoDescription);
     await showDialog(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx);
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'تعديل الشعار والهوية',
             textDirection: TextDirection.rtl,
+            style: dialogTheme.textTheme.titleMedium,
           ),
           content: TextField(
             controller: controller,
@@ -103,7 +122,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               onPressed: () {
                 final text = controller.text.trim();
                 if (text.isNotEmpty) {
-                  setState(() => _logoDescription = text);
+                  setState(
+                      () => _logoDescription = text);
                 }
                 Navigator.of(ctx).pop();
               },
@@ -119,7 +139,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MinistriesScreen(ministries: _ministries),
+        builder: (_) => MinistriesScreen(
+          ministries: _ministries,
+        ),
       ),
     );
     setState(() {});
@@ -134,61 +156,76 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = AdminSettingsScreen.primary;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // نزامن حالة السويتش مرة واحدة مع الثيم الحالي
+    if (!_themeInitializedFromApp) {
+      _isDarkMode = isDark;
+      _themeInitializedFromApp = true;
+    }
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AdminSettingsScreen.bgLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
               // الهيدر + البحث
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                       width: 1,
                     ),
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color:
+                            Colors.black.withOpacity(0.07),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
                 ),
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: () {
-                        if (widget.onBackToDashboard != null) {
+                        if (widget.onBackToDashboard !=
+                            null) {
                           widget.onBackToDashboard!();
                         } else {
                           Navigator.pop(context);
                         }
                       },
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                      icon: Icon(
+                        Icons
+                            .arrow_back_ios_new_rounded,
                         size: 20,
-                        color: Color(0xFF137FEC),
+                        color: primary,
                       ),
                     ),
                     const SizedBox(width: 8),
                     if (!_isSearching)
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'إعدادات النظام',
                           textAlign: TextAlign.right,
-                          style: TextStyle(
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF020617),
                           ),
                         ),
                       )
@@ -198,36 +235,52 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           height: 40,
                           child: TextField(
                             autofocus: true,
-                            textDirection: TextDirection.rtl,
+                            textDirection:
+                                TextDirection.rtl,
                             decoration: InputDecoration(
-                              hintText: 'بحث في الإعدادات...',
+                              hintText:
+                                  'بحث في الإعدادات...',
                               filled: true,
-                              fillColor: const Color(0xFFF9FAFB),
+                              fillColor: theme.cardColor,
                               contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                                  const EdgeInsets
+                                      .symmetric(
+                                horizontal: 12,
+                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
+                                borderRadius:
+                                    BorderRadius.circular(
+                                        12),
+                                borderSide: BorderSide(
+                                  color:
+                                      theme.dividerColor,
                                 ),
                               ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
+                              enabledBorder:
+                                  OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(
+                                        12),
+                                borderSide: BorderSide(
+                                  color:
+                                      theme.dividerColor,
                                 ),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF137FEC),
+                              focusedBorder:
+                                  OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(
+                                        12),
+                                borderSide: BorderSide(
+                                  color: primary,
                                   width: 1.5,
                                 ),
                               ),
                             ),
                             onChanged: (v) {
                               setState(() {
-                                _searchQuery = v.trim();
+                                _searchQuery =
+                                    v.trim();
                               });
                             },
                           ),
@@ -245,8 +298,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         });
                       },
                       icon: Icon(
-                        _isSearching ? Icons.close : Icons.search,
-                        color: const Color(0xFF6B7280),
+                        _isSearching
+                            ? Icons.close
+                            : Icons.search,
+                        color: theme.iconTheme.color
+                                ?.withOpacity(0.6) ??
+                            Colors.grey,
                       ),
                     ),
                   ],
@@ -257,30 +314,64 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    constraints:
+                        const BoxConstraints(maxWidth: 480),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
 
                         const _SectionTitle('إعدادات عامة'),
-                        if (_matchesSearch('اسم التطبيق', _appName))
+                        if (_matchesSearch(
+                            'اسم التطبيق', _appName))
                           _SettingsTile(
-                            icon: Icons.settings_applications_outlined,
+                            icon: Icons
+                                .settings_applications_outlined,
                             iconBg: primary,
                             title: 'اسم التطبيق',
                             subtitle: _appName,
                             onTap: _showAppNameDialog,
                           ),
                         if (_matchesSearch(
-                            'شعار النظام', _logoDescription))
+                            'شعار النظام',
+                            _logoDescription))
                           _SettingsTile(
                             icon: Icons.image_outlined,
                             iconBg: primary,
                             title: 'شعار النظام',
                             subtitle: _logoDescription,
                             onTap: _showLogoDialog,
+                          ),
+
+                        // زر الوضع الليلي
+                        if (_matchesSearch(
+                            'الوضع الليلي',
+                            'تفعيل / تعطيل الوضع الداكن'))
+                          _SettingsTile.switchTile(
+                            icon: Icons.dark_mode_outlined,
+                            iconBg: primary,
+                            title: 'الوضع الليلي',
+                            subtitle: _isDarkMode
+                                ? 'مفعل (الوضع الداكن)'
+                                : 'مغلق (الوضع الفاتح)',
+                            value: _isDarkMode,
+                            onChanged: (val) {
+                              setState(() {
+                                _isDarkMode = val;
+                              });
+                              final appState =
+                                  MyApp.of(context);
+                              if (appState != null) {
+                                appState.setThemeMode(
+                                  val
+                                      ? ThemeMode.dark
+                                      : ThemeMode.light,
+                                );
+                              }
+                            },
                           ),
 
                         const Divider(height: 24),
@@ -290,7 +381,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             'قائمة الوزارات',
                             'إضافة أو تعديل بيانات الجهات الحكومية'))
                           _SettingsTile(
-                            icon: Icons.account_balance_outlined,
+                            icon: Icons
+                                .account_balance_outlined,
                             iconBg: primary,
                             title: 'قائمة الوزارات',
                             subtitle:
@@ -301,7 +393,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             'معلومات التواصل',
                             'تحديث أرقام الطوارئ والبريد لكل وزارة'))
                           _SettingsTile(
-                            icon: Icons.contact_phone_outlined,
+                            icon: Icons
+                                .contact_phone_outlined,
                             iconBg: primary,
                             title: 'معلومات التواصل',
                             subtitle:
@@ -342,7 +435,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             'سجلات الوصول',
                             'مراقبة عمليات دخول المشرفين'))
                           _SettingsTile(
-                            icon: Icons.history_edu_outlined,
+                            icon: Icons
+                                .history_edu_outlined,
                             iconBg: primary,
                             title: 'سجلات الوصول',
                             subtitle:
@@ -368,19 +462,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
 class _SectionTitle extends StatelessWidget {
   final String text;
-  const _SectionTitle(this.text);
+  const _SectionTitle(this.text, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding:
           const EdgeInsets.only(top: 4, bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(
+        style: theme.textTheme.titleMedium?.copyWith(
           fontSize: 16,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF020617),
         ),
       ),
     );
@@ -394,28 +488,58 @@ class _SettingsTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
 
+  // خصائص السويتش (لما نستخدمه كـ switchTile)
+  final bool? value;
+  final ValueChanged<bool>? onChanged;
+
   const _SettingsTile({
-    // ignore: unused_element_parameter
-    super.key,
+    Key? key,
     required this.icon,
     required this.iconBg,
     required this.title,
     required this.subtitle,
     this.onTap,
-  });
+    this.value,
+    this.onChanged,
+  }) : super(key: key);
+
+  const _SettingsTile.switchTile({
+    Key? key,
+    required this.icon,
+    required this.iconBg,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  })  : onTap = null,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final hasSwitch = value != null && onChanged != null;
+
     return InkWell(
-      onTap: onTap,
+      onTap: hasSwitch ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         margin: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color:
+                    Colors.black.withOpacity(0.04),
+                blurRadius: 3,
+                offset: const Offset(0, 2),
+              ),
+          ],
         ),
         child: Row(
           children: [
@@ -423,7 +547,6 @@ class _SettingsTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                // ignore: deprecated_member_use
                 color: iconBg.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -440,27 +563,36 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style:
+                        theme.textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF020617),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style:
+                        theme.textTheme.bodySmall?.copyWith(
                       fontSize: 12,
-                      color: Color(0xFF6B7280),
+                      color: theme.hintColor,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Color(0xFF9CA3AF),
-            ),
+            if (hasSwitch)
+              Switch(
+                value: value!,
+                onChanged: onChanged,
+              )
+            else
+              Icon(
+                Icons.chevron_right,
+                color: theme.iconTheme.color
+                        ?.withOpacity(0.4) ??
+                    Colors.grey,
+              ),
           ],
         ),
       ),
@@ -473,40 +605,47 @@ class _SettingsTile extends StatelessWidget {
 class MinistriesScreen extends StatefulWidget {
   final List<Map<String, String>> ministries;
 
-  const MinistriesScreen({super.key, required this.ministries});
+  const MinistriesScreen({
+    Key? key,
+    required this.ministries,
+  }) : super(key: key);
 
   @override
-  State<MinistriesScreen> createState() => _MinistriesScreenState();
-
-  // ignore: body_might_complete_normally_nullable
-  static Object? of(BuildContext context) {}
+  State<MinistriesScreen> createState() =>
+      _MinistriesScreenState();
 }
 
-class _MinistriesScreenState extends State<MinistriesScreen> {
+class _MinistriesScreenState
+    extends State<MinistriesScreen> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ??
+                  theme.cardColor,
           elevation: 0.5,
-          iconTheme: const IconThemeData(color: Color(0xFF020617)),
-          title: const Text(
+          iconTheme: theme.appBarTheme.iconTheme ??
+              IconThemeData(color: theme.iconTheme.color),
+          title: Text(
             'قائمة الوزارات',
-            style: TextStyle(
-              color: Color(0xFF020617),
+            style: theme.textTheme.titleMedium?.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           centerTitle: true,
         ),
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: widget.ministries.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, __) =>
+              const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final m = widget.ministries[index];
             final name = m['name'] ?? '';
@@ -516,24 +655,28 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              tileColor: Colors.white,
+              tileColor: theme.cardColor,
               title: Text(
                 name,
-                style: const TextStyle(
+                style:
+                    theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),
               ),
               subtitle: Text(
                 info,
-                style: const TextStyle(
+                style:
+                    theme.textTheme.bodySmall?.copyWith(
                   fontSize: 12,
-                  color: Color(0xFF6B7280),
+                  color: theme.hintColor,
                 ),
               ),
-              trailing: const Icon(
+              trailing: Icon(
                 Icons.chevron_right,
-                color: Color(0xFF9CA3AF),
+                color: theme.iconTheme.color
+                        ?.withOpacity(0.4) ??
+                    Colors.grey,
               ),
               onTap: () async {
                 await Navigator.push(
@@ -557,23 +700,30 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
 class MinistryEditScreen extends StatefulWidget {
   final Map<String, String> ministry;
 
-  const MinistryEditScreen({super.key, required this.ministry});
+  const MinistryEditScreen({
+    Key? key,
+    required this.ministry,
+  }) : super(key: key);
 
   @override
-  State<MinistryEditScreen> createState() => _MinistryEditScreenState();
+  State<MinistryEditScreen> createState() =>
+      _MinistryEditScreenState();
 }
 
-class _MinistryEditScreenState extends State<MinistryEditScreen> {
+class _MinistryEditScreenState
+    extends State<MinistryEditScreen> {
   late TextEditingController _nameController;
   late TextEditingController _infoController;
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.ministry['name'] ?? '');
-    _infoController =
-        TextEditingController(text: widget.ministry['info'] ?? '');
+    _nameController = TextEditingController(
+      text: widget.ministry['name'] ?? '',
+    );
+    _infoController = TextEditingController(
+      text: widget.ministry['info'] ?? '',
+    );
   }
 
   @override
@@ -585,24 +735,29 @@ class _MinistryEditScreenState extends State<MinistryEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ??
+                  theme.cardColor,
           elevation: 0.5,
-          iconTheme: const IconThemeData(color: Color(0xFF020617)),
-          title: const Text(
+          iconTheme: theme.appBarTheme.iconTheme ??
+              IconThemeData(color: theme.iconTheme.color),
+          title: Text(
             'تعديل بيانات الوزارة',
-            style: TextStyle(
-              color: Color(0xFF020617),
+            style: theme.textTheme.titleMedium?.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           centerTitle: true,
         ),
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -630,8 +785,10 @@ class _MinistryEditScreenState extends State<MinistryEditScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    final newName = _nameController.text.trim();
-                    final newInfo = _infoController.text.trim();
+                    final newName =
+                        _nameController.text.trim();
+                    final newInfo =
+                        _infoController.text.trim();
 
                     if (newName.isNotEmpty) {
                       widget.ministry['name'] = newName;
@@ -643,11 +800,14 @@ class _MinistryEditScreenState extends State<MinistryEditScreen> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF137FEC),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: primary,
+                    foregroundColor:
+                        theme.colorScheme.onPrimary,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(

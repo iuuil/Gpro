@@ -46,7 +46,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // حقول تغيير كلمة المرور
   final TextEditingController _currentPasswordController =
       TextEditingController();
-  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController =
+      TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
@@ -72,31 +73,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Alert منسق بزر "حسنًا"
   Future<void> _showAlert(String message) async {
+    final theme = Theme.of(context);
+    final dialogTheme = theme.dialogTheme;
+
     await showDialog<void>(
       context: context,
       builder: (ctx) {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            shape: dialogTheme.shape ??
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
             content: Text(
               message,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF111827),
-              ),
+              style: dialogTheme.contentTextStyle ??
+                  theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                  ),
             ),
             actionsAlignment: MainAxisAlignment.center,
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text(
+                child: Text(
                   'حسنًا',
-                  style: TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF2563EB),
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -327,11 +332,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       // مسار مجلد التطبيق
-      final dir = await getApplicationDocumentsDirectory(); // [web:297][web:299][web:303]
+      final dir = await getApplicationDocumentsDirectory();
       final ext = p.extension(picked.path);
       final fileName = 'avatar_${user.uid}$ext';
       final savedFile = await File(picked.path)
-          .copy(p.join(dir.path, fileName)); // [web:299][web:302][web:300]
+          .copy(p.join(dir.path, fileName));
 
       setState(() {
         _avatarPath = savedFile.path;
@@ -355,11 +360,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: ProfileScreen.backgroundLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -369,17 +376,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(
+                      color: theme.dividerColor,
+                    ),
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
                 ),
                 child: Row(
@@ -396,21 +407,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         },
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
-                          color: Color(0xFF4B5563),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.iconTheme.color ??
+                                  const Color(0xFF4B5563),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'الملف الشخصي',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -425,12 +441,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // المحتوى + الأزرار المثبتة أسفل الصفحة
               Expanded(
                 child: user == null
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'يرجى تسجيل الدخول لعرض الملف الشخصي.',
-                          style: TextStyle(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: Color(0xFF6B7280),
+                            color: theme.hintColor,
                           ),
                         ),
                       )
@@ -449,21 +465,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: Text(
                                 'حدث خطأ أثناء جلب بيانات الحساب: ${snapshot.error}',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(
                                   fontSize: 13,
-                                  color: Color(0xFFB91C1C),
+                                  color: theme.colorScheme.error,
                                 ),
                               ),
                             );
                           }
 
                           if (!snapshot.hasData || _stats == null) {
-                            return const Center(
+                            return Center(
                               child: Text(
                                 'لم يتم العثور على بيانات لهذا الحساب.',
-                                style: TextStyle(
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(
                                   fontSize: 14,
-                                  color: Color(0xFF6B7280),
+                                  color: theme.hintColor,
                                 ),
                               ),
                             );
@@ -486,59 +504,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               (data['city'] as String? ?? 'غير محددة')
                                   .toString();
 
-                          final activeComplaints = stats.activeCount;
-                          final resolvedComplaints = stats.resolvedCount;
+                          final activeComplaints =
+                              stats.activeCount;
+                          final resolvedComplaints =
+                              stats.resolvedCount;
 
                           return Column(
                             children: [
                               Expanded(
                                 child: SingleChildScrollView(
-                                  padding: const EdgeInsets.only(bottom: 24),
+                                  padding:
+                                      const EdgeInsets.only(bottom: 24),
                                   child: Column(
                                     children: [
                                       // Profile section
                                       Padding(
-                                        padding: const EdgeInsets.all(24),
+                                        padding:
+                                            const EdgeInsets.all(24),
                                         child: Column(
                                           children: [
                                             Stack(
-                                              clipBehavior: Clip.none,
+                                              clipBehavior:
+                                                  Clip.none,
                                               children: [
                                                 Container(
                                                   width: 120,
                                                   height: 120,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
+                                                  decoration:
+                                                      BoxDecoration(
+                                                    shape:
+                                                        BoxShape.circle,
                                                     border: Border.all(
-                                                      color: Colors.white,
+                                                      color: theme
+                                                          .scaffoldBackgroundColor,
                                                       width: 4,
                                                     ),
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.08),
+                                                        color: Colors
+                                                            .black
+                                                            .withOpacity(
+                                                                0.08),
                                                         blurRadius: 6,
                                                         offset:
-                                                            const Offset(0, 3),
+                                                            const Offset(
+                                                                0, 3),
                                                       ),
                                                     ],
-                                                    color: const Color(
-                                                        0xFFD1D5DB),
-                                                    image: _avatarPath
-                                                            .isNotEmpty
-                                                        ? DecorationImage(
-                                                            image: FileImage(
-                                                              File(_avatarPath),
-                                                            ),
-                                                            fit: BoxFit.cover,
-                                                          )
-                                                        : null,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .surfaceVariant,
+                                                    image:
+                                                        _avatarPath
+                                                                .isNotEmpty
+                                                            ? DecorationImage(
+                                                                image:
+                                                                    FileImage(
+                                                                  File(
+                                                                      _avatarPath),
+                                                                ),
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              )
+                                                            : null,
                                                   ),
-                                                  child: _avatarPath.isEmpty
-                                                      ? const Icon(
+                                                  child: _avatarPath
+                                                          .isEmpty
+                                                      ? Icon(
                                                           Icons.person,
                                                           size: 60,
-                                                          color: Colors.white,
+                                                          color: theme
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
                                                         )
                                                       : null,
                                                 ),
@@ -546,64 +583,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   bottom: 0,
                                                   right: 0,
                                                   child: InkWell(
-                                                    onTap: _pickAndSaveAvatar,
+                                                    onTap:
+                                                        _pickAndSaveAvatar,
                                                     borderRadius:
-                                                        BorderRadius.circular(
-                                                            24),
+                                                        BorderRadius
+                                                            .circular(
+                                                                24),
                                                     child: Container(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              6),
+                                                          const EdgeInsets
+                                                              .all(6),
                                                       decoration:
                                                           BoxDecoration(
-                                                        color: ProfileScreen
+                                                        color: theme
+                                                            .colorScheme
                                                             .primary,
-                                                        shape:
-                                                            BoxShape.circle,
-                                                        border: Border.all(
-                                                          color: Colors.white,
+                                                        shape: BoxShape
+                                                            .circle,
+                                                        border:
+                                                            Border.all(
+                                                          color: theme
+                                                              .cardColor,
                                                           width: 2,
                                                         ),
                                                         boxShadow: [
                                                           BoxShadow(
-                                                            color: Colors.black
+                                                            color: Colors
+                                                                .black
                                                                 .withOpacity(
                                                                     0.15),
-                                                            blurRadius: 4,
+                                                            blurRadius:
+                                                                4,
                                                             offset:
                                                                 const Offset(
-                                                                    0, 2),
+                                                                    0,
+                                                                    2),
                                                           ),
                                                         ],
                                                       ),
-                                                      child: const Icon(
-                                                        Icons.photo_camera,
+                                                      child: Icon(
+                                                        Icons
+                                                            .photo_camera,
                                                         size: 16,
-                                                        color: Colors.white,
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onPrimary,
                                                       ),
                                                     ),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 12),
+                                            const SizedBox(
+                                                height: 12),
                                             Text(
                                               fullName,
-                                              style: const TextStyle(
+                                              style: theme
+                                                  .textTheme
+                                                  .headlineSmall
+                                                  ?.copyWith(
                                                 fontSize: 22,
-                                                fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F172A),
+                                                fontWeight:
+                                                    FontWeight.w700,
                                               ),
-                                              textAlign: TextAlign.center,
+                                              textAlign:
+                                                  TextAlign.center,
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
                                               city,
-                                              style: const TextStyle(
+                                              style: theme
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
                                                 fontSize: 14,
-                                                color: Color(0xFF6B7280),
+                                                color:
+                                                    theme.hintColor,
                                               ),
-                                              textAlign: TextAlign.center,
+                                              textAlign:
+                                                  TextAlign.center,
                                             ),
                                           ],
                                         ),
@@ -611,24 +669,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                       // ملخص الشكاوى
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(
+                                        padding:
+                                            const EdgeInsets.symmetric(
                                           horizontal: 16,
                                           vertical: 4,
                                         ),
                                         child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                              CrossAxisAlignment
+                                                  .start,
                                           children: [
-                                            const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 4),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets
+                                                      .symmetric(
+                                                horizontal: 4,
+                                              ),
                                               child: Text(
                                                 'ملخص الشكاوى',
-                                                style: TextStyle(
+                                                style: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
                                                   fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
+                                                  fontWeight:
+                                                      FontWeight.w700,
                                                   letterSpacing: 0.8,
-                                                  color: Color(0xFF0F172A),
                                                 ),
                                               ),
                                             ),
@@ -639,15 +705,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 Expanded(
                                                   child: InkWell(
                                                     borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
+                                                        BorderRadius
+                                                            .circular(
+                                                                16),
                                                     onTap: () {
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
                                                           builder: (_) =>
                                                               const UserComplaintsListScreen(
-                                                            status: 'pending',
+                                                            status:
+                                                                'pending',
                                                             title:
                                                                 'الشكاوى النشطة',
                                                           ),
@@ -656,28 +724,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     },
                                                     child: Container(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              16),
+                                                          const EdgeInsets
+                                                              .all(16),
                                                       decoration:
                                                           BoxDecoration(
-                                                        color: Colors.white,
+                                                        color: theme
+                                                            .cardColor,
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(16),
+                                                                .circular(
+                                                                    16),
                                                         border: Border.all(
-                                                          color: const Color(
-                                                              0xFFE5E7EB),
+                                                          color: theme
+                                                              .dividerColor,
                                                         ),
                                                         boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(
-                                                                    0.03),
-                                                            blurRadius: 4,
-                                                            offset:
-                                                                const Offset(
-                                                                    0, 2),
-                                                          ),
+                                                          if (!isDark)
+                                                            BoxShadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                      0.03),
+                                                              blurRadius:
+                                                                  4,
+                                                              offset:
+                                                                  const Offset(
+                                                                      0,
+                                                                      2),
+                                                            ),
                                                         ],
                                                       ),
                                                       child: Column(
@@ -685,43 +759,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          const Row(
+                                                          Row(
                                                             children: [
-                                                              Icon(
+                                                              const Icon(
                                                                 Icons
                                                                     .pending_actions,
                                                                 color: Color(
                                                                     0xFFF59E0B),
                                                               ),
-                                                              SizedBox(
-                                                                  width: 6),
+                                                              const SizedBox(
+                                                                  width:
+                                                                      6),
                                                               Text(
                                                                 'الشكاوى النشطة',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 13,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500,
-                                                                  color: Color(
-                                                                      0xFF6B7280),
+                                                                style: theme
+                                                                    .textTheme
+                                                                    .bodySmall
+                                                                    ?.copyWith(
+                                                                  fontSize:
+                                                                      13,
+                                                                  color: theme
+                                                                      .hintColor,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
                                                           const SizedBox(
-                                                              height: 6),
+                                                              height:
+                                                                  6),
                                                           Text(
                                                             activeComplaints
                                                                 .toString(),
-                                                            style:
-                                                                const TextStyle(
-                                                              fontSize: 26,
+                                                            style: theme
+                                                                .textTheme
+                                                                .headlineSmall
+                                                                ?.copyWith(
+                                                              fontSize:
+                                                                  26,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w700,
-                                                              color: Color(
-                                                                  0xFF0F172A),
                                                             ),
                                                           ),
                                                         ],
@@ -730,49 +807,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 12),
-                                                // الشكاوى المكتملة
+                                                // الشكاوى المحلولة
                                                 Expanded(
                                                   child: InkWell(
                                                     borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
+                                                        BorderRadius
+                                                            .circular(
+                                                                16),
                                                     onTap: () {
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
                                                           builder: (_) =>
                                                               const UserComplaintsListScreen(
-                                                            status: 'resolved',
+                                                            status:
+                                                                'resolved',
                                                             title:
-                                                                'الشكاوى المكتملة',
+                                                                'الشكاوى المحلولة',
                                                           ),
                                                         ),
                                                       );
                                                     },
                                                     child: Container(
                                                       padding:
-                                                          const EdgeInsets.all(
-                                                              16),
+                                                          const EdgeInsets
+                                                              .all(16),
                                                       decoration:
                                                           BoxDecoration(
-                                                        color: Colors.white,
+                                                        color: theme
+                                                            .cardColor,
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(16),
+                                                                .circular(
+                                                                    16),
                                                         border: Border.all(
-                                                          color: const Color(
-                                                              0xFFE5E7EB),
+                                                          color: theme
+                                                              .dividerColor,
                                                         ),
                                                         boxShadow: [
-                                                          BoxShadow(
-                                                            color: Colors.black
-                                                                .withOpacity(
-                                                                    0.03),
-                                                            blurRadius: 4,
-                                                            offset:
-                                                                const Offset(
-                                                                    0, 2),
-                                                          ),
+                                                          if (!isDark)
+                                                            BoxShadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                      0.03),
+                                                              blurRadius:
+                                                                  4,
+                                                              offset:
+                                                                  const Offset(
+                                                                      0,
+                                                                      2),
+                                                            ),
                                                         ],
                                                       ),
                                                       child: Column(
@@ -780,42 +865,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          const Row(
+                                                          Row(
                                                             children: [
-                                                              Icon(
-                                                                Icons.task_alt,
+                                                              const Icon(
+                                                                Icons
+                                                                    .check_circle_outline,
                                                                 color: Color(
-                                                                    0xFF10B981),
+                                                                    0xFF16A34A),
                                                               ),
-                                                              SizedBox(
-                                                                  width: 6),
+                                                              const SizedBox(
+                                                                  width:
+                                                                      6),
                                                               Text(
-                                                                'الشكاوى المكتملة',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 13,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500,
-                                                                  color: Color(
-                                                                      0xFF6B7280),
+                                                                'الشكاوى المحلولة',
+                                                                style: theme
+                                                                    .textTheme
+                                                                    .bodySmall
+                                                                    ?.copyWith(
+                                                                  fontSize:
+                                                                      13,
+                                                                  color: theme
+                                                                      .hintColor,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
                                                           const SizedBox(
-                                                              height: 6),
+                                                              height:
+                                                                  6),
                                                           Text(
                                                             resolvedComplaints
                                                                 .toString(),
-                                                            style:
-                                                                const TextStyle(
-                                                              fontSize: 26,
+                                                            style: theme
+                                                                .textTheme
+                                                                .headlineSmall
+                                                                ?.copyWith(
+                                                              fontSize:
+                                                                  26,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w700,
-                                                              color: Color(
-                                                                  0xFF0F172A),
                                                             ),
                                                           ),
                                                         ],
@@ -829,101 +918,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ),
 
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 16),
 
-                                      // المعلومات الشخصية
+                                      // حقول البيانات
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(
+                                        padding:
+                                            const EdgeInsets.symmetric(
                                           horizontal: 16,
                                           vertical: 4,
                                         ),
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
                                           children: [
-                                            const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 4),
-                                              child: Text(
-                                                'المعلومات الشخصية',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  letterSpacing: 0.8,
-                                                  color: Color(0xFF0F172A),
-                                                ),
-                                              ),
+                                            _ProfileField(
+                                              label: 'الاسم الكامل',
+                                              icon: Icons.person_outline,
+                                              controller:
+                                                  _fullNameController,
+                                              keyboardType:
+                                                  TextInputType.name,
+                                              enabled: _isEditing,
                                             ),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                border: Border.all(
-                                                  color: const Color(
-                                                      0xFFE5E7EB),
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.03),
-                                                    blurRadius: 4,
-                                                    offset:
-                                                        const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Column(
-                                                children: [
-                                                  _ProfileField(
-                                                    label: 'الاسم الكامل',
-                                                    icon: Icons.person,
-                                                    controller:
-                                                        _fullNameController,
-                                                    keyboardType:
-                                                        TextInputType.text,
-                                                    enabled: _isEditing,
-                                                  ),
-                                                  const SizedBox(height: 12),
-                                                  _ProfileField(
-                                                    label: 'البريد الإلكتروني',
-                                                    icon: Icons.mail_outline,
-                                                    controller:
-                                                        _emailController,
-                                                    keyboardType:
-                                                        TextInputType
-                                                            .emailAddress,
-                                                    enabled: _isEditing,
-                                                  ),
-                                                  const SizedBox(height: 12),
-                                                  _ProfileField(
-                                                    label: 'رقم الهاتف',
-                                                    icon: Icons.call,
-                                                    controller:
-                                                        _phoneController,
-                                                    keyboardType:
-                                                        TextInputType.phone,
-                                                    ltr: true,
-                                                    enabled: _isEditing,
-                                                  ),
-                                                  const SizedBox(height: 12),
-                                                  _ProfileField(
-                                                    label:
-                                                        'رقم البطاقة الوطنية',
-                                                    icon:
-                                                        Icons.badge_outlined,
-                                                    controller:
-                                                        _nationalIdController,
-                                                    keyboardType:
-                                                        TextInputType.number,
-                                                    ltr: true,
-                                                    enabled: _isEditing,
-                                                  ),
-                                                ],
-                                              ),
+                                            const SizedBox(height: 12),
+                                            _ProfileField(
+                                              label: 'البريد الإلكتروني',
+                                              icon: Icons.email_outlined,
+                                              controller:
+                                                  _emailController,
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
+                                              ltr: true,
+                                              enabled: false, // لا نعدل الإيميل من هنا
+                                            ),
+                                            const SizedBox(height: 12),
+                                            _ProfileField(
+                                              label: 'رقم الهاتف',
+                                              icon: Icons.phone_outlined,
+                                              controller:
+                                                  _phoneController,
+                                              keyboardType:
+                                                  TextInputType.phone,
+                                              ltr: true,
+                                              enabled: _isEditing,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            _ProfileField(
+                                              label: 'الرقم الوطني',
+                                              icon: Icons.badge_outlined,
+                                              controller:
+                                                  _nationalIdController,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              ltr: true,
+                                              enabled: _isEditing,
                                             ),
                                           ],
                                         ),
@@ -933,49 +979,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (_isEditing) ...[
                                         const SizedBox(height: 12),
                                         Padding(
-                                          padding: const EdgeInsets.symmetric(
+                                          padding:
+                                              const EdgeInsets.symmetric(
                                             horizontal: 16,
                                             vertical: 4,
                                           ),
                                           child: Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                CrossAxisAlignment
+                                                    .start,
                                             children: [
-                                              const Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: 4),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets
+                                                        .symmetric(
+                                                  horizontal: 4,
+                                                ),
                                                 child: Text(
                                                   'تغيير كلمة المرور',
-                                                  style: TextStyle(
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
                                                     fontSize: 12,
                                                     fontWeight:
                                                         FontWeight.w700,
                                                     letterSpacing: 0.8,
-                                                    color: Color(0xFF0F172A),
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(height: 8),
                                               Container(
                                                 padding:
-                                                    const EdgeInsets.all(16),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
+                                                    const EdgeInsets
+                                                        .all(16),
+                                                decoration:
+                                                    BoxDecoration(
+                                                  color: theme.cardColor,
                                                   borderRadius:
-                                                      BorderRadius.circular(
-                                                          16),
+                                                      BorderRadius
+                                                          .circular(16),
                                                   border: Border.all(
-                                                    color: const Color(
-                                                        0xFFE5E7EB),
+                                                    color: theme
+                                                        .dividerColor,
                                                   ),
                                                   boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(0.03),
-                                                      blurRadius: 4,
-                                                      offset:
-                                                          const Offset(0, 2),
-                                                    ),
+                                                    if (!isDark)
+                                                      BoxShadow(
+                                                        color: Colors
+                                                            .black
+                                                            .withOpacity(
+                                                                0.03),
+                                                        blurRadius: 4,
+                                                        offset:
+                                                            const Offset(
+                                                                0, 2),
+                                                      ),
                                                   ],
                                                 ),
                                                 child: Column(
@@ -983,7 +1042,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     _PasswordField(
                                                       label:
                                                           'كلمة المرور الحالية',
-                                                      icon: Icons.lock_outline,
+                                                      icon: Icons
+                                                          .lock_outline,
                                                       controller:
                                                           _currentPasswordController,
                                                     ),
@@ -1002,7 +1062,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     _PasswordField(
                                                       label:
                                                           'تأكيد كلمة المرور الجديدة',
-                                                      icon: Icons.lock_outline,
+                                                      icon: Icons
+                                                          .lock_outline,
                                                       controller:
                                                           _confirmPasswordController,
                                                     ),
@@ -1022,7 +1083,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               SafeArea(
                                 top: false,
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(
                                     16,
                                     8,
                                     16,
@@ -1041,46 +1103,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                         user.uid);
                                                   } else {
                                                     setState(() {
-                                                      _isEditing = true;
+                                                      _isEditing =
+                                                          true;
                                                     });
                                                   }
                                                 },
                                           icon: _isSaving
-                                              ? const SizedBox(
+                                              ? SizedBox(
                                                   width: 18,
                                                   height: 18,
                                                   child:
                                                       CircularProgressIndicator(
                                                     strokeWidth: 2,
-                                                    color: Colors.white,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onPrimary,
                                                   ),
                                                 )
                                               : Icon(
                                                   _isEditing
-                                                      ? Icons.save_outlined
-                                                      : Icons.edit_outlined,
+                                                      ? Icons
+                                                          .save_outlined
+                                                      : Icons
+                                                          .edit_outlined,
                                                 ),
                                           label: Text(
                                             _isEditing
                                                 ? 'حفظ الملف الشخصي'
                                                 : 'تعديل الملف الشخصي',
                                           ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                ProfileScreen.primary,
-                                            foregroundColor: Colors.white,
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                              vertical: 14,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            elevation: 4,
-                                            shadowColor: ProfileScreen.primary
-                                                .withOpacity(0.3),
-                                          ),
+                                          // الألوان من ElevatedButtonTheme في AppTheme
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -1088,29 +1140,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         width: double.infinity,
                                         child: OutlinedButton.icon(
                                           onPressed: _logout,
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.logout,
-                                            color: Color(0xFFDC2626),
+                                            color: theme
+                                                .colorScheme.error,
                                           ),
-                                          label: const Text(
+                                          label: Text(
                                             'تسجيل الخروج',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFFDC2626),
+                                            style: theme
+                                                .textTheme.bodyMedium
+                                                ?.copyWith(
+                                              fontWeight:
+                                                  FontWeight.w700,
                                               fontSize: 14,
+                                              color: theme
+                                                  .colorScheme.error,
                                             ),
                                           ),
-                                          style: OutlinedButton.styleFrom(
-                                            side: const BorderSide(
-                                              color: Color(0xFFDC2626),
+                                          style:
+                                              OutlinedButton.styleFrom(
+                                            side: BorderSide(
+                                              color: theme
+                                                  .colorScheme.error,
                                             ),
                                             padding:
-                                                const EdgeInsets.symmetric(
+                                                const EdgeInsets
+                                                    .symmetric(
                                               vertical: 12,
                                             ),
-                                            shape: RoundedRectangleBorder(
+                                            shape:
+                                                RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(16),
+                                                  BorderRadius
+                                                      .circular(16),
                                             ),
                                           ),
                                         ),
@@ -1132,6 +1194,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
+// ====== الحقول المساعدة ======
+
 class _ProfileField extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -1151,16 +1215,18 @@ class _ProfileField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF6B7280),
+            color: theme.hintColor,
           ),
         ),
         const SizedBox(height: 4),
@@ -1178,17 +1244,29 @@ class _ProfileField extends StatelessWidget {
                   vertical: 12,
                 ),
                 filled: true,
-                fillColor:
-                    enabled ? const Color(0xFFF9FAFB) : const Color(0xFFF3F4F6),
+                fillColor: enabled
+                    ? (isDark
+                        ? theme.colorScheme.surfaceVariant
+                        : const Color(0xFFF9FAFB))
+                    : (isDark
+                        ? theme.disabledColor.withOpacity(0.1)
+                        : const Color(0xFFF3F4F6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFE5E7EB)),
+                  borderSide: BorderSide(
+                    color: theme.dividerColor,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.dividerColor,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: ProfileScreen.primary,
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -1200,7 +1278,9 @@ class _ProfileField extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 20,
-                color: const Color(0xFF9CA3AF),
+                color:
+                    theme.iconTheme.color?.withOpacity(0.6) ??
+                        const Color(0xFF9CA3AF),
               ),
             ),
           ],
@@ -1222,7 +1302,8 @@ class _PasswordField extends StatefulWidget {
   });
 
   @override
-  State<_PasswordField> createState() => _PasswordFieldState();
+  State<_PasswordField> createState() =>
+      _PasswordFieldState();
 }
 
 class _PasswordFieldState extends State<_PasswordField> {
@@ -1230,16 +1311,18 @@ class _PasswordFieldState extends State<_PasswordField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.label,
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF6B7280),
+            color: theme.hintColor,
           ),
         ),
         const SizedBox(height: 4),
@@ -1255,16 +1338,25 @@ class _PasswordFieldState extends State<_PasswordField> {
                   vertical: 12,
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF9FAFB),
+                fillColor: isDark
+                    ? theme.colorScheme.surfaceVariant
+                    : const Color(0xFFF9FAFB),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFE5E7EB)),
+                  borderSide: BorderSide(
+                    color: theme.dividerColor,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.dividerColor,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: ProfileScreen.primary,
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 suffixIcon: IconButton(
@@ -1273,7 +1365,9 @@ class _PasswordFieldState extends State<_PasswordField> {
                         ? Icons.visibility_off
                         : Icons.visibility,
                     size: 18,
-                    color: const Color(0xFF9CA3AF),
+                    color:
+                        theme.iconTheme.color?.withOpacity(0.6) ??
+                            const Color(0xFF9CA3AF),
                   ),
                   onPressed: () {
                     setState(() {
@@ -1290,7 +1384,9 @@ class _PasswordFieldState extends State<_PasswordField> {
               child: Icon(
                 widget.icon,
                 size: 20,
-                color: const Color(0xFF9CA3AF),
+                color:
+                    theme.iconTheme.color?.withOpacity(0.6) ??
+                        const Color(0xFF9CA3AF),
               ),
             ),
           ],

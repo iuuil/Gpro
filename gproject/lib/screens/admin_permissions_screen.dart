@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: duplicate_ignore, unused_local_variable, deprecated_member_use
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -13,23 +13,26 @@ class AdminPermissionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final adminDoc = FirebaseFirestore.instance
-        .collection('admins')
-        .doc(adminDocId);
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final adminDoc =
+        FirebaseFirestore.instance.collection('admins').doc(adminDocId);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ?? theme.cardColor,
           elevation: 0.5,
-          iconTheme:
-              const IconThemeData(color: Color(0xFF020617)),
-          title: const Text(
+          iconTheme: theme.appBarTheme.iconTheme ??
+              IconThemeData(color: theme.iconTheme.color),
+          title: Text(
             'إدارة صلاحيات المسؤول',
-            style: TextStyle(
-              color: Color(0xFF020617),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.appBarTheme.foregroundColor ??
+                  theme.colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -39,6 +42,9 @@ class AdminPermissionsScreen extends StatelessWidget {
         body: StreamBuilder<DocumentSnapshot>(
           stream: adminDoc.snapshots(),
           builder: (context, snapshot) {
+            final theme = Theme.of(context);
+            final primary = theme.colorScheme.primary;
+
             if (snapshot.connectionState ==
                 ConnectionState.waiting) {
               return const Center(
@@ -51,18 +57,21 @@ class AdminPermissionsScreen extends StatelessWidget {
                 child: Text(
                   'خطأ في تحميل بيانات المسؤول: ${snapshot.error}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 13,
+                    color: theme.colorScheme.error,
+                  ),
                 ),
               );
             }
 
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(
+              return Center(
                 child: Text(
                   'لم يتم العثور على هذا المسؤول.',
-                  style: TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 14,
-                    color: Color(0xFF64748B),
+                    color: theme.hintColor,
                   ),
                 ),
               );
@@ -93,6 +102,9 @@ class AdminPermissionsScreen extends StatelessWidget {
             bool canViewStats =
                 (data['canViewStats'] ?? true) == true;
 
+            final cardColor = theme.cardColor;
+            final borderColor = theme.dividerColor;
+
             return StatefulBuilder(
               builder: (context, setStateLocal) {
                 return SingleChildScrollView(
@@ -105,19 +117,22 @@ class AdminPermissionsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardColor,
                           borderRadius:
                               BorderRadius.circular(14),
                           border: Border.all(
-                            color:
-                                const Color(0xFFE5E7EB),
+                            color: borderColor,
                           ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x08000000),
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
+                          boxShadow: [
+                            if (theme.brightness ==
+                                Brightness.light)
+                              BoxShadow(
+                                color: Colors.black
+                                    .withOpacity(0.05),
+                                blurRadius: 4,
+                                offset:
+                                    const Offset(0, 2),
+                              ),
                           ],
                         ),
                         child: Row(
@@ -128,19 +143,20 @@ class AdminPermissionsScreen extends StatelessWidget {
                               height: 54,
                               width: 54,
                               decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFFF1F5F9),
+                                color: theme
+                                    .colorScheme.surfaceVariant
+                                    .withOpacity(0.7),
                                 borderRadius:
                                     BorderRadius.circular(
                                         999),
                                 border: Border.all(
-                                  color: const Color(
-                                      0xFFE5E7EB),
+                                  color: borderColor,
                                 ),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.admin_panel_settings,
-                                color: Color(0xFF0F172A),
+                                color: theme
+                                    .colorScheme.onSurface,
                                 size: 28,
                               ),
                             ),
@@ -148,50 +164,58 @@ class AdminPermissionsScreen extends StatelessWidget {
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                    CrossAxisAlignment
+                                        .start,
                                 children: [
                                   Text(
                                     name,
-                                    style:
-                                        const TextStyle(
+                                    style: theme
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
                                       fontSize: 16,
                                       fontWeight:
                                           FontWeight.w700,
-                                      color: Color(
-                                          0xFF020617),
+                                      color: theme
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
-                                  const SizedBox(
-                                      height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     email,
-                                    style:
-                                        const TextStyle(
+                                    style: theme
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
                                       fontSize: 13,
-                                      color: Color(
-                                          0xFF6B7280),
+                                      color:
+                                          theme.hintColor,
                                     ),
                                   ),
-                                  const SizedBox(
-                                      height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'الجهة: $ministry',
-                                    style:
-                                        const TextStyle(
+                                    style: theme
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
                                       fontSize: 12,
-                                      color: Color(
-                                          0xFF6B7280),
+                                      color:
+                                          theme.hintColor,
                                     ),
                                   ),
-                                  const SizedBox(
-                                      height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'مسؤول منذ: $createdAt',
-                                    style:
-                                        const TextStyle(
+                                    style: theme
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
                                       fontSize: 11,
-                                      color: Color(
-                                          0xFF9CA3AF),
+                                      color: theme
+                                          .hintColor
+                                          .withOpacity(0.8),
                                     ),
                                   ),
                                 ],
@@ -203,12 +227,14 @@ class AdminPermissionsScreen extends StatelessWidget {
 
                       const SizedBox(height: 20),
 
-                      const Text(
+                      Text(
                         'الصلاحيات الممنوحة',
-                        style: TextStyle(
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color:
+                              theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -264,18 +290,20 @@ class AdminPermissionsScreen extends StatelessWidget {
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           foregroundColor:
-                              const Color(0xFF6B7280),
-                          side: const BorderSide(
-                            color: Color(0xFFD1D5DB),
+                              theme.hintColor,
+                          side: BorderSide(
+                            color: borderColor,
                           ),
                           padding:
                               const EdgeInsets.symmetric(
                             vertical: 10,
                             horizontal: 12,
                           ),
-                          shape: RoundedRectangleBorder(
+                          shape:
+                              RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius.circular(12),
+                                BorderRadius.circular(
+                                    12),
                           ),
                         ),
                         onPressed: () async {
@@ -283,31 +311,44 @@ class AdminPermissionsScreen extends StatelessWidget {
                               await showDialog<bool>(
                             context: context,
                             builder: (context) {
+                              final dialogTheme =
+                                  Theme.of(context);
+                              final primaryDialog = dialogTheme
+                                  .colorScheme.primary;
                               return AlertDialog(
-                                title: const Text(
-                                    'إعادة تعيين الصلاحيات'),
-                                content: const Text(
+                                title: Text(
+                                  'إعادة تعيين الصلاحيات',
+                                  style: dialogTheme
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                                content: Text(
                                   'سيتم إعادة الصلاحيات للحالة الافتراضية (السماح بإدارة الشكاوى وعرض الإحصائيات فقط).',
+                                  style: dialogTheme
+                                      .textTheme
+                                      .bodyMedium,
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(
-                                            context,
-                                            false),
+                                      context,
+                                      false,
+                                    ),
                                     child:
                                         const Text('إلغاء'),
                                   ),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(
-                                            context,
-                                            true),
-                                    child: const Text(
+                                      context,
+                                      true,
+                                    ),
+                                    child: Text(
                                       'تأكيد',
                                       style: TextStyle(
-                                        color: Color(
-                                            0xFF2563EB),
+                                        color:
+                                            primaryDialog,
                                       ),
                                     ),
                                   ),
@@ -368,44 +409,41 @@ class _PermissionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardColor;
+    // ignore: unused_local_variable
+    final borderColor = theme.dividerColor;
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: borderColor),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
       ),
       child: Row(
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
-                  ),
+                  style: theme.textTheme.titleMedium,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF6B7280),
-                  ),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Switch(
+          Switch.adaptive(
             value: value,
-            activeColor: const Color(0xFF22C55E),
             onChanged: onChanged,
           ),
         ],

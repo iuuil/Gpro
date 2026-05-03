@@ -8,8 +8,6 @@ class AdminRegisterScreen extends StatefulWidget {
   const AdminRegisterScreen({super.key});
 
   static const Color primaryColor = Color(0xFF137FEC);
-  static const Color backgroundLight = Color(0xFFF6F7F8);
-  static const Color backgroundDark = Color(0xFF101922);
 
   @override
   State<AdminRegisterScreen> createState() => _AdminRegisterScreenState();
@@ -47,8 +45,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     ),
   ];
 
-  Color? get backgroundLight => AdminRegisterScreen.backgroundLight;
-
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -64,7 +60,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('يجب الموافقة على شروط الاستخدام وسياسة الخصوصية'),
+          content:
+              Text('يجب الموافقة على شروط الاستخدام وسياسة الخصوصية'),
         ),
       );
       return;
@@ -78,9 +75,9 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     final password = _passwordController.text.trim();
     final department = _selectedDepartment;
 
-    // تحقق من قوة كلمة المرور: 8 أحرف على الأقل + حروف + أرقام + رموز
-    final passwordRegex =
-        RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$&*~^%\-_+=<>?]).{8,}$');
+    final passwordRegex = RegExp(
+      r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#\$&*~^%\-_+=<>?]).{8,}$',
+    );
 
     if (!passwordRegex.hasMatch(password)) {
       setState(() => _isSubmitting = false);
@@ -97,7 +94,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     try {
       final firestore = FirebaseFirestore.instance;
 
-      // 1) التحقق أن هذا البريد + الرقم الوظيفي موجودين في allowed_admins
       final allowedQuery = await firestore
           .collection('allowed_admins')
           .where('email', isEqualTo: email)
@@ -106,7 +102,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
           .get();
 
       if (allowedQuery.docs.isEmpty) {
-        // ليس ضمن قائمة المسؤولين المعتمدين
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -117,18 +112,18 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
         return;
       }
 
-      // 2) إنشاء حساب في FirebaseAuth (مسؤول فقط إذا كان في allowed_admins)
       final cred = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       final user = cred.user;
 
       if (user == null) {
-        throw Exception('تعذر إنشاء حساب المسؤول، الرجاء المحاولة مرة أخرى.');
+        throw Exception(
+          'تعذر إنشاء حساب المسؤول، الرجاء المحاولة مرة أخرى.',
+        );
       }
 
       await user.updateDisplayName(fullName);
 
-      // 3) حفظ بيانات المسؤول في Firestore داخل collection admins
       await firestore.collection('admins').doc(user.uid).set({
         'fullName': fullName,
         'email': email,
@@ -139,7 +134,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
         'role': 'admin',
       });
 
-      // 4) رسالة نجاح + تحويل مباشرة لصفحة لوحة تحكم المسؤول
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('تم إنشاء حساب المسؤول بنجاح.'),
@@ -178,10 +172,13 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: backgroundLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: Container(
@@ -190,10 +187,13 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                 children: [
                   // الهيدر العلوي
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: backgroundLight?.withOpacity(0.9),
+                      color: theme.appBarTheme.backgroundColor ??
+                          theme.cardColor.withOpacity(0.9),
                     ),
                     child: Row(
                       children: [
@@ -203,20 +203,22 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                           child: IconButton(
                             onPressed: () => Navigator.pop(context),
                             padding: EdgeInsets.zero,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_back_ios_new,
                               size: 20,
-                              color: Color(0xFF020617),
+                              color:
+                                  theme.appBarTheme.foregroundColor ??
+                                      theme.iconTheme.color ??
+                                      const Color(0xFF020617),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'تسجيل حساب مسؤول',
-                          style: TextStyle(
+                          style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF020617),
                           ),
                         ),
                       ],
@@ -233,20 +235,19 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'إنشاء حساب جديد',
-                            style: TextStyle(
+                            style: theme.textTheme.headlineSmall?.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF020617),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'يرجى إدخال البيانات المطلوبة لتسجيل حساب مسؤول في تطبيق "صوت المواطن".',
-                            style: TextStyle(
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
-                              color: Color(0xFF64748B),
+                              color: theme.hintColor,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -254,21 +255,23 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                           Form(
                             key: _formKey,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 // الاسم الكامل
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.person_outline,
                                       size: 18,
-                                      color: AdminRegisterScreen.primaryColor,
+                                      color: primary,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       'الاسم الكامل',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -282,16 +285,18 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                     hintText:
                                         'أدخل الاسم الثلاثي كما في الهوية الرسمية',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFCBD5E1),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: theme.dividerColor,
                                       ),
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
                                       return 'يرجى إدخال الاسم الكامل';
                                     }
                                     return null;
@@ -300,18 +305,19 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 const SizedBox(height: 16),
 
                                 // البريد الإلكتروني الوزاري
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.email_outlined,
                                       size: 18,
-                                      color: AdminRegisterScreen.primaryColor,
+                                      color: primary,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       'البريد الإلكتروني الوزاري',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -321,21 +327,25 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
+                                  keyboardType:
+                                      TextInputType.emailAddress,
                                   textDirection: TextDirection.ltr,
                                   decoration: InputDecoration(
-                                    hintText: 'example@ministry.gov.iq',
+                                    hintText:
+                                        'example@ministry.gov.iq',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFCBD5E1),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: theme.dividerColor,
                                       ),
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
                                       return 'يرجى إدخال البريد الإلكتروني';
                                     }
                                     if (!value.contains('@')) {
@@ -347,18 +357,19 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 const SizedBox(height: 16),
 
                                 // الرقم الوظيفي
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.badge_outlined,
                                       size: 18,
-                                      color: AdminRegisterScreen.primaryColor,
+                                      color: primary,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       'الرقم الوظيفي',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -369,18 +380,21 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 TextFormField(
                                   controller: _employeeIdController,
                                   decoration: InputDecoration(
-                                    hintText: 'أدخل رقم الهوية الوظيفية',
+                                    hintText:
+                                        'أدخل رقم الهوية الوظيفية',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFCBD5E1),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: theme.dividerColor,
                                       ),
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
                                       return 'يرجى إدخال الرقم الوظيفي';
                                     }
                                     return null;
@@ -389,18 +403,19 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 const SizedBox(height: 16),
 
                                 // القسم / الدائرة
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.account_tree_outlined,
                                       size: 18,
-                                      color: AdminRegisterScreen.primaryColor,
+                                      color: primary,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       'القسم / الدائرة',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -409,7 +424,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  initialValue: _selectedDepartment,
+                                  value: _selectedDepartment,
                                   items: _departments,
                                   onChanged: (value) {
                                     setState(() {
@@ -419,11 +434,12 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   decoration: InputDecoration(
                                     hintText: 'اختر القسم المعني',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFCBD5E1),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: theme.dividerColor,
                                       ),
                                     ),
                                   ),
@@ -437,18 +453,19 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 const SizedBox(height: 16),
 
                                 // كلمة المرور
-                                const Row(
+                                Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.lock_outline,
                                       size: 18,
-                                      color: AdminRegisterScreen.primaryColor,
+                                      color: primary,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       'كلمة المرور',
-                                      style: TextStyle(
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -462,29 +479,36 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   decoration: InputDecoration(
                                     hintText: 'أدخل كلمة مرور قوية',
                                     filled: true,
-                                    fillColor: Colors.white,
+                                    fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFCBD5E1),
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: theme.dividerColor,
                                       ),
                                     ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                        color: const Color(0xFF64748B),
+                                            ? Icons
+                                                .visibility_outlined
+                                            : Icons
+                                                .visibility_off_outlined,
+                                        color: theme.iconTheme.color
+                                                ?.withOpacity(0.7) ??
+                                            const Color(0xFF64748B),
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          _obscurePassword = !_obscurePassword;
+                                          _obscurePassword =
+                                              !_obscurePassword;
                                         });
                                       },
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
+                                    if (value == null ||
+                                        value.trim().isEmpty) {
                                       return 'يرجى إدخال كلمة المرور';
                                     }
                                     if (value.length < 8) {
@@ -497,50 +521,54 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
 
                                 // الشروط والأحكام
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Checkbox(
                                       value: _acceptTerms,
                                       onChanged: (value) {
                                         setState(() {
-                                          _acceptTerms = value ?? false;
+                                          _acceptTerms =
+                                              value ?? false;
                                         });
                                       },
-                                      activeColor:
-                                          AdminRegisterScreen.primaryColor,
+                                      activeColor: primary,
                                     ),
-                                    const Expanded(
+                                    Expanded(
                                       child: Text.rich(
                                         TextSpan(
-                                          style: TextStyle(
+                                          style: theme
+                                              .textTheme.bodySmall
+                                              ?.copyWith(
                                             fontSize: 13,
-                                            color: Color(0xFF64748B),
+                                            color: theme.hintColor,
                                           ),
                                           children: [
-                                            TextSpan(
+                                            const TextSpan(
                                               text: 'أوافق على ',
                                             ),
                                             TextSpan(
                                               text: 'شروط الاستخدام',
                                               style: TextStyle(
-                                                color: AdminRegisterScreen
-                                                    .primaryColor,
-                                                fontWeight: FontWeight.w600,
+                                                color: primary,
+                                                fontWeight:
+                                                    FontWeight.w600,
                                               ),
                                             ),
-                                            TextSpan(
+                                            const TextSpan(
                                               text: ' و ',
                                             ),
                                             TextSpan(
                                               text: 'سياسة الخصوصية',
                                               style: TextStyle(
-                                                color: AdminRegisterScreen
-                                                    .primaryColor,
-                                                fontWeight: FontWeight.w600,
+                                                color: primary,
+                                                fontWeight:
+                                                    FontWeight.w600,
                                               ),
                                             ),
-                                            TextSpan(
-                                              text: ' الخاصة بالبوابة الحكومية.',
+                                            const TextSpan(
+                                              text:
+                                                  ' الخاصة بالبوابة الحكومية.',
                                             ),
                                           ],
                                         ),
@@ -556,24 +584,17 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   width: double.infinity,
                                   height: 56,
                                   child: ElevatedButton(
-                                    onPressed:
-                                        _isSubmitting ? null : _submit,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          AdminRegisterScreen.primaryColor,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16),
-                                      ),
-                                      elevation: 4,
-                                    ),
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : _submit,
                                     child: _isSubmitting
-                                        ? const SizedBox(
+                                        ? SizedBox(
                                             width: 22,
                                             height: 22,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
+                                            child:
+                                                CircularProgressIndicator(
+                                              color: theme.colorScheme
+                                                  .onPrimary,
                                               strokeWidth: 2,
                                             ),
                                           )
@@ -581,9 +602,11 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                             'تسجيل حساب مسؤول',
                                             style: TextStyle(
                                               fontSize: 15,
-                                              fontWeight: FontWeight.w700,
+                                              fontWeight:
+                                                  FontWeight.w700,
                                             ),
                                           ),
+                                    // باقي الـ style من ElevatedButtonTheme
                                   ),
                                 ),
                               ],
@@ -599,13 +622,15 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 Navigator.pushNamed(
                                     context, '/admin-login');
                               },
-                              child: const Text(
+                              child: Text(
                                 'لديك حساب بالفعل؟ تسجيل الدخول',
-                                style: TextStyle(
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(
                                   fontSize: 13,
-                                  color: AdminRegisterScreen.primaryColor,
+                                  color: primary,
                                   fontWeight: FontWeight.w700,
-                                  decoration: TextDecoration.underline,
+                                  decoration:
+                                      TextDecoration.underline,
                                 ),
                               ),
                             ),
@@ -620,13 +645,13 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                   // خط زخرفي سفلي
                   Container(
                     height: 3,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.centerRight,
                         end: Alignment.centerLeft,
                         colors: [
-                          AdminRegisterScreen.primaryColor,
-                          Color(0x80137FEC),
+                          primary,
+                          primary.withOpacity(0.5),
                           Colors.transparent,
                         ],
                       ),

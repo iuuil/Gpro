@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,15 +17,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  static const Color primaryColor = Color(0xFF137FEC);
-
   Future<void> _loginAdmin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال البريد الإلكتروني وكلمة المرور')),
+        const SnackBar(
+          content: Text('يرجى إدخال البريد الإلكتروني وكلمة المرور'),
+        ),
       );
       return;
     }
@@ -33,7 +33,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1) تسجيل الدخول في Firebase Auth
       final cred = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
       final user = cred.user;
@@ -42,24 +41,23 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         throw Exception('تعذر تسجيل الدخول، يرجى المحاولة مرة أخرى.');
       }
 
-      // 2) التحقق أن هذا المستخدم موجود في Collection admins
       final adminDoc = await FirebaseFirestore.instance
           .collection('admins')
           .doc(user.uid)
           .get();
 
       if (!adminDoc.exists) {
-        // ليس مسؤول حتى لو عنده حساب Auth
         await FirebaseAuth.instance.signOut();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('هذا الحساب ليس حساب مسؤول، لا يمكنك الدخول من هنا.'),
+            content: Text(
+              'هذا الحساب ليس حساب مسؤول، لا يمكنك الدخول من هنا.',
+            ),
           ),
         );
         return;
       }
 
-      // 3) نجاح: رسالة + الانتقال إلى لوحة تحكم المسؤول
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم تسجيل دخول المسؤول بنجاح')),
       );
@@ -103,23 +101,29 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
-              // شريط علوي مع سهم رجوع أعلى اليمين
+              // شريط علوي مع سهم رجوع
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back_ios_new,
-                        color: Color(0xFF020617),
+                        color: theme.appBarTheme.foregroundColor ??
+                            theme.iconTheme.color ??
+                            const Color(0xFF020617),
                         size: 20,
                       ),
                     ),
@@ -131,21 +135,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 24),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
+                      constraints:
+                          const BoxConstraints(maxWidth: 420),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'تسجيل دخول المسؤول',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF020617),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -155,89 +159,95 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             height: 72,
                             width: 72,
                             decoration: BoxDecoration(
-                              // ignore: deprecated_member_use
-                              color: primaryColor.withOpacity(0.08),
+                              color: primary.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
-                            child: const Icon(
+                            child: Icon(
                               Icons.fingerprint,
                               size: 36,
-                              color: primaryColor,
+                              color: primary,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'صوت المواطن',
-                            style: TextStyle(
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: primaryColor,
+                              color: primary,
                             ),
                           ),
 
                           const SizedBox(height: 28),
 
-                          const Text(
+                          Text(
                             'مرحباً، مسؤول النظام',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'يرجى إدخال بياناتك للوصول إلى لوحة إدارة الشكاوى.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
-                              color: Color(0xFF64748B),
+                              color: theme.hintColor,
                             ),
                           ),
 
                           const SizedBox(height: 24),
 
                           // البريد الإلكتروني الرسمي
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'البريد الإلكتروني الرسمي',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF111827),
                               ),
                             ),
                           ),
                           const SizedBox(height: 8),
-                        
+
                           Container(
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFFCBD5E1),
+                                color: theme.dividerColor,
                               ),
                             ),
                             child: Row(
                               children: [
                                 const SizedBox(width: 12),
-                                const Icon(
+                                Icon(
                                   Icons.email_outlined,
-                                  color: Color(0xFF64748B),
+                                  color: theme.iconTheme.color
+                                          ?.withOpacity(0.7) ??
+                                      const Color(0xFF64748B),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: TextField(
                                     controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
+                                    keyboardType:
+                                        TextInputType.emailAddress,
+                                    decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText: 'admin@ministry.gov',
-                                      hintTextDirection: TextDirection.ltr,
+                                      hintTextDirection:
+                                          TextDirection.ltr,
+                                      hintStyle: theme
+                                          .textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: theme.hintColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -249,14 +259,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           const SizedBox(height: 16),
 
                           // كلمة المرور
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'كلمة المرور',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF111827),
                               ),
                             ),
                           ),
@@ -264,27 +273,35 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           Container(
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFFCBD5E1),
+                                color: theme.dividerColor,
                               ),
                             ),
                             child: Row(
                               children: [
                                 const SizedBox(width: 12),
-                                const Icon(
+                                Icon(
                                   Icons.lock_outline,
-                                  color: Color(0xFF64748B),
+                                  color: theme.iconTheme.color
+                                          ?.withOpacity(0.7) ??
+                                      const Color(0xFF64748B),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: TextField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       border: InputBorder.none,
-                                      hintText: 'أدخل كلمة المرور الخاصة بك',
+                                      hintText:
+                                          'أدخل كلمة المرور الخاصة بك',
+                                      hintStyle: theme
+                                          .textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: theme.hintColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -293,11 +310,14 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                     _obscurePassword
                                         ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
-                                    color: const Color(0xFF64748B),
+                                    color: theme.iconTheme.color
+                                            ?.withOpacity(0.7) ??
+                                        const Color(0xFF64748B),
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _obscurePassword = !_obscurePassword;
+                                      _obscurePassword =
+                                          !_obscurePassword;
                                     });
                                   },
                                 ),
@@ -312,22 +332,17 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _loginAdmin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 2,
-                              ),
+                              onPressed:
+                                  _isLoading ? null : _loginAdmin,
                               child: _isLoading
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child: CircularProgressIndicator(
+                                      child:
+                                          CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: theme
+                                            .colorScheme.onPrimary,
                                       ),
                                     )
                                   : const Text(
@@ -337,6 +352,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
+                              // بقية الـ style يأتي من ElevatedButtonTheme في الثيم العام
                             ),
                           ),
 
@@ -346,11 +362,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             onPressed: () {
                               
                             },
-                            child: const Text(
+                            child: Text(
                               'نسيت كلمة المرور؟',
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 13,
-                                color: Color(0xFF64748B),
+                                color: theme.hintColor,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -362,24 +378,27 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
+                              Text(
                                 'لا تمتلك حساب مسؤول؟',
-                                style: TextStyle(
+                                style: theme.textTheme.bodySmall?.copyWith(
                                   fontSize: 13,
-                                  color: Color(0xFF64748B),
+                                  color: theme.hintColor,
                                 ),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushNamed(
-                                      context, '/admin-register');
+                                    context,
+                                    '/admin-register',
+                                  );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'إنشاء حساب جديد',
-                                  style: TextStyle(
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(
                                     fontSize: 13,
-                                    color: primaryColor,
                                     fontWeight: FontWeight.w700,
+                                    color: primary,
                                   ),
                                 ),
                               ),

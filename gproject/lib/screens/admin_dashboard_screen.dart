@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, unused_import, use_build_context_synchronously
+// ignore_for_file: unused_local_variable, deprecated_member_use, unused_import, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -12,15 +12,13 @@ import 'admin_account_screen.dart';       // يحتوي AdminProfileScreen فق�
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
-  static const Color primary = Color(0xFF0070D2);
-  static const Color secondary = Color(0xFFF4F7FE);
-  static const Color accent = Color(0xFFEE4B5E);
-
   @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  State<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState
+    extends State<AdminDashboardScreen> {
   int _currentIndex = 0;
 
   Widget _buildBody() {
@@ -50,37 +48,47 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: _buildBody(),
         ),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: theme
+                    .bottomNavigationBarTheme.backgroundColor ??
+                theme.cardColor,
             border: Border(
               top: BorderSide(
-                color: Color(0xFFE5E7EB),
+                color: theme.dividerColor,
                 width: 1,
               ),
             ),
             boxShadow: [
               BoxShadow(
-                color: Color(0x12000000),
+                color: Colors.black.withOpacity(0.07),
                 blurRadius: 6,
-                offset: Offset(0, -2),
+                offset: const Offset(0, -2),
               ),
             ],
           ),
           child: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             currentIndex: _currentIndex,
-            selectedItemColor: AdminDashboardScreen.primary,
-            unselectedItemColor: const Color(0xFF9CA3AF),
+            selectedItemColor: theme.bottomNavigationBarTheme
+                    .selectedItemColor ??
+                primary,
+            unselectedItemColor: theme
+                    .bottomNavigationBarTheme
+                    .unselectedItemColor ??
+                theme.hintColor,
             onTap: (index) {
               setState(() {
                 _currentIndex = index;
@@ -116,6 +124,9 @@ class _AdminHomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final complaintsRef =
         FirebaseFirestore.instance.collection('complaints');
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return StreamBuilder<QuerySnapshot>(
       stream: complaintsRef.snapshots(),
@@ -129,8 +140,10 @@ class _AdminHomeContent extends StatelessWidget {
           final docs = snapshot.data!.docs;
 
           for (final doc in docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final status = (data['status'] ?? 'pending').toString();
+            final data =
+                doc.data() as Map<String, dynamic>;
+            final status =
+                (data['status'] ?? 'pending').toString();
             final createdAt = data['createdAt'];
 
             // "شكاوى جديدة" = pending خلال آخر 24 ساعة
@@ -160,7 +173,8 @@ class _AdminHomeContent extends StatelessWidget {
         }
 
         final isLoading =
-            snapshot.connectionState == ConnectionState.waiting;
+            snapshot.connectionState ==
+                ConnectionState.waiting;
 
         return Column(
           children: [
@@ -170,22 +184,23 @@ class _AdminHomeContent extends StatelessWidget {
                 horizontal: 16,
                 vertical: 10,
               ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: theme.appBarTheme.backgroundColor ??
+                    theme.cardColor,
                 border: Border(
                   bottom: BorderSide(
-                    color: Color(0xFFE5E7EB),
+                    color: theme.dividerColor,
                     width: 1,
                   ),
                 ),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'لوحة تحكم الأدمن',
-                  style: TextStyle(
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F2933),
                   ),
                 ),
               ),
@@ -199,33 +214,41 @@ class _AdminHomeContent extends StatelessWidget {
               ),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 480),
+                  constraints:
+                      const BoxConstraints(maxWidth: 480),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: AdminDashboardScreen.primary,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
+                      color: primary,
+                      borderRadius:
+                          BorderRadius.circular(14),
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x33000000),
+                          color: Colors.black
+                              .withOpacity(0.2),
                           blurRadius: 8,
-                          offset: Offset(0, 3),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(6),
+                          padding:
+                              const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white
+                                .withOpacity(0.2),
+                            borderRadius:
+                                BorderRadius.circular(
+                                    10),
                           ),
                           child: const Icon(
-                            Icons.notifications_active_outlined,
+                            Icons
+                                .notifications_active_outlined,
                             color: Colors.white,
                             size: 22,
                           ),
@@ -238,38 +261,48 @@ class _AdminHomeContent extends StatelessWidget {
                                 : totalNew == 0
                                     ? 'لا توجد شكاوى جديدة خلال آخر ٢٤ ساعة.'
                                     : 'وصلت $totalNew شكوى جديدة خلال آخر ٢٤ ساعة!',
-                            style: const TextStyle(
+                            style: theme
+                                .textTheme.bodyMedium
+                                ?.copyWith(
                               color: Colors.white,
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                              fontWeight:
+                                  FontWeight.w700,
                             ),
                           ),
                         ),
                         TextButton(
                           style: TextButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor:
-                                AdminDashboardScreen.primary,
-                            padding: const EdgeInsets.symmetric(
+                            backgroundColor:
+                                Colors.white,
+                            foregroundColor: primary,
+                            padding:
+                                const EdgeInsets
+                                    .symmetric(
                               horizontal: 10,
                               vertical: 4,
                             ),
                             minimumSize: Size.zero,
                             tapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                                MaterialTapTargetSize
+                                    .shrinkWrap,
+                            shape:
+                                RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(8),
                             ),
                           ),
                           onPressed: () {
-                            // عند الضغط على زر "عرض" في البانر:
                             // افتح صفحة الشكاوى على فلتر "جديدة"
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
                                     const AdminComplaintsScreen(
-                                  initialFilter: ComplaintStatus.neww,
+                                  initialFilter:
+                                      ComplaintStatus
+                                          .neww,
                                 ),
                               ),
                             );
@@ -278,7 +311,8 @@ class _AdminHomeContent extends StatelessWidget {
                             'عرض',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontWeight:
+                                  FontWeight.w700,
                             ),
                           ),
                         ),
@@ -292,25 +326,35 @@ class _AdminHomeContent extends StatelessWidget {
             // باقي المحتوى قابل للتمرير
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
                 ),
                 child: Center(
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 480),
+                    constraints:
+                        const BoxConstraints(
+                            maxWidth: 480),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         // عنوان إحصائيات الشكاوى
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
+                        Padding(
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                                      horizontal:
+                                          4),
                           child: Text(
                             'إحصائيات الشكاوى',
-                            style: TextStyle(
+                            style: theme.textTheme
+                                .bodyLarge
+                                ?.copyWith(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
+                              fontWeight:
+                                  FontWeight.w700,
                             ),
                           ),
                         ),
@@ -318,9 +362,13 @@ class _AdminHomeContent extends StatelessWidget {
 
                         // صناديق الإحصائيات
                         LayoutBuilder(
-                          builder: (context, constraints) {
+                          builder: (context,
+                              constraints) {
                             final cardWidth =
-                                (constraints.maxWidth - 8) / 2;
+                                (constraints
+                                            .maxWidth -
+                                        8) /
+                                    2;
 
                             return Wrap(
                               spacing: 8,
@@ -329,38 +377,48 @@ class _AdminHomeContent extends StatelessWidget {
                                 // شكاوى جديدة
                                 SizedBox(
                                   width: cardWidth,
-                                  child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
-                                    onTap: () {
-                                      // عند الضغط على بطاقة "شكاوى جديدة":
-                                      // افتح صفحة الشكاوى على فلتر "جديدة"
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AdminComplaintsScreen(
-                                            initialFilter:
-                                                ComplaintStatus.neww,
+                                  child: SizedBox(
+                                    height: 110,
+                                    child: InkWell(
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                                  12),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const AdminComplaintsScreen(
+                                              initialFilter:
+                                                  ComplaintStatus
+                                                      .neww,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: _StatCard(
-                                      titleLines: const [
-                                        'شكاوى',
-                                        'جديدة'
-                                      ],
-                                      value: isLoading
-                                          ? '—'
-                                          : totalNew.toString(),
-                                      badgeText: '',
-                                      badgeColor:
-                                          AdminDashboardScreen.primary,
-                                      badgeTextColor: Colors.white,
-                                      icon: Icons.mail_outline,
-                                      iconColor:
-                                          AdminDashboardScreen.primary,
+                                        );
+                                      },
+                                      child:
+                                          _StatCard(
+                                        titleLines:
+                                            const [
+                                          'شكاوى',
+                                          'جديدة'
+                                        ],
+                                        value: isLoading
+                                            ? '—'
+                                            : totalNew
+                                                .toString(),
+                                        badgeText: '',
+                                        badgeColor:
+                                            primary.withOpacity(
+                                                0.08),
+                                        badgeTextColor:
+                                            primary,
+                                        icon: Icons
+                                            .mail_outline,
+                                        iconColor:
+                                            primary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -368,37 +426,49 @@ class _AdminHomeContent extends StatelessWidget {
                                 // قيد المراجعة
                                 SizedBox(
                                   width: cardWidth,
-                                  child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AdminComplaintsScreen(
-                                            initialFilter:
-                                                ComplaintStatus.pending,
+                                  child: SizedBox(
+                                    height: 110,
+                                    child: InkWell(
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                                  12),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const AdminComplaintsScreen(
+                                              initialFilter:
+                                                  ComplaintStatus
+                                                      .pending,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: _StatCard(
-                                      titleLines: const [
-                                        'قيد',
-                                        'المراجعة'
-                                      ],
-                                      value: isLoading
-                                          ? '—'
-                                          : pending.toString(),
-                                      badgeText: 'قيد الانتظار',
-                                      badgeColor:
-                                          const Color(0xFFF3F4F6),
-                                      badgeTextColor:
-                                          const Color(0xFF4B5563),
-                                      icon:
-                                          Icons.schedule_outlined,
-                                      iconColor: Colors.orange,
+                                        );
+                                      },
+                                      child:
+                                          _StatCard(
+                                        titleLines:
+                                            const [
+                                          'قيد',
+                                          'المراجعة'
+                                        ],
+                                        value: isLoading
+                                            ? '—'
+                                            : pending
+                                                .toString(),
+                                        badgeText:
+                                            'قيد الانتظار',
+                                        badgeColor:
+                                            theme.cardColor,
+                                        badgeTextColor:
+                                            theme
+                                                .hintColor,
+                                        icon: Icons
+                                            .schedule_outlined,
+                                        iconColor: Colors
+                                            .orangeAccent,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -406,37 +476,49 @@ class _AdminHomeContent extends StatelessWidget {
                                 // تمت المعالجة
                                 SizedBox(
                                   width: cardWidth,
-                                  child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AdminComplaintsScreen(
-                                            initialFilter:
-                                                ComplaintStatus.resolved,
+                                  child: SizedBox(
+                                    height: 110,
+                                    child: InkWell(
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                                  12),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const AdminComplaintsScreen(
+                                              initialFilter:
+                                                  ComplaintStatus
+                                                      .resolved,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: _StatCard(
-                                      titleLines: const [
-                                        'تمت',
-                                        'المعالجة'
-                                      ],
-                                      value: isLoading
-                                          ? '—'
-                                          : resolved.toString(),
-                                      badgeText: 'مكتمل',
-                                      badgeColor:
-                                          const Color(0xFFF9FAFB),
-                                      badgeTextColor:
-                                          const Color(0xFF6B7280),
-                                      icon: Icons
-                                          .check_circle_outline,
-                                      iconColor: Colors.green,
+                                        );
+                                      },
+                                      child:
+                                          _StatCard(
+                                        titleLines:
+                                            const [
+                                          'تمت',
+                                          'المعالجة'
+                                        ],
+                                        value: isLoading
+                                            ? '—'
+                                            : resolved
+                                                .toString(),
+                                        badgeText:
+                                            'مكتمل',
+                                        badgeColor:
+                                            theme.cardColor,
+                                        badgeTextColor:
+                                            theme
+                                                .hintColor,
+                                        icon: Icons
+                                            .check_circle_outline,
+                                        iconColor:
+                                            Colors.green,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -444,35 +526,54 @@ class _AdminHomeContent extends StatelessWidget {
                                 // مرفوضة
                                 SizedBox(
                                   width: cardWidth,
-                                  child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AdminComplaintsScreen(
-                                            initialFilter:
-                                                ComplaintStatus.rejected,
+                                  child: SizedBox(
+                                    height: 110,
+                                    child: InkWell(
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                                  12),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const AdminComplaintsScreen(
+                                              initialFilter:
+                                                  ComplaintStatus
+                                                      .rejected,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: _StatCard(
-                                      titleLines: const [
-                                        'شكاوى',
-                                        'مرفوضة'
-                                      ],
-                                      value: isLoading
-                                          ? '—'
-                                          : rejected.toString(),
-                                      badgeText: 'ملغي',
-                                      badgeColor:
-                                          const Color(0xFFFEE2E2),
-                                      badgeTextColor: Colors.red,
-                                      icon: Icons.cancel_outlined,
-                                      iconColor: Colors.red,
+                                        );
+                                      },
+                                      child:
+                                          _StatCard(
+                                        titleLines:
+                                            const [
+                                          'شكاوى',
+                                          'مرفوضة'
+                                        ],
+                                        value: isLoading
+                                            ? '—'
+                                            : rejected
+                                                .toString(),
+                                        badgeText:
+                                            'ملغي',
+                                        badgeColor: theme
+                                            .colorScheme
+                                            .errorContainer
+                                            .withOpacity(
+                                                0.5),
+                                        badgeTextColor:
+                                            theme
+                                                .colorScheme
+                                                .error,
+                                        icon: Icons
+                                            .cancel_outlined,
+                                        iconColor: theme
+                                            .colorScheme
+                                            .error,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -484,14 +585,20 @@ class _AdminHomeContent extends StatelessWidget {
                         const SizedBox(height: 20),
 
                         // عنوان الوصول السريع
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
+                        Padding(
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                                      horizontal:
+                                          4),
                           child: Text(
                             'الوصول السريع',
-                            style: TextStyle(
+                            style: theme.textTheme
+                                .bodyLarge
+                                ?.copyWith(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
+                              fontWeight:
+                                  FontWeight.w700,
                             ),
                           ),
                         ),
@@ -508,9 +615,12 @@ class _AdminHomeContent extends StatelessWidget {
                           childAspectRatio: 1.0,
                           children: [
                             _QuickAccessCard(
-                              icon: Icons.group_outlined,
-                              iconBg: const Color(0xFFE0ECFF),
-                              title: 'إدارة المستخدمين',
+                              icon: Icons
+                                  .group_outlined,
+                              iconBg: primary
+                                  .withOpacity(0.08),
+                              title:
+                                  'إدارة المستخدمين',
                               subtitle:
                                   'عرض وإدارة حسابات المواطنين.',
                               onTap: () {
@@ -518,16 +628,21 @@ class _AdminHomeContent extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) =>
-                                        const users.AdminUsersScreen(),
+                                        const users
+                                                .AdminUsersScreen(),
                                   ),
                                 );
                               },
                             ),
                             _QuickAccessCard(
-                              icon: Icons.bar_chart_outlined,
-                              iconBg: const Color(0xFFE0ECFF),
-                              title: 'التقارير والتحليلات',
-                              subtitle: 'الوصول لتقارير الشكاوى.',
+                              icon: Icons
+                                  .bar_chart_outlined,
+                              iconBg: primary
+                                  .withOpacity(0.08),
+                              title:
+                                  'التقارير والتحليلات',
+                              subtitle:
+                                  'الوصول لتقارير الشكاوى.',
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -577,24 +692,30 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Row(
             mainAxisAlignment:
@@ -602,9 +723,10 @@ class _StatCard extends StatelessWidget {
             children: [
               Text(
                 titleLines.join('\n'),
-                style: const TextStyle(
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(
                   fontSize: 11,
-                  color: Color(0xFF6B7280),
+                  color: theme.hintColor,
                   height: 1.3,
                   fontWeight: FontWeight.w600,
                 ),
@@ -619,34 +741,41 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
             ),
           ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius:
-                  BorderRadius.circular(999),
-              border: badgeColor.computeLuminance() > 0.9
-                  ? Border.all(
-                      color: const Color(0xFFE5E7EB))
-                  : null,
-            ),
-            child: Text(
-              badgeText,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: badgeTextColor,
+          const Spacer(),
+          if (badgeText.isNotEmpty)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: badgeColor,
+                borderRadius:
+                    BorderRadius.circular(999),
+                border: badgeColor
+                            .computeLuminance() >
+                        0.9
+                    ? Border.all(
+                        color: theme.dividerColor,
+                      )
+                    : null,
+              ),
+              child: Text(
+                badgeText,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: badgeTextColor,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -671,20 +800,25 @@ class _QuickAccessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 4,
-              offset: Offset(0, 3),
-            ),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 3),
+              ),
           ],
         ),
         child: Column(
@@ -699,7 +833,7 @@ class _QuickAccessCard extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                color: AdminDashboardScreen.primary,
+                color: primary,
                 size: 22,
               ),
             ),
@@ -707,10 +841,10 @@ class _QuickAccessCard extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
               ),
             ),
             const SizedBox(height: 4),
@@ -718,11 +852,11 @@ class _QuickAccessCard extends StatelessWidget {
               subtitle,
               textAlign: TextAlign.center,
               maxLines: 2,
-              overflow:
-                  TextOverflow.ellipsis,
-              style: const TextStyle(
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(
                 fontSize: 10,
-                color: Color(0xFF9CA3AF),
+                color: theme.hintColor,
               ),
             ),
           ],

@@ -57,7 +57,8 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredMinistries = List<Map<String, String>>.from(_allMinistries);
+    _filteredMinistries =
+        List<Map<String, String>>.from(_allMinistries);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -65,12 +66,14 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
       setState(() {
-        _filteredMinistries = List<Map<String, String>>.from(_allMinistries);
+        _filteredMinistries =
+            List<Map<String, String>>.from(_allMinistries);
       });
     } else {
       setState(() {
-        _filteredMinistries =
-            _allMinistries.where((m) => m['name']!.contains(query)).toList();
+        _filteredMinistries = _allMinistries
+            .where((m) => m['name']!.contains(query))
+            .toList();
       });
     }
   }
@@ -83,26 +86,32 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
               // هيدر
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.12)
+                          : const Color(0xFFE5E7EB),
                       width: 1,
                     ),
                   ),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Color(0x12000000),
                       blurRadius: 4,
@@ -120,34 +129,35 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                           // أولاً نحاول نغيّر التاب داخل MainShell لو كنا فيه
                           final shell = MainShellScreen.of(context);
                           if (shell != null) {
-                            // نرجع لتب الرئيسية داخل الشيل
                             shell.setTab(0);
                           } else {
-                            // لو مو داخل MainShell (مفتوحة كـ Route مستقل)
                             if (Navigator.of(context).canPop()) {
                               Navigator.of(context).pop();
                             } else {
                               Navigator.of(context)
-                                  .pushReplacementNamed('/main-shell');
+                                  .pushReplacementNamed(
+                                      '/main-shell');
                             }
                           }
                         },
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF4B5563),
+                          color: theme.appBarTheme.foregroundColor ??
+                              const Color(0xFF4B5563),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'الوزارات والهيئات',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color: theme.appBarTheme.foregroundColor ??
+                              theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -161,18 +171,20 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
 
               // حقل البحث
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding:
+                    const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Container(
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color:
+                            Colors.black.withOpacity(0.03),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -181,18 +193,23 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                   child: Row(
                     children: [
                       const SizedBox(width: 12),
-                      const Icon(
+                      Icon(
                         Icons.search,
-                        color: Color(0xFF6B7280),
+                        color:
+                            theme.iconTheme.color ??
+                            const Color(0xFF6B7280),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
-                          decoration: const InputDecoration(
+                          style: theme.textTheme.bodyMedium,
+                          decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: 'بحث عن وزارة أو هيئة...',
+                            hintStyle:
+                                theme.textTheme.bodySmall,
                           ),
                         ),
                       ),
@@ -205,18 +222,19 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
               // قائمة الوزارات
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 4),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFE5E7EB),
+                        color: theme.dividerColor,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color:
+                              Colors.black.withOpacity(0.03),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -224,13 +242,15 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                     ),
                     child: ListView.separated(
                       itemCount: _filteredMinistries.length,
-                      separatorBuilder: (context, index) => const Divider(
+                      separatorBuilder: (context, index) =>
+                          Divider(
                         indent: 64,
                         height: 1,
-                        color: Color(0xFFE5E7EB),
+                        color: theme.dividerColor,
                       ),
                       itemBuilder: (context, index) {
-                        final ministry = _filteredMinistries[index];
+                        final ministry =
+                            _filteredMinistries[index];
                         return InkWell(
                           onTap: () {
                             Navigator.pushNamed(
@@ -244,7 +264,8 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                             );
                           },
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding:
+                                const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 10,
                             ),
@@ -252,8 +273,11 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 20,
-                                  backgroundColor: const Color(0xFFE0E7FF),
-                                  backgroundImage: NetworkImage(
+                                  backgroundColor:
+                                      theme.colorScheme.primary
+                                          .withOpacity(0.12),
+                                  backgroundImage:
+                                      NetworkImage(
                                     ministry['logo']!,
                                   ),
                                 ),
@@ -262,17 +286,22 @@ class _MinistriesScreenState extends State<MinistriesScreen> {
                                   child: Text(
                                     ministry['name']!,
                                     maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    overflow:
+                                        TextOverflow.ellipsis,
+                                    style: theme
+                                        .textTheme.bodyLarge
+                                        ?.copyWith(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF111827),
+                                      fontWeight:
+                                          FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                                const Icon(
+                                Icon(
                                   Icons.chevron_right,
-                                  color: Color(0xFF9CA3AF),
+                                  color: theme.iconTheme.color
+                                          ?.withOpacity(0.6) ??
+                                      const Color(0xFF9CA3AF),
                                 ),
                               ],
                             ),

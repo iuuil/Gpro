@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -13,18 +13,14 @@ class CitizenDetailsScreen extends StatelessWidget {
     required this.userDocId,
   });
 
-  static const Color primaryColor = Color(0xFF137FEC);
-
   Query<Map<String, dynamic>> _buildQuery() {
     Query<Map<String, dynamic>> q =
         FirebaseFirestore.instance.collection('complaints');
 
-    // لو محدد مواطن معيّن نفلتر بـ userId
     if (userDocId.isNotEmpty) {
       q = q.where('userId', isEqualTo: userDocId);
     }
 
-    // فلترة حسب حالة الشكوى
     if (filterStatus == 'resolved') {
       q = q.where('status', whereIn: ['resolved', 'closed']);
     } else if (filterStatus == 'pending') {
@@ -46,11 +42,13 @@ class CitizenDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = _buildQuery();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7F8),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: Column(
             children: [
@@ -58,20 +56,22 @@ class CitizenDetailsScreen extends StatelessWidget {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                       width: 1,
                     ),
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color(0x12000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
                   ],
                 ),
                 child: Row(
@@ -82,10 +82,13 @@ class CitizenDetailsScreen extends StatelessWidget {
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: Color(0xFF4B5563),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.iconTheme.color ??
+                                  const Color(0xFF4B5563),
                         ),
                       ),
                     ),
@@ -93,8 +96,10 @@ class CitizenDetailsScreen extends StatelessWidget {
                       child: Text(
                         _titleText(),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF020617),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.textTheme.bodyLarge?.color,
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
@@ -127,9 +132,10 @@ class CitizenDetailsScreen extends StatelessWidget {
                           child: Text(
                             'خطأ في تحميل بيانات الشكاوى: ${snapshot.error}',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style:
+                                theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
-                              color: Color(0xFFB91C1C),
+                              color: theme.colorScheme.error,
                             ),
                           ),
                         ),
@@ -149,9 +155,10 @@ class CitizenDetailsScreen extends StatelessWidget {
                       return Center(
                         child: Text(
                           msg,
-                          style: const TextStyle(
+                          style:
+                              theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: Color(0xFF64748B),
+                            color: theme.hintColor,
                           ),
                         ),
                       );
@@ -167,12 +174,12 @@ class CitizenDetailsScreen extends StatelessWidget {
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'قائمة الشكاوى',
-                              style: TextStyle(
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -185,7 +192,8 @@ class CitizenDetailsScreen extends StatelessWidget {
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 8),
                               itemBuilder: (context, index) {
-                                final data = docs[index].data();
+                                final data =
+                                    docs[index].data();
                                 final title = (data['title'] ??
                                         'شكوى بدون عنوان')
                                     .toString();
@@ -212,37 +220,35 @@ class CitizenDetailsScreen extends StatelessWidget {
                                             .first ??
                                         '';
 
-                                final statusColor =
+                                final bool isResolved =
                                     status == 'resolved' ||
-                                            status == 'closed'
+                                        status == 'closed';
+                                final bool isPending =
+                                    status == 'pending' ||
+                                        status == 'suspended';
+
+                                final Color statusColor =
+                                    isResolved
                                         ? const Color(0xFF16A34A)
-                                        : status == 'pending' ||
-                                                status ==
-                                                    'suspended'
+                                        : isPending
                                             ? const Color(
                                                 0xFFF59E0B)
-                                            : const Color(
-                                                0xFF6B7280);
+                                            : theme.hintColor;
 
-                                final statusBg =
-                                    status == 'resolved' ||
-                                            status == 'closed'
+                                final Color statusBg =
+                                    isResolved
                                         ? const Color(0xFFEFFDF3)
-                                        : status == 'pending' ||
-                                                status ==
-                                                    'suspended'
+                                        : isPending
                                             ? const Color(
                                                 0xFFFFF7E6)
-                                            : const Color(
-                                                0xFFE5E7EB);
+                                            : theme.dividerColor
+                                                .withOpacity(
+                                                    0.3);
 
-                                final statusText =
-                                    status == 'resolved' ||
-                                            status == 'closed'
+                                final String statusText =
+                                    isResolved
                                         ? 'معالجة'
-                                        : status == 'pending' ||
-                                                status ==
-                                                    'suspended'
+                                        : isPending
                                             ? 'معلقة'
                                             : status;
 
@@ -250,21 +256,23 @@ class CitizenDetailsScreen extends StatelessWidget {
                                   padding:
                                       const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: theme.cardColor,
                                     borderRadius:
                                         BorderRadius.circular(
                                             14),
                                     border: Border.all(
-                                      color: const Color(
-                                          0xFFE5E7EB),
+                                      color: theme.dividerColor,
                                     ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color:
-                                            Color(0x08000000),
-                                        blurRadius: 4,
-                                        offset: Offset(0, 2),
-                                      ),
+                                    boxShadow: [
+                                      if (!isDark)
+                                        BoxShadow(
+                                          color:
+                                              Colors.black.withOpacity(
+                                                  0.03),
+                                          blurRadius: 4,
+                                          offset:
+                                              const Offset(0, 2),
+                                        ),
                                     ],
                                   ),
                                   child: Column(
@@ -282,18 +290,20 @@ class CitizenDetailsScreen extends StatelessWidget {
                                             width: 40,
                                             decoration:
                                                 BoxDecoration(
-                                              color: const Color(
-                                                  0xFFF1F5F9),
+                                              color: theme
+                                                  .colorScheme
+                                                  .surfaceVariant,
                                               borderRadius:
                                                   BorderRadius
                                                       .circular(
                                                           12),
                                             ),
-                                            child: const Icon(
+                                            child: Icon(
                                               Icons
                                                   .description_outlined,
-                                              color: Color(
-                                                  0xFF0F172A),
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                               size: 22,
                                             ),
                                           ),
@@ -307,15 +317,15 @@ class CitizenDetailsScreen extends StatelessWidget {
                                               children: [
                                                 Text(
                                                   title,
-                                                  style:
-                                                      const TextStyle(
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
                                                     fontSize:
                                                         14,
                                                     fontWeight:
                                                         FontWeight
                                                             .w700,
-                                                    color: Color(
-                                                        0xFF020617),
                                                   ),
                                                 ),
                                                 const SizedBox(
@@ -328,12 +338,14 @@ class CitizenDetailsScreen extends StatelessWidget {
                                                     overflow:
                                                         TextOverflow
                                                             .ellipsis,
-                                                    style:
-                                                        const TextStyle(
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
                                                       fontSize:
                                                           12,
-                                                      color: Color(
-                                                          0xFF6B7280),
+                                                      color: theme
+                                                          .hintColor,
                                                     ),
                                                   ),
                                               ],
@@ -343,7 +355,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                               width: 6),
                                           Container(
                                             padding: const EdgeInsets
-                                                    .symmetric(
+                                                .symmetric(
                                               horizontal: 8,
                                               vertical: 4,
                                             ),
@@ -357,7 +369,10 @@ class CitizenDetailsScreen extends StatelessWidget {
                                             ),
                                             child: Text(
                                               statusText,
-                                              style: TextStyle(
+                                              style: theme
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
                                                 fontSize: 11,
                                                 fontWeight:
                                                     FontWeight
@@ -377,66 +392,86 @@ class CitizenDetailsScreen extends StatelessWidget {
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(
+                                              Icon(
                                                 Icons
                                                     .person_outline,
                                                 size: 14,
-                                                color: Color(
-                                                    0xFF9CA3AF),
+                                                color: theme
+                                                    .iconTheme
+                                                    .color
+                                                    ?.withOpacity(
+                                                        0.6) ??
+                                                    const Color(
+                                                        0xFF9CA3AF),
                                               ),
                                               const SizedBox(
                                                   width: 4),
                                               Text(
                                                 citizenName,
-                                                style:
-                                                    const TextStyle(
+                                                style: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
                                                   fontSize: 11,
-                                                  color: Color(
-                                                      0xFF6B7280),
+                                                  color: theme
+                                                      .hintColor,
                                                 ),
                                               ),
                                             ],
                                           ),
                                           Row(
                                             children: [
-                                              const Icon(
+                                              Icon(
                                                 Icons
                                                     .account_balance_outlined,
                                                 size: 14,
-                                                color: Color(
-                                                    0xFF9CA3AF),
+                                                color: theme
+                                                    .iconTheme
+                                                    .color
+                                                    ?.withOpacity(
+                                                        0.6) ??
+                                                    const Color(
+                                                        0xFF9CA3AF),
                                               ),
                                               const SizedBox(
                                                   width: 4),
                                               Text(
                                                 ministry,
-                                                style:
-                                                    const TextStyle(
+                                                style: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
                                                   fontSize: 11,
-                                                  color: Color(
-                                                      0xFF6B7280),
+                                                  color: theme
+                                                      .hintColor,
                                                 ),
                                               ),
                                             ],
                                           ),
                                           Row(
                                             children: [
-                                              const Icon(
-                                                Icons
-                                                    .access_time,
+                                              Icon(
+                                                Icons.access_time,
                                                 size: 14,
-                                                color: Color(
-                                                    0xFF9CA3AF),
+                                                color: theme
+                                                    .iconTheme
+                                                    .color
+                                                    ?.withOpacity(
+                                                        0.6) ??
+                                                    const Color(
+                                                        0xFF9CA3AF),
                                               ),
                                               const SizedBox(
                                                   width: 4),
                                               Text(
                                                 createdAt,
-                                                style:
-                                                    const TextStyle(
+                                                style: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
                                                   fontSize: 11,
-                                                  color: Color(
-                                                      0xFF6B7280),
+                                                  color: theme
+                                                      .hintColor,
                                                 ),
                                               ),
                                             ],

@@ -15,14 +15,17 @@ class AdminComplaintsScreen extends StatefulWidget {
 
   final ComplaintStatus initialFilter;
 
+  // ممكن تتركهم كقيم افتراضية، بس راح نستخدم theme أغلب الوقت
   static const Color primaryColor = Color(0xFF137FEC);
   static const Color backgroundLight = Color(0xFFF6F7F8);
 
   @override
-  State<AdminComplaintsScreen> createState() => _AdminComplaintsScreenState();
+  State<AdminComplaintsScreen> createState() =>
+      _AdminComplaintsScreenState();
 }
 
-class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
+class _AdminComplaintsScreenState
+    extends State<AdminComplaintsScreen> {
   late ComplaintStatus _selectedFilter;
   late TextEditingController _searchController;
 
@@ -43,7 +46,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
     switch (status) {
       case 'new':
       case 'neww':
-        return ComplaintStatus.neww;       // نخزنها داخلياً كـ neww
+        return ComplaintStatus.neww; // نخزنها داخلياً كـ neww
       case 'pending':
         return ComplaintStatus.pending;
       case 'resolved':
@@ -57,14 +60,19 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
     }
   }
 
-  bool _filterByStatus(ComplaintStatus complaintStatus, Map<String, dynamic> c) {
+  bool _filterByStatus(
+    ComplaintStatus complaintStatus,
+    Map<String, dynamic> c,
+  ) {
     // فلتر "الكل" => لا يقيّد بالحالة
     if (_selectedFilter == ComplaintStatus.all) return true;
 
     // فلتر "جديدة" => الشكاوى pending خلال آخر 24 ساعة فقط
     if (_selectedFilter == ComplaintStatus.neww) {
       // لازم تكون حالتها pending
-      if (complaintStatus != ComplaintStatus.pending) return false;
+      if (complaintStatus != ComplaintStatus.pending) {
+        return false;
+      }
 
       final createdAt = c['createdAt'];
       if (createdAt is Timestamp) {
@@ -95,22 +103,30 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final scaffoldBg =
+        theme.scaffoldBackgroundColor; // نستخدمه بدل backgroundLight
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AdminComplaintsScreen.backgroundLight,
+        backgroundColor: scaffoldBg,
         body: SafeArea(
           child: Column(
             children: [
               // الهيدر
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Color(0xFFE5E7EB),
+                      color: theme.dividerColor,
                       width: 1,
                     ),
                   ),
@@ -121,23 +137,32 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       height: 40,
                       width: 40,
                       child: IconButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () =>
+                            Navigator.pop(context),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
-                          color: Color(0xFF020617),
+                          color: theme
+                                  .appBarTheme
+                                  .foregroundColor ??
+                              theme.iconTheme.color ??
+                              const Color(0xFF020617),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'كل الشكاوى (عرض المسؤول)',
-                        style: TextStyle(
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF020617),
+                          color: theme
+                                  .appBarTheme
+                                  .foregroundColor ??
+                              const Color(0xFF020617),
                         ),
                       ),
                     ),
@@ -147,37 +172,45 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
               // حقل البحث
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: SizedBox(
                   height: 44,
                   child: TextField(
                     controller: _searchController,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'البحث برقم الشكوى أو اسم المواطن...',
+                      hintText:
+                          'البحث برقم الشكوى أو اسم المواطن...',
                       filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(
+                      fillColor: theme.cardColor,
+                      prefixIcon: Icon(
                         Icons.search,
-                        color: Color(0xFF94A3B8),
+                        color: theme.iconTheme.color
+                                ?.withOpacity(0.6) ??
+                            const Color(0xFF94A3B8),
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE2E8F0),
+                        borderRadius:
+                            BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: theme.dividerColor,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE2E8F0),
+                        borderRadius:
+                            BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: theme.dividerColor,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AdminComplaintsScreen.primaryColor,
+                        borderRadius:
+                            BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: primary,
                           width: 1.5,
                         ),
                       ),
@@ -191,54 +224,65 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 height: 44,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   children: [
                     _buildFilterChip(
+                      context: context,
                       label: 'الكل',
-                      selected: _selectedFilter == ComplaintStatus.all,
+                      selected:
+                          _selectedFilter == ComplaintStatus.all,
                       onTap: () {
-                        setState(() => _selectedFilter = ComplaintStatus.all);
+                        setState(() =>
+                            _selectedFilter =
+                                ComplaintStatus.all);
                       },
                     ),
                     _buildFilterChip(
+                      context: context,
                       label: 'جديدة',
-                      selected: _selectedFilter == ComplaintStatus.neww,
-                      dotColor: Colors.blue,
+                      selected: _selectedFilter ==
+                          ComplaintStatus.neww,
+                      dotColor: primary,
                       onTap: () {
-                        setState(
-                          () => _selectedFilter = ComplaintStatus.neww,
-                        );
+                        setState(() => _selectedFilter =
+                            ComplaintStatus.neww);
                       },
                     ),
                     _buildFilterChip(
+                      context: context,
                       label: 'قيد المراجعة',
-                      selected: _selectedFilter == ComplaintStatus.pending,
+                      selected: _selectedFilter ==
+                          ComplaintStatus.pending,
                       dotColor: Colors.amber,
                       onTap: () {
-                        setState(
-                          () => _selectedFilter = ComplaintStatus.pending,
-                        );
+                        setState(() => _selectedFilter =
+                            ComplaintStatus.pending);
                       },
                     ),
                     _buildFilterChip(
+                      context: context,
                       label: 'تم الحل',
-                      selected: _selectedFilter == ComplaintStatus.resolved,
+                      selected: _selectedFilter ==
+                          ComplaintStatus.resolved,
                       dotColor: Colors.green,
                       onTap: () {
-                        setState(
-                          () => _selectedFilter = ComplaintStatus.resolved,
-                        );
+                        setState(() => _selectedFilter =
+                            ComplaintStatus.resolved);
                       },
                     ),
                     _buildFilterChip(
+                      context: context,
                       label: 'مرفوضة',
-                      selected: _selectedFilter == ComplaintStatus.rejected,
-                      dotColor: Colors.red,
+                      selected: _selectedFilter ==
+                          ComplaintStatus.rejected,
+                      dotColor: theme
+                          .colorScheme.error,
                       onTap: () {
-                        setState(
-                          () => _selectedFilter = ComplaintStatus.rejected,
-                        );
+                        setState(() => _selectedFilter =
+                            ComplaintStatus.rejected);
                       },
                     ),
                   ],
@@ -252,13 +296,20 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('complaints')
-                      .orderBy('createdAt', descending: true)
+                      .orderBy('createdAt',
+                          descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
+                    final theme = Theme.of(context);
+                    // ignore: unused_local_variable
+                    final primary =
+                        theme.colorScheme.primary;
+
                     if (snapshot.connectionState ==
                         ConnectionState.waiting) {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child:
+                            CircularProgressIndicator(),
                       );
                     }
 
@@ -267,12 +318,14 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         child: Text(
                           'حدث خطأ أثناء تحميل الشكاوى: ${snapshot.error}',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 13),
+                          style:
+                              theme.textTheme.bodyMedium,
                         ),
                       );
                     }
 
-                    final docs = snapshot.data?.docs ?? [];
+                    final docs =
+                        snapshot.data?.docs ?? [];
 
                     // حساب الإحصائيات من كل الشكاوى
                     int total = docs.length;
@@ -282,18 +335,27 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     int newCount = 0;
 
                     for (final doc in docs) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      final s = (data['status'] ?? '').toString().trim();
-                      final createdAt = data['createdAt'];
+                      final data = doc.data()
+                          as Map<String, dynamic>;
+                      final s = (data['status'] ?? '')
+                          .toString()
+                          .trim();
+                      final createdAt =
+                          data['createdAt'];
 
                       switch (s) {
                         case 'pending':
                           pendingCount++;
                           // نعتبر "جديدة" pending خلال آخر 24 ساعة
-                          if (createdAt is Timestamp) {
-                            final dt = createdAt.toDate();
-                            final isLast24h =
-                                DateTime.now().difference(dt).inHours <= 24;
+                          if (createdAt
+                              is Timestamp) {
+                            final dt =
+                                createdAt.toDate();
+                            final isLast24h = DateTime
+                                    .now()
+                                .difference(dt)
+                                .inHours <=
+                                24;
                             if (isLast24h) {
                               newCount++;
                             }
@@ -316,40 +378,58 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     }
 
                     // تحويل للعرض (مع الفلتر الحالي والبحث)
-                    final complaints = docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      data['docId'] = doc.id;
-                      return data;
-                    }).where((c) {
-                      final status = _statusFromString(
-                        (c['status'] ?? '').toString(),
-                      );
+                    final complaints = docs
+                        .map((doc) {
+                          final data = doc.data()
+                              as Map<String, dynamic>;
+                          data['docId'] = doc.id;
+                          return data;
+                        })
+                        .where((c) {
+                          final status =
+                              _statusFromString(
+                            (c['status'] ?? '')
+                                .toString(),
+                          );
 
-                      return _filterByStatus(status, c) &&
-                          _filterBySearch(c);
-                    }).toList();
+                          return _filterByStatus(
+                                  status, c) &&
+                              _filterBySearch(c);
+                        })
+                        .toList();
 
                     if (complaints.isEmpty) {
                       return SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                        padding:
+                            const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             _buildStatsRow(
+                              context: context,
                               total: total,
-                              pending: pendingCount,
-                              resolved: resolvedCount,
-                              rejected: rejectedCount,
+                              pending:
+                                  pendingCount,
+                              resolved:
+                                  resolvedCount,
+                              rejected:
+                                  rejectedCount,
                               newCount: newCount,
                             ),
                             const SizedBox(height: 16),
-                            const Center(
+                            Center(
                               child: Text(
                                 'لا توجد شكاوى مطابقة للبحث / الفلتر الحالي.',
-                                style: TextStyle(
+                                style: theme.textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
                                   fontSize: 14,
-                                  color: Color(0xFF64748B),
+                                  color: theme
+                                      .hintColor,
                                 ),
                               ),
                             ),
@@ -359,12 +439,17 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     }
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                      padding:
+                          const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           _buildStatsRow(
+                            context: context,
                             total: total,
                             pending: pendingCount,
                             resolved: resolvedCount,
@@ -375,8 +460,10 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                           for (final c in complaints)
                             _ComplaintCard(
                               data: c,
-                              status: _statusFromString(
-                                (c['status'] ?? '').toString(),
+                              status:
+                                  _statusFromString(
+                                (c['status'] ?? '')
+                                    .toString(),
                               ),
                             ),
                         ],
@@ -393,19 +480,23 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   }
 
   Widget _buildStatsRow({
+    required BuildContext context,
     required int total,
     required int pending,
     required int resolved,
     required int rejected,
     required int newCount,
   }) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Row(
       children: [
         Expanded(
           child: _StatCard(
             title: 'إجمالي الشكاوى',
             value: total.toString(),
-            color: const Color(0xFF0F172A),
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(width: 8),
@@ -413,7 +504,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           child: _StatCard(
             title: 'شكاوى جديدة (آخر ٢٤ ساعة)',
             value: newCount.toString(),
-            color: Colors.blue[700]!,
+            color: primary,
           ),
         ),
         const SizedBox(width: 8),
@@ -421,7 +512,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           child: _StatCard(
             title: 'شكاوى قيد المراجعة',
             value: pending.toString(),
-            color: Colors.amber[700]!,
+            color: Colors.amber.shade700,
           ),
         ),
         const SizedBox(width: 8),
@@ -429,7 +520,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           child: _StatCard(
             title: 'تم حلها',
             value: resolved.toString(),
-            color: Colors.green[700]!,
+            color: Colors.green.shade700,
           ),
         ),
         const SizedBox(width: 8),
@@ -437,7 +528,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           child: _StatCard(
             title: 'مرفوضة',
             value: rejected.toString(),
-            color: Colors.red[700]!,
+            color: theme.colorScheme.error,
           ),
         ),
       ],
@@ -445,35 +536,44 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   }
 
   Widget _buildFilterChip({
+    required BuildContext context,
     required String label,
     required bool selected,
     Color? dotColor,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
+      padding:
+          const EdgeInsetsDirectional.only(end: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: selected
-                ? AdminComplaintsScreen.primaryColor
-                : Colors.white,
-            borderRadius: BorderRadius.circular(999),
+                ? primary
+                : theme.cardColor,
+            borderRadius:
+                BorderRadius.circular(999),
             border: Border.all(
               color: selected
-                  ? AdminComplaintsScreen.primaryColor
-                  : const Color(0xFFE2E8F0),
+                  ? primary
+                  : theme.dividerColor,
             ),
             boxShadow: selected
-                ? const [
+                ? [
                     BoxShadow(
-                      color: Color(0x33000000),
+                      color:
+                          Colors.black.withOpacity(0.2),
                       blurRadius: 4,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ]
                 : null,
@@ -494,12 +594,14 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               ],
               Text(
                 label,
-                style: TextStyle(
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(
                   fontSize: 13,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: selected
+                      ? FontWeight.w600
+                      : FontWeight.w500,
                   color: selected
-                      ? Colors.white
+                      ? theme.colorScheme.onPrimary
                       : const Color(0xFF1F2933),
                 ),
               ),
@@ -525,15 +627,30 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness ==
+        Brightness.dark;
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFFE5E7EB),
+          color: theme.dividerColor,
         ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color:
+                  Colors.black.withOpacity(0.04),
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+        ],
       ),
       child: Column(
         crossAxisAlignment:
@@ -541,15 +658,17 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: theme.textTheme.bodySmall
+                ?.copyWith(
               fontSize: 11,
-              color: Color(0xFF6B7280),
+              color: theme.hintColor,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
+            style: theme.textTheme.titleMedium
+                ?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: color,
@@ -573,6 +692,9 @@ class _ComplaintCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     Color sideColor;
     Color badgeBg;
     Color badgeText;
@@ -593,13 +715,14 @@ class _ComplaintCard extends StatelessWidget {
         badgeLabel = 'تم الحل';
         break;
       case ComplaintStatus.rejected:
-        sideColor = Colors.red;
-        badgeBg = const Color(0xFFFEE2E2);
-        badgeText = const Color(0xFFB91C1C);
+        sideColor = theme.colorScheme.error;
+        badgeBg = theme.colorScheme
+            .errorContainer;
+        badgeText = theme.colorScheme.error;
         badgeLabel = 'مرفوضة';
         break;
       case ComplaintStatus.neww:
-        sideColor = Colors.blue;
+        sideColor = primary;
         badgeBg = const Color(0xFFDBEAFE);
         badgeText = const Color(0xFF1D4ED8);
         badgeLabel = 'جديدة';
@@ -607,18 +730,21 @@ class _ComplaintCard extends StatelessWidget {
       case ComplaintStatus.all:
       // ignore: unreachable_switch_default
       default:
-        sideColor = Colors.grey;
+        sideColor = theme.hintColor;
         badgeBg = const Color(0xFFE5E7EB);
         badgeText = const Color(0xFF374151);
         badgeLabel = 'غير محدد';
         break;
     }
 
-    final docId = (data['docId'] ?? '').toString(); // مهم
+    final docId =
+        (data['docId'] ?? '').toString(); // مهم
     final id = (data['id'] ?? '').toString();
     final title = (data['title'] ?? '').toString();
-    final ministry = (data['ministry'] ?? '').toString();
-    final citizen = (data['citizenName'] ?? '').toString();
+    final ministry =
+        (data['ministry'] ?? '').toString();
+    final citizen =
+        (data['citizenName'] ?? '').toString();
     final createdAt = data['createdAt'];
     String dateText = '';
 
@@ -637,7 +763,8 @@ class _ComplaintCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => AdminComplaintDetailsScreen(
+            builder: (_) =>
+                AdminComplaintDetailsScreen(
               complaintDocId: docId,
             ),
           ),
@@ -646,17 +773,20 @@ class _ComplaintCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(14),
-          border: const Border.fromBorderSide(
-            BorderSide(color: Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: theme.dividerColor,
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x08000000),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
+          boxShadow: [
+            if (theme.brightness ==
+                Brightness.light)
+              BoxShadow(
+                color:
+                    Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: Stack(
@@ -669,9 +799,12 @@ class _ComplaintCard extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: sideColor,
-                  borderRadius: const BorderRadiusDirectional.only(
+                  borderRadius:
+                      const BorderRadiusDirectional
+                          .only(
                     topEnd: Radius.circular(14),
-                    bottomEnd: Radius.circular(14),
+                    bottomEnd:
+                        Radius.circular(14),
                   ),
                 ),
               ),
@@ -690,40 +823,50 @@ class _ComplaintCard extends StatelessWidget {
                       Expanded(
                         child: Column(
                           crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                              CrossAxisAlignment
+                                  .start,
                           children: [
                             Text(
                               '$title - ID $id',
-                              style: const TextStyle(
+                              style: theme
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
                                 fontSize: 14,
                                 fontWeight:
                                     FontWeight.w700,
-                                color: Color(0xFF0F172A),
+                                color: theme
+                                    .colorScheme
+                                    .onSurface,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(
+                                height: 4),
                             Container(
                               padding:
-                                  const EdgeInsets.symmetric(
+                                  const EdgeInsets
+                                      .symmetric(
                                 horizontal: 8,
                                 vertical: 3,
                               ),
-                              decoration: BoxDecoration(
-                                color: AdminComplaintsScreen
-                                    .primaryColor
-                                    .withOpacity(0.08),
+                              decoration:
+                                  BoxDecoration(
+                                color: primary
+                                    .withOpacity(
+                                        0.08),
                                 borderRadius:
-                                    BorderRadius.circular(999),
+                                    BorderRadius
+                                        .circular(
+                                            999),
                               ),
                               child: Text(
                                 ministry,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight:
-                                      FontWeight.w600,
-                                  color:
-                                      AdminComplaintsScreen
-                                          .primaryColor,
+                                      FontWeight
+                                          .w600,
+                                  color: primary,
                                 ),
                               ),
                             ),
@@ -733,14 +876,16 @@ class _ComplaintCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Container(
                         padding:
-                            const EdgeInsets.symmetric(
+                            const EdgeInsets
+                                .symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: badgeBg,
                           borderRadius:
-                              BorderRadius.circular(8),
+                              BorderRadius.circular(
+                                  8),
                         ),
                         child: Text(
                           badgeLabel,
@@ -760,10 +905,10 @@ class _ComplaintCard extends StatelessWidget {
                   // المواطن + التاريخ
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.person_outline,
                         size: 16,
-                        color: Color(0xFF64748B),
+                        color: theme.hintColor,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -771,9 +916,12 @@ class _ComplaintCard extends StatelessWidget {
                           citizen.isEmpty
                               ? 'غير معروف'
                               : citizen,
-                          style: const TextStyle(
+                          style: theme
+                              .textTheme.bodySmall
+                              ?.copyWith(
                             fontSize: 12,
-                            color: Color(0xFF64748B),
+                            color:
+                                theme.hintColor,
                           ),
                         ),
                       ),
@@ -782,17 +930,22 @@ class _ComplaintCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
+                      Icon(
+                        Icons
+                            .calendar_today_outlined,
                         size: 14,
-                        color: Color(0xFF94A3B8),
+                        color: theme.hintColor
+                            .withOpacity(0.9),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'تاريخ التقديم: $dateText',
-                        style: const TextStyle(
+                        style: theme
+                            .textTheme.bodySmall
+                            ?.copyWith(
                           fontSize: 11,
-                          color: Color(0xFF94A3B8),
+                          color:
+                              theme.hintColor,
                         ),
                       ),
                     ],

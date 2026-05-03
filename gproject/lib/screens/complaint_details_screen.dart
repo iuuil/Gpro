@@ -12,27 +12,35 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required this.complaintId,
   });
 
+  // نخلي الألوان البراند تعتمد على الثيم قدر الإمكان، بس نخلي قيم افتراضية إذا ما حددت بالثيم
   static const Color brandBlue = Color(0xFF4A76B8);
   static const Color brandLightBlue = Color(0xFFA3BCE0);
   static const Color bgGray = Color(0xFFF3F4F6);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: bgGray,
+        backgroundColor:
+            isDark ? theme.scaffoldBackgroundColor : bgGray,
         body: SafeArea(
           child: Column(
             children: [
               // الهيدر
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(
+                      color: theme.dividerColor,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -43,21 +51,26 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
-                          color: Color(0xFF1F2937),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.iconTheme.color ??
+                                  const Color(0xFF1F2937),
                         ),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'تفاصيل الشكوى',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -91,17 +104,21 @@ class ComplaintDetailsScreen extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFEE2E2),
-                              borderRadius: BorderRadius.circular(12),
+                              color: theme.colorScheme.errorContainer
+                                  .withOpacity(0.2),
+                              borderRadius:
+                                  BorderRadius.circular(12),
                               border: Border.all(
-                                  color: const Color(0xFFDC2626)),
+                                color: theme.colorScheme.error,
+                              ),
                             ),
                             child: Text(
                               'حدث خطأ أثناء جلب بيانات الشكوى:\n${snapshot.error}',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 13,
-                                color: Color(0xFFB91C1C),
+                                color: theme.colorScheme.error,
                                 height: 1.5,
                               ),
                             ),
@@ -110,25 +127,27 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       );
                     }
 
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return const Center(
+                    if (!snapshot.hasData ||
+                        !snapshot.data!.exists) {
+                      return Center(
                         child: Padding(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           child: Text(
                             'لم يتم العثور على هذه الشكوى.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
-                              color: Color(0xFF6B7280),
+                              color: theme.hintColor,
                             ),
                           ),
                         ),
                       );
                     }
 
-                    final data = snapshot.data!.data()
-                            as Map<String, dynamic>? ??
-                        {};
+                    final data =
+                        snapshot.data!.data() as Map<String, dynamic>? ??
+                            {};
 
                     final title =
                         (data['title'] as String?)?.trim().isNotEmpty ==
@@ -138,7 +157,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                                     'بدون عنوان')
                                 .toString();
                     final description =
-                        (data['description'] as String? ?? '').toString();
+                        (data['description'] as String? ?? '')
+                            .toString();
                     final status =
                         (data['status'] as String? ?? 'pending')
                             .toString();
@@ -151,22 +171,28 @@ class ComplaintDetailsScreen extends StatelessWidget {
                         .split(' ')
                         .first;
                     final contactName =
-                        (data['contactName'] as String? ?? '').toString();
+                        (data['contactName'] as String? ?? '')
+                            .toString();
                     final contactPhone =
-                        (data['contactPhone'] as String? ?? '').toString();
+                        (data['contactPhone'] as String? ?? '')
+                            .toString();
 
-                    // قراءة المرفقات من الوثيقة
+                    // المرفقات
                     final List<dynamic> attachmentsDyn =
-                        (data['attachments'] as List<dynamic>? ?? []);
-                    final List<String> attachments =
-                        attachmentsDyn.map((e) => e.toString()).toList();
+                        (data['attachments'] as List<dynamic>? ??
+                            []);
+                    final List<String> attachments = attachmentsDyn
+                        .map((e) => e.toString())
+                        .toList();
 
-                    final statusLabel = _statusLabelFromStatus(status);
-                    final statusColor = _statusColorFromStatus(status);
+                    final statusLabel =
+                        _statusLabelFromStatus(status);
+                    final statusColor =
+                        _statusColorFromStatus(status);
 
                     return SingleChildScrollView(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                      padding: const EdgeInsets.fromLTRB(
+                          16, 16, 16, 24),
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment.stretch,
@@ -175,19 +201,20 @@ class ComplaintDetailsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius:
                                   BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      Colors.black.withOpacity(0.03),
+                                  color: Colors.black
+                                      .withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: _buildComplaintOverviewSection(
+                              context: context,
                               title: title,
                               description: description,
                               statusLabel: statusLabel,
@@ -203,13 +230,13 @@ class ComplaintDetailsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius:
                                   BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      Colors.black.withOpacity(0.03),
+                                  color: Colors.black
+                                      .withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -227,19 +254,20 @@ class ComplaintDetailsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: theme.cardColor,
                               borderRadius:
                                   BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      Colors.black.withOpacity(0.03),
+                                  color: Colors.black
+                                      .withOpacity(0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                            child: _buildInternalCommentsSection(),
+                            child: _buildInternalCommentsSection(
+                                context),
                           ),
                         ],
                       ),
@@ -252,60 +280,85 @@ class ComplaintDetailsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
                   border: Border(
-                    top: BorderSide(color: Color(0xFFE5E7EB)),
+                    top: BorderSide(
+                      color: theme.dividerColor,
+                    ),
                   ),
                 ),
                 child: SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
-                    icon:
-                        const Icon(Icons.delete_outline, size: 18),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDC2626),
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor:
+                          theme.colorScheme.onError,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius:
+                            BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(16),
-                            ),
-                            title: const Text(
-                              'تأكيد الحذف',
-                              textAlign: TextAlign.center,
-                            ),
-                            content: const Text(
-                              'هل أنت متأكد من حذف هذه الشكوى بشكل نهائي؟',
-                              textAlign: TextAlign.center,
-                            ),
-                            actionsAlignment:
-                                MainAxisAlignment.center,
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(ctx, false),
-                                child: const Text('إلغاء'),
+                          final dialogTheme =
+                              Theme.of(ctx).dialogTheme;
+                          return Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: AlertDialog(
+                              shape: dialogTheme.shape ??
+                                  RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                            16),
+                                  ),
+                              title: Text(
+                                'تأكيد الحذف',
+                                textAlign: TextAlign.center,
+                                style: dialogTheme.titleTextStyle ??
+                                    Theme.of(ctx)
+                                        .textTheme
+                                        .titleMedium,
                               ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(ctx, true),
-                                child: const Text(
-                                  'حذف',
-                                  style: TextStyle(
-                                      color: Color(0xFFDC2626)),
+                              content: Text(
+                                'هل أنت متأكد من حذف هذه الشكوى بشكل نهائي؟',
+                                textAlign: TextAlign.center,
+                                style:
+                                    dialogTheme.contentTextStyle ??
+                                        Theme.of(ctx)
+                                            .textTheme
+                                            .bodyMedium,
+                              ),
+                              actionsAlignment:
+                                  MainAxisAlignment.center,
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(ctx, false),
+                                  child: const Text('إلغاء'),
                                 ),
-                              ),
-                            ],
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(ctx, true),
+                                  child: Text(
+                                    'حذف',
+                                    style: TextStyle(
+                                      color: Theme.of(ctx)
+                                          .colorScheme
+                                          .error,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         },
                       );
@@ -323,82 +376,109 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             context: context,
                             barrierDismissible: false,
                             builder: (ctx) {
-                              return AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(18),
-                                ),
-                                contentPadding:
-                                    const EdgeInsets.fromLTRB(
-                                        24, 24, 24, 8),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(
-                                      Icons.check_circle_rounded,
-                                      color: Color(0xFF16A34A),
-                                      size: 48,
-                                    ),
-                                    SizedBox(height: 12),
-                                    Text(
-                                      'تم حذف الشكوى بنجاح',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight:
-                                            FontWeight.w700,
-                                        color: Color(0xFF111827),
+                              final themeDialog =
+                                  Theme.of(ctx);
+                              return Directionality(
+                                textDirection:
+                                    TextDirection.rtl,
+                                child: AlertDialog(
+                                  shape:
+                                      RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                            18),
+                                  ),
+                                  contentPadding:
+                                      const EdgeInsets.fromLTRB(
+                                          24, 24, 24, 8),
+                                  content: Column(
+                                    mainAxisSize:
+                                        MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons
+                                            .check_circle_rounded,
+                                        color: themeDialog
+                                            .colorScheme
+                                            .primary,
+                                        size: 48,
                                       ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'تمت إزالة الشكوى من سجلك في النظام.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF6B7280),
+                                      const SizedBox(
+                                          height: 12),
+                                      Text(
+                                        'تم حذف الشكوى بنجاح',
+                                        textAlign:
+                                            TextAlign.center,
+                                        style: themeDialog
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                          fontSize: 16,
+                                          fontWeight:
+                                              FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                          height: 8),
+                                      Text(
+                                        'تمت إزالة الشكوى من سجلك في النظام.',
+                                        textAlign:
+                                            TextAlign.center,
+                                        style: themeDialog
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actionsAlignment:
+                                      MainAxisAlignment.center,
+                                  actions: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(
+                                              bottom: 8),
+                                      child: SizedBox(
+                                        width:
+                                            double.infinity,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton
+                                              .styleFrom(
+                                            backgroundColor:
+                                                themeDialog
+                                                    .colorScheme
+                                                    .primary,
+                                            foregroundColor:
+                                                themeDialog
+                                                    .colorScheme
+                                                    .onPrimary,
+                                            shape:
+                                                RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius
+                                                      .circular(
+                                                          10),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            Navigator.of(ctx)
+                                                .pop();
+                                          },
+                                          child: const Text(
+                                            'حسنًا',
+                                            style: TextStyle(
+                                              fontWeight:
+                                                  FontWeight
+                                                      .w600,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                actionsAlignment:
-                                    MainAxisAlignment.center,
-                                actions: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(
-                                            bottom: 8),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        style: ElevatedButton
-                                            .styleFrom(
-                                          backgroundColor:
-                                              const Color(
-                                                  0xFF2563EB),
-                                          foregroundColor:
-                                              Colors.white,
-                                          shape:
-                                              RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius
-                                                    .circular(10),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.of(ctx).pop();
-                                        },
-                                        child: const Text(
-                                          'حسنًا',
-                                          style: TextStyle(
-                                            fontWeight:
-                                                FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               );
                             },
                           );
@@ -411,7 +491,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                               .showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'فشل حذف الشكوى: $e'),
+                                'فشل حذف الشكوى: $e',
+                              ),
                             ),
                           );
                         }
@@ -437,6 +518,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
   // == Sections ==
 
   Widget _buildComplaintOverviewSection({
+    required BuildContext context,
     required String title,
     required String description,
     required String statusLabel,
@@ -445,6 +527,10 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required String? createdAt,
     required List<String> attachments,
   }) {
+    final theme = Theme.of(context);
+    final subtleBg = theme.colorScheme.surfaceVariant
+        .withOpacity(0.25);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -455,10 +541,9 @@ class ComplaintDetailsScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
                 ),
               ),
             ),
@@ -468,7 +553,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                   horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius:
+                    BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -499,18 +585,18 @@ class ComplaintDetailsScreen extends StatelessWidget {
         if (ministry.isNotEmpty) ...[
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.account_balance,
                 size: 16,
-                color: Color(0xFF6B7280),
+                color: theme.iconTheme.color
+                        ?.withOpacity(0.6) ??
+                    const Color(0xFF6B7280),
               ),
               const SizedBox(width: 4),
               Text(
                 'الجهة: $ministry',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontSize: 12),
               ),
             ],
           ),
@@ -519,28 +605,27 @@ class ComplaintDetailsScreen extends StatelessWidget {
         if (createdAt != null)
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_today,
                 size: 14,
-                color: Color(0xFF9CA3AF),
+                color: theme.iconTheme.color
+                        ?.withOpacity(0.5) ??
+                    const Color(0xFF9CA3AF),
               ),
               const SizedBox(width: 4),
               Text(
                 'تاريخ الإرسال: $createdAt',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF6B7280),
-                ),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontSize: 12),
               ),
             ],
           ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'وصف المشكلة',
-          style: TextStyle(
+          style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF4B5563),
           ),
         ),
         const SizedBox(height: 6),
@@ -548,28 +633,29 @@ class ComplaintDetailsScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
+            color: subtleBg,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(
+              color: theme.dividerColor,
+            ),
           ),
           child: Text(
             description.isNotEmpty
                 ? description
                 : 'لا يوجد وصف تفصيلي لهذه الشكوى.',
-            style: const TextStyle(
+            style:
+                theme.textTheme.bodyMedium?.copyWith(
               fontSize: 13,
               height: 1.5,
-              color: Color(0xFF374151),
             ),
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           'المرفقات',
-          style: TextStyle(
+          style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF4B5563),
           ),
         ),
         const SizedBox(height: 6),
@@ -578,25 +664,29 @@ class ComplaintDetailsScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(
                 horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: subtleBg,
               borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(
+                color: theme.dividerColor,
+              ),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(
                   Icons.attach_file,
                   size: 16,
-                  color: Color(0xFF9CA3AF),
+                  color: theme.iconTheme.color
+                          ?.withOpacity(0.5) ??
+                      const Color(0xFF9CA3AF),
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'لا توجد مرفقات مضافة لهذه الشكوى.',
-                    style: TextStyle(
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(
                       fontSize: 12,
-                      color: Color(0xFF9CA3AF),
+                      color: theme.hintColor,
                     ),
                   ),
                 ),
@@ -607,10 +697,11 @@ class ComplaintDetailsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: subtleBg,
               borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(
+                color: theme.dividerColor,
+              ),
             ),
             child: SizedBox(
               height: 80,
@@ -643,30 +734,30 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required String contactName,
     required String contactPhone,
   }) {
+    final theme = Theme.of(context);
     final hasName = contactName.trim().isNotEmpty;
     final hasPhone = contactPhone.trim().isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'معلومات صاحب الشكوى',
-          style: TextStyle(
+          style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1F2937),
           ),
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 26,
               backgroundColor: brandLightBlue,
               child: Icon(
                 Icons.person,
                 size: 26,
-                color: Colors.white,
+                color: theme.colorScheme.onPrimary,
               ),
             ),
             const SizedBox(width: 12),
@@ -676,37 +767,42 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasName ? contactName : 'مستخدم التطبيق',
-                    style: const TextStyle(
+                    hasName
+                        ? contactName
+                        : 'مستخدم التطبيق',
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827),
                     ),
                   ),
                   const SizedBox(height: 4),
                   if (hasPhone)
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.phone_in_talk_outlined,
                           size: 12,
-                          color: Color(0xFF6B7280),
+                          color: theme.iconTheme.color
+                                  ?.withOpacity(0.6) ??
+                              const Color(0xFF6B7280),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           contactPhone,
-                          style: const TextStyle(
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(
                             fontSize: 11,
-                            color: Color(0xFF6B7280),
                           ),
                         ),
                       ],
                     )
                   else
-                    const Text(
+                    Text(
                       'لم يقم المستخدم بإدخال رقم هاتف.',
-                      style: TextStyle(
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(
                         fontSize: 11,
-                        color: Color(0xFF9CA3AF),
+                        color: theme.hintColor,
                       ),
                     ),
                 ],
@@ -727,18 +823,17 @@ class ComplaintDetailsScreen extends StatelessWidget {
               );
             },
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFE5E7EB)),
+              side: BorderSide(color: theme.dividerColor),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10),
             ),
-            child: const Text(
+            child: Text(
               'عرض الملف الشخصي',
-              style: TextStyle(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 13,
-                color: Color(0xFF4B5563),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -748,19 +843,19 @@ class ComplaintDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInternalCommentsSection() {
-    return const Column(
+  Widget _buildInternalCommentsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'ملاحظة',
-          style: TextStyle(
+          style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1F2937),
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         _InternalCommentCard(
           author: 'النظام',
           datetime: '—',
@@ -813,14 +908,22 @@ class _InternalCommentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor =
+        theme.colorScheme.primary.withOpacity(0.8);
+
     return Container(
       padding: const EdgeInsets.only(
-          right: 10, left: 8, top: 8, bottom: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+        right: 10,
+        left: 8,
+        top: 8,
+        bottom: 8,
+      ),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
         border: Border(
           right: BorderSide(
-            color: ComplaintDetailsScreen.brandBlue,
+            color: borderColor,
             width: 3,
           ),
         ),
@@ -835,17 +938,18 @@ class _InternalCommentCard extends StatelessWidget {
             children: [
               Text(
                 author,
-                style: const TextStyle(
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
                 ),
               ),
               Text(
                 datetime,
-                style: const TextStyle(
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(
                   fontSize: 10,
-                  color: Color(0xFF9CA3AF),
+                  color: theme.hintColor,
                 ),
               ),
             ],
@@ -853,9 +957,9 @@ class _InternalCommentCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             text,
-            style: const TextStyle(
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(
               fontSize: 13,
-              color: Color(0xFF4B5563),
               height: 1.4,
             ),
           ),
