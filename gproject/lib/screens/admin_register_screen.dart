@@ -54,15 +54,91 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
     super.dispose();
   }
 
+  Future<void> _showMessageDialog({
+    required String message,
+    String title = 'تنبيه',
+    bool isError = false,
+  }) async {
+    final theme = Theme.of(context);
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.info_outline,
+                color:
+                    isError ? const Color(0xFFDC2626) : AdminRegisterScreen.primaryColor,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            textAlign: TextAlign.right,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.only(
+            right: 16,
+            left: 16,
+            bottom: 10,
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AdminRegisterScreen.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'حسنًا',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('يجب الموافقة على شروط الاستخدام وسياسة الخصوصية'),
-        ),
+      await _showMessageDialog(
+        title: 'الموافقة مطلوبة',
+        message: 'يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل المتابعة.',
+        isError: true,
       );
       return;
     }
@@ -81,12 +157,11 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
 
     if (!passwordRegex.hasMatch(password)) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+      await _showMessageDialog(
+        title: 'كلمة مرور ضعيفة',
+        message:
             'كلمة المرور يجب أن تكون قوية (8 أحرف على الأقل وتحتوي على حروف وأرقام ورموز).',
-          ),
-        ),
+        isError: true,
       );
       return;
     }
@@ -102,12 +177,12 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
           .get();
 
       if (allowedQuery.docs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
+        setState(() => _isSubmitting = false);
+        await _showMessageDialog(
+          title: 'غير مصرح',
+          message:
               'لا يمكنك التسجيل لأنك لست مسؤولاً معتمداً (تحقق من البريد والرقم الوظيفي).',
-            ),
-          ),
+          isError: true,
         );
         return;
       }
@@ -134,10 +209,10 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
         'role': 'admin',
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم إنشاء حساب المسؤول بنجاح.'),
-        ),
+      await _showMessageDialog(
+        title: 'تم إنشاء الحساب',
+        message: 'تم إنشاء حساب المسؤول بنجاح.',
+        isError: false,
       );
 
       Navigator.pushNamedAndRemoveUntil(
@@ -154,14 +229,17 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
       } else if (e.code == 'invalid-email') {
         message = 'صيغة البريد الإلكتروني غير صالحة.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+
+      await _showMessageDialog(
+        title: 'خطأ في التسجيل',
+        message: message,
+        isError: true,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ غير متوقع: $e'),
-        ),
+      await _showMessageDialog(
+        title: 'خطأ غير متوقع',
+        message: 'حدث خطأ غير متوقع: $e',
+        isError: true,
       );
     } finally {
       if (mounted) {
@@ -282,8 +360,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                 TextFormField(
                                   controller: _fullNameController,
                                   decoration: InputDecoration(
-                                    hintText:
-                                        'أدخل الاسم الكامل',
+                                    hintText: 'أدخل الاسم الكامل',
                                     filled: true,
                                     fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
@@ -331,8 +408,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                       TextInputType.emailAddress,
                                   textDirection: TextDirection.ltr,
                                   decoration: InputDecoration(
-                                    hintText:
-                                        'example@ministry.gov.iq',
+                                    hintText: 'example@ministry.gov.iq',
                                     filled: true,
                                     fillColor: theme.cardColor,
                                     border: OutlineInputBorder(
@@ -490,10 +566,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
-                                            ? Icons
-                                                .visibility_outlined
-                                            : Icons
-                                                .visibility_off_outlined,
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                         color: theme.iconTheme.color
                                                 ?.withOpacity(0.7) ??
                                             const Color(0xFF64748B),
@@ -528,8 +602,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                       value: _acceptTerms,
                                       onChanged: (value) {
                                         setState(() {
-                                          _acceptTerms =
-                                              value ?? false;
+                                          _acceptTerms = value ?? false;
                                         });
                                       },
                                       activeColor: primary,
@@ -537,8 +610,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                     Expanded(
                                       child: Text.rich(
                                         TextSpan(
-                                          style: theme
-                                              .textTheme.bodySmall
+                                          style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                             fontSize: 13,
                                             color: theme.hintColor,
@@ -584,17 +656,16 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   width: double.infinity,
                                   height: 56,
                                   child: ElevatedButton(
-                                    onPressed: _isSubmitting
-                                        ? null
-                                        : _submit,
+                                    onPressed:
+                                        _isSubmitting ? null : _submit,
                                     child: _isSubmitting
                                         ? SizedBox(
                                             width: 22,
                                             height: 22,
                                             child:
                                                 CircularProgressIndicator(
-                                              color: theme.colorScheme
-                                                  .onPrimary,
+                                              color: theme
+                                                  .colorScheme.onPrimary,
                                               strokeWidth: 2,
                                             ),
                                           )
@@ -606,7 +677,6 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                                   FontWeight.w700,
                                             ),
                                           ),
-                                    // باقي الـ style من ElevatedButtonTheme
                                   ),
                                 ),
                               ],
@@ -629,8 +699,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   fontSize: 13,
                                   color: primary,
                                   fontWeight: FontWeight.w700,
-                                  decoration:
-                                      TextDecoration.underline,
+                                  decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),
