@@ -204,12 +204,12 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                       child: Text(
                         'شكاواي',
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color:
                               theme.appBarTheme.foregroundColor ??
-                                  theme.textTheme.bodyLarge?.color,
+                                  theme.textTheme.titleMedium?.color,
                         ),
                       ),
                     ),
@@ -238,7 +238,8 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                       return Center(
                         child: Text(
                           'لا توجد شكاوى حتى الآن.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style:
+                              theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
                             color: theme.hintColor,
                           ),
@@ -266,9 +267,8 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                           WidgetsBinding.instance
                               .addPostFrameCallback((_) {
                             _showStatusChangedDialog(
-                              complaintTitle: title.isEmpty
-                                  ? 'بدون عنوان'
-                                  : title,
+                              complaintTitle:
+                                  title.isEmpty ? 'بدون عنوان' : title,
                               oldStatus: prev,
                               newStatus: status,
                             );
@@ -353,8 +353,8 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                                           title.isEmpty
                                               ? 'شكوى بدون عنوان'
                                               : title,
-                                          style: theme.textTheme
-                                              .bodyLarge
+                                          style: theme
+                                              .textTheme.bodyLarge
                                               ?.copyWith(
                                             fontSize: 15,
                                             fontWeight:
@@ -366,8 +366,7 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                                         Text(
                                           ministry,
                                           style: theme
-                                              .textTheme
-                                              .bodySmall
+                                              .textTheme.bodySmall
                                               ?.copyWith(
                                             fontSize: 12,
                                           ),
@@ -377,17 +376,16 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding:
-                                        const EdgeInsets
-                                            .symmetric(
+                                    padding: const EdgeInsets
+                                        .symmetric(
                                       horizontal: 8,
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
                                       color: statusBg,
                                       borderRadius:
-                                          BorderRadius
-                                              .circular(999),
+                                          BorderRadius.circular(
+                                              999),
                                     ),
                                     child: Text(
                                       statusLabel,
@@ -409,8 +407,7 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                                       Icons
                                           .calendar_today_outlined,
                                       size: 14,
-                                      color: theme.iconTheme
-                                              .color
+                                      color: theme.iconTheme.color
                                               ?.withOpacity(
                                                   0.6) ??
                                           const Color(
@@ -419,12 +416,11 @@ class _MyComplaintsScreenState extends State<MyComplaintsScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       'تاريخ التقديم: $dateText',
-                                      style: theme.textTheme
-                                          .bodySmall
+                                      style: theme
+                                          .textTheme.bodySmall
                                           ?.copyWith(
                                         fontSize: 11,
-                                        color:
-                                            theme.hintColor,
+                                        color: theme.hintColor,
                                       ),
                                     ),
                                   ],

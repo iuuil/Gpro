@@ -12,7 +12,6 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required this.complaintId,
   });
 
-  // نخلي الألوان البراند تعتمد على الثيم قدر الإمكان، بس نخلي قيم افتراضية إذا ما حددت بالثيم
   static const Color brandBlue = Color(0xFF4A76B8);
   static const Color brandLightBlue = Color(0xFFA3BCE0);
   static const Color bgGray = Color(0xFFF3F4F6);
@@ -25,18 +24,19 @@ class ComplaintDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor:
-            isDark ? theme.scaffoldBackgroundColor : bgGray,
+        backgroundColor: isDark
+            ? theme.scaffoldBackgroundColor
+            : theme.colorScheme.surfaceVariant.withOpacity(0.5),
         body: SafeArea(
           child: Column(
             children: [
               // الهيدر
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: theme.appBarTheme.backgroundColor ??
-                      theme.cardColor,
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
                       color: theme.dividerColor,
@@ -54,10 +54,9 @@ class ComplaintDetailsScreen extends StatelessWidget {
                         icon: Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
-                          color:
-                              theme.appBarTheme.foregroundColor ??
-                                  theme.iconTheme.color ??
-                                  const Color(0xFF1F2937),
+                          color: theme.appBarTheme.foregroundColor ??
+                              theme.iconTheme.color ??
+                              const Color(0xFF1F2937),
                         ),
                       ),
                     ),
@@ -106,8 +105,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: theme.colorScheme.errorContainer
                                   .withOpacity(0.2),
-                              borderRadius:
-                                  BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: theme.colorScheme.error,
                               ),
@@ -115,8 +113,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             child: Text(
                               'حدث خطأ أثناء جلب بيانات الشكوى:\n${snapshot.error}',
                               textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontSize: 13,
                                 color: theme.colorScheme.error,
                                 height: 1.5,
@@ -127,16 +124,14 @@ class ComplaintDetailsScreen extends StatelessWidget {
                       );
                     }
 
-                    if (!snapshot.hasData ||
-                        !snapshot.data!.exists) {
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
                             'لم يتم العثور على هذه الشكوى.',
                             textAlign: TextAlign.center,
-                            style:
-                                theme.textTheme.bodyMedium?.copyWith(
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
                               color: theme.hintColor,
                             ),
@@ -146,8 +141,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     }
 
                     final data =
-                        snapshot.data!.data() as Map<String, dynamic>? ??
-                            {};
+                        snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
                     final title =
                         (data['title'] as String?)?.trim().isNotEmpty ==
@@ -157,33 +151,27 @@ class ComplaintDetailsScreen extends StatelessWidget {
                                     'بدون عنوان')
                                 .toString();
                     final description =
-                        (data['description'] as String? ?? '')
-                            .toString();
+                        (data['description'] as String? ?? '').toString();
                     final status =
-                        (data['status'] as String? ?? 'pending')
-                            .toString();
+                        (data['status'] as String? ?? 'pending').toString();
                     final ministry =
                         (data['ministry'] as String? ?? 'غير محددة')
                             .toString();
-                    final createdAt = (data['createdAt'] as Timestamp?)
-                        ?.toDate()
-                        .toString()
-                        .split(' ')
-                        .first;
+                    final createdAt =
+                        (data['createdAt'] as Timestamp?)
+                            ?.toDate()
+                            .toString()
+                            .split(' ')
+                            .first;
                     final contactName =
-                        (data['contactName'] as String? ?? '')
-                            .toString();
+                        (data['contactName'] as String? ?? '').toString();
                     final contactPhone =
-                        (data['contactPhone'] as String? ?? '')
-                            .toString();
+                        (data['contactPhone'] as String? ?? '').toString();
 
-                    // المرفقات
                     final List<dynamic> attachmentsDyn =
-                        (data['attachments'] as List<dynamic>? ??
-                            []);
-                    final List<String> attachments = attachmentsDyn
-                        .map((e) => e.toString())
-                        .toList();
+                        (data['attachments'] as List<dynamic>? ?? []);
+                    final List<String> attachments =
+                        attachmentsDyn.map((e) => e.toString()).toList();
 
                     final statusLabel =
                         _statusLabelFromStatus(status);
@@ -191,8 +179,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                         _statusColorFromStatus(status);
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                          16, 16, 16, 24),
+                      padding:
+                          const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment.stretch,
@@ -266,8 +254,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: _buildInternalCommentsSection(
-                                context),
+                            child:
+                                _buildInternalCommentsSection(context),
                           ),
                         ],
                       ),
@@ -298,11 +286,9 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.error,
-                      foregroundColor:
-                          theme.colorScheme.onError,
+                      foregroundColor: theme.colorScheme.onError,
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: () async {
@@ -317,8 +303,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                               shape: dialogTheme.shape ??
                                   RoundedRectangleBorder(
                                     borderRadius:
-                                        BorderRadius.circular(
-                                            16),
+                                        BorderRadius.circular(16),
                                   ),
                               title: Text(
                                 'تأكيد الحذف',
@@ -331,11 +316,11 @@ class ComplaintDetailsScreen extends StatelessWidget {
                               content: Text(
                                 'هل أنت متأكد من حذف هذه الشكوى بشكل نهائي؟',
                                 textAlign: TextAlign.center,
-                                style:
-                                    dialogTheme.contentTextStyle ??
-                                        Theme.of(ctx)
-                                            .textTheme
-                                            .bodyMedium,
+                                style: dialogTheme
+                                        .contentTextStyle ??
+                                    Theme.of(ctx)
+                                        .textTheme
+                                        .bodyMedium,
                               ),
                               actionsAlignment:
                                   MainAxisAlignment.center,
@@ -376,8 +361,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                             context: context,
                             barrierDismissible: false,
                             builder: (ctx) {
-                              final themeDialog =
-                                  Theme.of(ctx);
+                              final themeDialog = Theme.of(ctx);
                               return Directionality(
                                 textDirection:
                                     TextDirection.rtl,
@@ -441,8 +425,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                                           const EdgeInsets.only(
                                               bottom: 8),
                                       child: SizedBox(
-                                        width:
-                                            double.infinity,
+                                        width: double.infinity,
                                         child: ElevatedButton(
                                           style: ElevatedButton
                                               .styleFrom(
@@ -528,8 +511,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
     required List<String> attachments,
   }) {
     final theme = Theme.of(context);
-    final subtleBg = theme.colorScheme.surfaceVariant
-        .withOpacity(0.25);
+    final subtleBg =
+        theme.colorScheme.surfaceVariant.withOpacity(0.25);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,8 +536,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                   horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.08),
-                borderRadius:
-                    BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -588,15 +570,15 @@ class ComplaintDetailsScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 16,
-                color: theme.iconTheme.color
-                        ?.withOpacity(0.6) ??
-                    const Color(0xFF6B7280),
+                color:
+                    theme.iconTheme.color?.withOpacity(0.6) ??
+                        const Color(0xFF6B7280),
               ),
               const SizedBox(width: 4),
               Text(
                 'الجهة: $ministry',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontSize: 12),
+                style:
+                    theme.textTheme.bodySmall?.copyWith(fontSize: 12),
               ),
             ],
           ),
@@ -608,15 +590,15 @@ class ComplaintDetailsScreen extends StatelessWidget {
               Icon(
                 Icons.calendar_today,
                 size: 14,
-                color: theme.iconTheme.color
-                        ?.withOpacity(0.5) ??
-                    const Color(0xFF9CA3AF),
+                color:
+                    theme.iconTheme.color?.withOpacity(0.5) ??
+                        const Color(0xFF9CA3AF),
               ),
               const SizedBox(width: 4),
               Text(
                 'تاريخ الإرسال: $createdAt',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontSize: 12),
+                style:
+                    theme.textTheme.bodySmall?.copyWith(fontSize: 12),
               ),
             ],
           ),
@@ -643,8 +625,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
             description.isNotEmpty
                 ? description
                 : 'لا يوجد وصف تفصيلي لهذه الشكوى.',
-            style:
-                theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 13,
               height: 1.5,
             ),
@@ -675,16 +656,16 @@ class ComplaintDetailsScreen extends StatelessWidget {
                 Icon(
                   Icons.attach_file,
                   size: 16,
-                  color: theme.iconTheme.color
-                          ?.withOpacity(0.5) ??
-                      const Color(0xFF9CA3AF),
+                  color:
+                      theme.iconTheme.color?.withOpacity(0.5) ??
+                          const Color(0xFF9CA3AF),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'لا توجد مرفقات مضافة لهذه الشكوى.',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(
+                    style:
+                        theme.textTheme.bodySmall?.copyWith(
                       fontSize: 12,
                       color: theme.hintColor,
                     ),
@@ -753,11 +734,12 @@ class ComplaintDetailsScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundColor: brandLightBlue,
+              backgroundColor:
+                  theme.colorScheme.primary.withOpacity(0.1),
               child: Icon(
                 Icons.person,
                 size: 26,
-                color: theme.colorScheme.onPrimary,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(width: 12),
@@ -767,11 +749,8 @@ class ComplaintDetailsScreen extends StatelessWidget {
                     CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasName
-                        ? contactName
-                        : 'مستخدم التطبيق',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(
+                    hasName ? contactName : 'مستخدم التطبيق',
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -799,8 +778,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                   else
                     Text(
                       'لم يقم المستخدم بإدخال رقم هاتف.',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 11,
                         color: theme.hintColor,
                       ),
@@ -827,8 +805,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              padding: const EdgeInsets.symmetric(
-                  vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             child: Text(
               'عرض الملف الشخصي',
@@ -938,16 +915,14 @@ class _InternalCommentCard extends StatelessWidget {
             children: [
               Text(
                 author,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
                 datetime,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(
+                style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 10,
                   color: theme.hintColor,
                 ),
@@ -957,8 +932,7 @@ class _InternalCommentCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             text,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 13,
               height: 1.4,
             ),

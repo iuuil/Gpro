@@ -53,10 +53,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             children: [
               // الهيدر
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: theme.appBarTheme.backgroundColor ?? theme.cardColor,
+                  color: theme.appBarTheme.backgroundColor ??
+                      theme.cardColor,
                   border: Border(
                     bottom: BorderSide(color: theme.dividerColor),
                   ),
@@ -84,11 +85,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       child: Text(
                         'الإشعارات',
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: theme.appBarTheme.foregroundColor ??
-                              theme.textTheme.bodyLarge?.color,
+                              theme.textTheme.titleMedium?.color,
                         ),
                       ),
                     ),
@@ -121,7 +122,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       const SizedBox(height: 8),
 
                       // قائمة الإشعارات
-                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      StreamBuilder<
+                          QuerySnapshot<Map<String, dynamic>>>(
                         stream: _notificationsStream(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
@@ -137,19 +139,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           if (!snapshot.hasData ||
                               snapshot.data!.docs.isEmpty) {
                             return Padding(
-                              padding: const EdgeInsets.only(top: 40),
+                              padding:
+                                  const EdgeInsets.only(top: 40),
                               child: Column(
                                 children: [
                                   Icon(
-                                    Icons.notifications_off_outlined,
+                                    Icons
+                                        .notifications_off_outlined,
                                     size: 48,
                                     color: theme.hintColor,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'لا توجد إشعارات حاليًا',
-                                    style:
-                                        theme.textTheme.bodyMedium?.copyWith(
+                                    style: theme
+                                        .textTheme.bodyMedium
+                                        ?.copyWith(
                                       fontSize: 14,
                                       color: theme.hintColor,
                                     ),
@@ -162,7 +167,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           final docs = snapshot.data!.docs;
 
                           return ListView.separated(
-                            physics: const NeverScrollableScrollPhysics(),
+                            physics:
+                                const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             itemCount: docs.length,
                             separatorBuilder: (_, __) =>
@@ -170,9 +176,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             itemBuilder: (context, index) {
                               final data = docs[index].data();
                               final title =
-                                  (data['title'] ?? 'إشعار جديد').toString();
-                              final body = (data['body'] ?? '').toString();
-                              final type = (data['type'] ?? '').toString();
+                                  (data['title'] ?? 'إشعار جديد')
+                                      .toString();
+                              final body =
+                                  (data['body'] ?? '').toString();
+                              final type =
+                                  (data['type'] ?? '').toString();
                               final isRead =
                                   (data['isRead'] as bool?) ?? false;
                               final createdAt = data['createdAt'];
@@ -193,7 +202,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               if (type == 'complaint_status') {
                                 leadingIcon =
                                     Icons.rule_folder_outlined;
-                                iconColor = const Color(0xFF16A34A);
+                                iconColor =
+                                    const Color(0xFF16A34A);
                               }
 
                               final Color cardColor = isRead
@@ -204,20 +214,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       : const Color(0xFFEFF6FF));
 
                               return Container(
-                                padding: const EdgeInsets.all(12),
+                                padding:
+                                    const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: cardColor,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius:
+                                      BorderRadius.circular(14),
                                   border: Border.all(
                                     color: theme.dividerColor,
                                   ),
                                   boxShadow: [
                                     if (!isDark)
                                       BoxShadow(
-                                        color:
-                                            Colors.black.withOpacity(0.02),
+                                        color: Colors.black
+                                            .withOpacity(0.02),
                                         blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                                        offset:
+                                            const Offset(0, 2),
                                       ),
                                   ],
                                 ),
@@ -229,10 +242,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color:
-                                            iconColor.withOpacity(0.08),
+                                        color: iconColor
+                                            .withOpacity(0.08),
                                         borderRadius:
-                                            BorderRadius.circular(12),
+                                            BorderRadius.circular(
+                                                12),
                                       ),
                                       child: Icon(
                                         leadingIcon,
@@ -243,52 +257,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            CrossAxisAlignment
+                                                .start,
                                         children: [
                                           Text(
                                             title,
                                             style: theme
-                                                .textTheme.bodyMedium
+                                                .textTheme
+                                                .bodyMedium
                                                 ?.copyWith(
                                               fontSize: 14,
                                               fontWeight:
-                                                  FontWeight.w600,
+                                                  FontWeight
+                                                      .w600,
                                             ),
                                           ),
                                           if (body.isNotEmpty) ...[
-                                            const SizedBox(height: 4),
+                                            const SizedBox(
+                                                height: 4),
                                             Text(
                                               body,
                                               style: theme
-                                                  .textTheme.bodySmall
+                                                  .textTheme
+                                                  .bodySmall
                                                   ?.copyWith(
                                                 fontSize: 12,
                                                 height: 1.4,
                                               ),
                                             ),
                                           ],
-                                          const SizedBox(height: 4),
+                                          const SizedBox(
+                                              height: 4),
                                           Row(
                                             children: [
                                               Icon(
-                                                Icons.access_time,
+                                                Icons
+                                                    .access_time,
                                                 size: 12,
                                                 color: theme
-                                                    .iconTheme.color
-                                                    ?.withOpacity(0.6) ??
+                                                    .iconTheme
+                                                    .color
+                                                    ?.withOpacity(
+                                                        0.6) ??
                                                     const Color(
                                                         0xFF9CA3AF),
                                               ),
-                                              const SizedBox(width: 4),
+                                              const SizedBox(
+                                                  width: 4),
                                               Text(
-                                                timeText.isEmpty
+                                                timeText
+                                                        .isEmpty
                                                     ? 'الآن'
                                                     : timeText,
                                                 style: theme
-                                                    .textTheme.bodySmall
+                                                    .textTheme
+                                                    .bodySmall
                                                     ?.copyWith(
                                                   fontSize: 11,
-                                                  color: theme.hintColor,
+                                                  color: theme
+                                                      .hintColor,
                                                 ),
                                               ),
                                             ],
@@ -301,10 +328,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       Container(
                                         width: 8,
                                         height: 8,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              theme.colorScheme.primary,
-                                          shape: BoxShape.circle,
+                                        decoration:
+                                            BoxDecoration(
+                                          color: theme
+                                              .colorScheme
+                                              .primary,
+                                          shape:
+                                              BoxShape.circle,
                                         ),
                                       ),
                                     ],

@@ -82,6 +82,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await user.reauthenticateWithCredential(cred);
       await user.updatePassword(newPassword);
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('تم تغيير كلمة المرور بنجاح.'),
@@ -212,10 +214,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // هيدر موحد
+              // الهيدر
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color:
                       theme.appBarTheme.backgroundColor ?? theme.cardColor,
@@ -274,11 +276,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // المحتوى
               Expanded(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
                   child: Container(
-                    constraints:
-                        const BoxConstraints(maxWidth: 520),
+                    constraints: const BoxConstraints(maxWidth: 520),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -387,7 +387,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 fontSize: 15,
                               ),
                             ),
-                      // الألوان من ElevatedButtonTheme في AppTheme
                     ),
                   ),
                 ),

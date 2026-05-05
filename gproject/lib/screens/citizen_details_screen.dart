@@ -132,8 +132,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                           child: Text(
                             'خطأ في تحميل بيانات الشكاوى: ${snapshot.error}',
                             textAlign: TextAlign.center,
-                            style:
-                                theme.textTheme.bodySmall?.copyWith(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
                               color: theme.colorScheme.error,
                             ),
@@ -155,8 +154,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                       return Center(
                         child: Text(
                           msg,
-                          style:
-                              theme.textTheme.bodyMedium?.copyWith(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
                             color: theme.hintColor,
                           ),
@@ -176,8 +174,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                           children: [
                             Text(
                               'قائمة الشكاوى',
-                              style: theme.textTheme.bodyLarge
-                                  ?.copyWith(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -192,11 +189,10 @@ class CitizenDetailsScreen extends StatelessWidget {
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 8),
                               itemBuilder: (context, index) {
-                                final data =
-                                    docs[index].data();
-                                final title = (data['title'] ??
-                                        'شكوى بدون عنوان')
-                                    .toString();
+                                final data = docs[index].data();
+                                final title =
+                                    (data['title'] ?? 'شكوى بدون عنوان')
+                                        .toString();
                                 final description =
                                     (data['description'] ?? '')
                                         .toString();
@@ -208,17 +204,15 @@ class CitizenDetailsScreen extends StatelessWidget {
                                             'مواطن غير معروف')
                                         .toString();
                                 final ministry =
-                                    (data['ministry'] ??
-                                            'غير محدد')
+                                    (data['ministry'] ?? 'غير محدد')
                                         .toString();
                                 final createdAt =
-                                    (data['createdAt']
-                                                as Timestamp?)
-                                            ?.toDate()
-                                            .toString()
-                                            .split(' ')
-                                            .first ??
-                                        '';
+                                    (data['createdAt'] as Timestamp?)
+                                        ?.toDate()
+                                        .toString()
+                                        .split(' ')
+                                        .first ??
+                                    '';
 
                                 final bool isResolved =
                                     status == 'resolved' ||
@@ -242,8 +236,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                             ? const Color(
                                                 0xFFFFF7E6)
                                             : theme.dividerColor
-                                                .withOpacity(
-                                                    0.3);
+                                                .withOpacity(0.3);
 
                                 final String statusText =
                                     isResolved
@@ -266,19 +259,18 @@ class CitizenDetailsScreen extends StatelessWidget {
                                     boxShadow: [
                                       if (!isDark)
                                         BoxShadow(
-                                          color:
-                                              Colors.black.withOpacity(
+                                          color: Colors.black
+                                              .withOpacity(
                                                   0.03),
                                           blurRadius: 4,
-                                          offset:
-                                              const Offset(0, 2),
+                                          offset: const Offset(
+                                              0, 2),
                                         ),
                                     ],
                                   ),
                                   child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment
-                                            .start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         crossAxisAlignment:
@@ -451,7 +443,8 @@ class CitizenDetailsScreen extends StatelessWidget {
                                           Row(
                                             children: [
                                               Icon(
-                                                Icons.access_time,
+                                                Icons
+                                                    .access_time,
                                                 size: 14,
                                                 color: theme
                                                     .iconTheme

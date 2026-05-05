@@ -22,7 +22,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   // ignore: prefer_final_fields, unused_field
   bool _isDark = false;
 
-  List<Widget> get _pages => [
+  List<Widget> get _pages => const [
         HomeScreen(),              // 0: الرئيسية
         MinistriesScreen(),        // 1: الوزارات
         ComplaintsCenterScreen(),  // 2: الشكاوى
@@ -54,10 +54,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
           onTap: _onBottomNavTap,
           selectedItemColor:
               theme.bottomNavigationBarTheme.selectedItemColor ??
-                  HomeScreen.primaryColor,
+              HomeScreen.primaryColor,
           unselectedItemColor:
               theme.bottomNavigationBarTheme.unselectedItemColor ??
-                  const Color(0xFF9CA3AF),
+              theme.hintColor,
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(

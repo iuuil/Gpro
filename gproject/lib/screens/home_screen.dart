@@ -71,8 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: theme.appBarTheme.backgroundColor ??
-                      theme.cardColor,
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
                       color: isDark
@@ -109,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // بانر علوي (كرت كبير) – مهيّأ للوضعين
                       Container(
-                        margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        margin:
+                            const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: isDark
@@ -135,12 +136,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 8),
                             Text(
                               'صوت المواطن',
-                              style: theme.textTheme.bodyLarge?.copyWith(
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
                                 color: Colors.white,
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
@@ -149,7 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 6),
                             Text(
                               'منصّة رقمية لعرض شكاوى المواطنين وربطها بالوزارات الحكومية المختصة.',
-                              style: theme.textTheme.bodySmall?.copyWith(
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(
                                 color: const Color(0xFFE5E7EB),
                                 fontSize: 13,
                               ),
@@ -163,11 +167,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         margin: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 4),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             Text(
                               'صوتك من أجل عراق أفضل',
-                              style: theme.textTheme.bodyLarge?.copyWith(
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -175,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'قدّم شكوى، بلّغ عن مشكلة خدمية، وساهم بتحسين أداء المؤسسات الحكومية.',
-                              style: theme.textTheme.bodySmall?.copyWith(
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(
                                 fontSize: 13,
                               ),
                             ),
@@ -187,13 +194,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // عنوان ما الذي تريد القيام به؟
                       Container(
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16),
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
                             'ما الذي تريد القيام به؟',
-                            style: theme.textTheme.bodyLarge?.copyWith(
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
@@ -204,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // كروت الميزات
                       Container(
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16),
                         child: Wrap(
                           spacing: 10,
                           runSpacing: 10,
@@ -288,18 +296,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             Navigator.pushNamed(context, '/signup');
                           },
+                          // يفضل ضبط الألوان عبر ElevatedButtonTheme في الثيم،
+                          // لكن هنا نستخدم colorScheme حتى تبقى ماشية مع الفاتح/الداكن.
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: HomeScreen.primaryColor,
-                            foregroundColor: Colors.white,
+                            backgroundColor:
+                                theme.colorScheme.primary,
+                            foregroundColor:
+                                theme.colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'إنشاء حساب',
-                            style: TextStyle(
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onPrimary,
                             ),
                           ),
                         ),
@@ -313,29 +328,36 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.pushNamed(context, '/login');
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: HomeScreen.primaryColor,
-                            side: const BorderSide(
-                                color: HomeScreen.primaryColor),
+                            foregroundColor:
+                                theme.colorScheme.primary,
+                            side: BorderSide(
+                              color: theme.colorScheme.primary,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'تسجيل الدخول',
-                            style: TextStyle(
+                            style: theme.textTheme.bodyLarge
+                                ?.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.primary,
                             ),
                           ),
                         ),
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/admin-login');
+                          Navigator.pushNamed(
+                              context, '/admin-login');
                         },
                         child: Text(
                           'تسجيل الدخول كمسؤول',
-                          style: TextStyle(
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(
                             fontSize: 14,
                             color: theme.colorScheme.primary,
                             decoration: TextDecoration.underline,
@@ -398,17 +420,19 @@ class _FeatureCard extends StatelessWidget {
             ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Icon(
                 icon,
-                color: HomeScreen.primaryColor,
+                color: theme.colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(height: 8),
               Text(
                 title,
-                style: theme.textTheme.bodyLarge?.copyWith(
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -417,7 +441,8 @@ class _FeatureCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   description,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(
                     fontSize: 12,
                   ),
                   maxLines: 3,

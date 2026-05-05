@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+// ignore_for_file: unused_field, deprecated_member_use, use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,8 +37,8 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: theme.appBarTheme.backgroundColor ??
-                      theme.cardColor,
+                  color:
+                      theme.appBarTheme.backgroundColor ?? theme.cardColor,
                   border: Border(
                     bottom: BorderSide(
                       color: isDark
@@ -71,8 +71,10 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                         icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 20,
-                          color: theme.appBarTheme.foregroundColor ??
-                              const Color(0xFF4B5563),
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.iconTheme.color ??
+                                  const Color(0xFF4B5563),
                         ),
                       ),
                     ),
@@ -83,8 +85,9 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                         style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: theme.appBarTheme.foregroundColor ??
-                              theme.textTheme.bodyLarge?.color,
+                          color:
+                              theme.appBarTheme.foregroundColor ??
+                                  theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                     ),
@@ -118,9 +121,11 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                     ? Center(
                         child: Text(
                           'يرجى تسجيل الدخول لعرض الشكاوى.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style:
+                              theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: theme.textTheme.bodySmall?.color,
+                            color:
+                                theme.textTheme.bodySmall?.color,
                           ),
                         ),
                       )
@@ -141,12 +146,14 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                           if (snapshot.hasError) {
                             return Center(
                               child: Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding:
+                                    const EdgeInsets.all(16),
                                 child: Text(
                                   'حدث خطأ أثناء جلب الشكاوى: ${snapshot.error}',
                                   textAlign: TextAlign.center,
-                                  style:
-                                      theme.textTheme.bodySmall?.copyWith(
+                                  style: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
                                     fontSize: 13,
                                     color: Colors.red.shade700,
                                   ),
@@ -163,9 +170,10 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                                     as Map<String, dynamic>? ??
                                 {};
 
-                            final status = (data['status'] ?? 'pending')
-                                .toString()
-                                .trim();
+                            final status =
+                                (data['status'] ?? 'pending')
+                                    .toString()
+                                    .trim();
 
                             final createdAt =
                                 (data['createdAt'] as Timestamp?)
@@ -179,12 +187,14 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                               title: (data['title'] as String?)
                                               ?.trim()
                                               .isNotEmpty ==
-                                          true
+                                      true
                                   ? data['title'] as String
-                                  : (data['description'] as String? ??
+                                  : (data['description']
+                                              as String? ??
                                           'بدون عنوان')
                                       .toString(),
-                              statusLabel: _statusLabelFromStatus(status),
+                              statusLabel:
+                                  _statusLabelFromStatus(status),
                               statusCode: status,
                               statusType:
                                   _statusFromStatusField(status),
@@ -211,10 +221,12 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                             return Center(
                               child: Text(
                                 'لا توجد شكاوى لعرضها.',
-                                style: theme.textTheme.bodyMedium
+                                style: theme
+                                    .textTheme.bodyMedium
                                     ?.copyWith(
                                   fontSize: 14,
-                                  color: theme.textTheme.bodySmall?.color,
+                                  color: theme.textTheme.bodySmall
+                                      ?.color,
                                 ),
                               ),
                             );
@@ -224,8 +236,9 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                             padding: const EdgeInsets.fromLTRB(
                                 16, 12, 16, 100),
                             child: Container(
-                              constraints: const BoxConstraints(
-                                  maxWidth: 520),
+                              constraints:
+                                  const BoxConstraints(
+                                      maxWidth: 520),
                               child: Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
@@ -236,7 +249,8 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                                         .textTheme.bodyLarge
                                         ?.copyWith(
                                       fontSize: 17,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight:
+                                          FontWeight.w700,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -245,12 +259,16 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
                                     _StatusCard(
                                       complaintId: c.id,
                                       title: c.title,
-                                      statusLabel: c.statusLabel,
-                                      statusType: c.statusType,
+                                      statusLabel:
+                                          c.statusLabel,
+                                      statusType:
+                                          c.statusType,
                                       date: c.date,
-                                      lastUpdate: c.lastUpdate,
+                                      lastUpdate:
+                                          c.lastUpdate,
                                     ),
-                                    const SizedBox(height: 10),
+                                    const SizedBox(
+                                        height: 10),
                                   ],
                                 ],
                               ),
@@ -285,6 +303,8 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
         displayLabel = 'الكل';
     }
 
+    final primary = theme.colorScheme.primary;
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -293,15 +313,16 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
       },
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? primaryColor.withOpacity(0.12)
+              ? primary.withOpacity(0.12)
               : theme.cardColor,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected
-                ? primaryColor.withOpacity(0.6)
+                ? primary.withOpacity(0.6)
                 : theme.dividerColor,
           ),
         ),
@@ -312,7 +333,7 @@ class _ComplaintsCenterScreenState extends State<ComplaintsCenterScreen> {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             color: isSelected
-                ? primaryColor
+                ? primary
                 : theme.textTheme.bodyLarge?.color,
           ),
         ),
@@ -407,7 +428,8 @@ class _StatusCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           // العنوان + شارة الحالة
           Row(
@@ -415,7 +437,8 @@ class _StatusCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -426,7 +449,8 @@ class _StatusCard extends StatelessWidget {
                     horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: colors['bg'],
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius:
+                      BorderRadius.circular(999),
                 ),
                 child: Text(
                   statusLabel,
@@ -447,15 +471,18 @@ class _StatusCard extends StatelessWidget {
               Icon(
                 Icons.calendar_today,
                 size: 14,
-                color: theme.iconTheme.color?.withOpacity(0.6) ??
+                color: theme.iconTheme.color
+                        ?.withOpacity(0.6) ??
                     const Color(0xFF9CA3AF),
               ),
               const SizedBox(width: 6),
               Text(
                 'التاريخ: $date',
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(
                   fontSize: 12,
-                  color: theme.textTheme.bodySmall?.color,
+                  color: theme.textTheme.bodySmall
+                      ?.color,
                 ),
               ),
             ],
@@ -464,14 +491,17 @@ class _StatusCard extends StatelessWidget {
 
           // آخر تحديث
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding:
+                    const EdgeInsets.only(top: 2),
                 child: Icon(
                   Icons.update,
                   size: 14,
-                  color: theme.iconTheme.color?.withOpacity(0.6) ??
+                  color: theme.iconTheme.color
+                          ?.withOpacity(0.6) ??
                       const Color(0xFF9CA3AF),
                 ),
               ),
@@ -479,7 +509,8 @@ class _StatusCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   lastUpdate,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(
                     fontSize: 12,
                     height: 1.5,
                   ),
@@ -499,7 +530,8 @@ class _StatusCard extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        ComplaintDetailsScreen(complaintId: complaintId),
+                        ComplaintDetailsScreen(
+                            complaintId: complaintId),
                   ),
                 );
               },
@@ -508,19 +540,26 @@ class _StatusCard extends StatelessWidget {
                   color: theme.dividerColor,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
-                backgroundColor: Colors.transparent,
+                backgroundColor:
+                    Colors.transparent,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
                 children: [
                   Text(
                     'عرض التفاصيل',
-                    style: TextStyle(
+                    style: theme
+                        .textTheme.bodySmall
+                        ?.copyWith(
                       fontSize: 13,
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w500,
+                      color:
+                          theme.colorScheme.primary,
+                      fontWeight:
+                          FontWeight.w500,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -538,7 +577,8 @@ class _StatusCard extends StatelessWidget {
     );
   }
 
-  static Map<String, Color> _statusColors(ComplaintStatus status) {
+  static Map<String, Color> _statusColors(
+      ComplaintStatus status) {
     switch (status) {
       case ComplaintStatus.review:
         return {

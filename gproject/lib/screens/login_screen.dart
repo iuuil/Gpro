@@ -96,8 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               // AppBar مخصص مع سهم رجوع
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color:
                       theme.appBarTheme.backgroundColor ?? theme.cardColor,
@@ -313,8 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons
-                                            .visibility_off_outlined
+                                        ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
                                     color: theme.iconTheme.color
                                             ?.withOpacity(0.7) ??
@@ -372,11 +371,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                             .onPrimary,
                                       ),
                                     )
-                                  : const Text(
+                                  : Text(
                                       'تسجيل الدخول',
-                                      style: TextStyle(fontSize: 16),
+                                      style: theme
+                                          .textTheme.bodyLarge
+                                          ?.copyWith(
+                                        fontSize: 16,
+                                        color: theme.colorScheme
+                                            .onPrimary,
+                                      ),
                                     ),
-                              // الألوان من ElevatedButtonTheme في AppTheme
+                              // الألوان من ElevatedButtonTheme / colorScheme
                             ),
                           ),
 
@@ -411,8 +416,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       .textTheme.bodySmall
                                       ?.copyWith(
                                     fontSize: 13,
-                                    color:
-                                        theme.colorScheme.primary,
+                                    color: theme
+                                        .colorScheme.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

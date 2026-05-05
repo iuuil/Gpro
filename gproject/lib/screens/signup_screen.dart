@@ -50,7 +50,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('كلمة المرور وتأكيدها غير متطابقتين')),
+        const SnackBar(
+            content: Text('كلمة المرور وتأكيدها غير متطابقتين')),
       );
       return;
     }
@@ -62,7 +63,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
-      ); // [web:133]
+      );
 
       final uid = credential.user!.uid;
 
@@ -71,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'email': email,
         'phone': phone,
         'createdAt': FieldValue.serverTimestamp(),
-      }); // [web:4]
+      });
 
       setState(() => _isSaving = false);
 
@@ -123,8 +124,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // ignore: unused_local_variable
-    final isDark = theme.brightness == Brightness.dark;
+    // final isDark = theme.brightness == Brightness.dark; // غير مستخدم حاليًا
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -135,8 +135,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             children: [
               // AppBar مخصص
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color:
                       theme.appBarTheme.backgroundColor ?? theme.cardColor,
@@ -196,7 +196,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'الاسم الكامل',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -232,7 +231,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'البريد الإلكتروني',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -269,7 +267,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'رقم الهاتف',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -314,7 +311,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   border: InputBorder.none,
                                   contentPadding:
                                       const EdgeInsets.symmetric(
-                                          horizontal: 15, vertical: 16),
+                                          horizontal: 15,
+                                          vertical: 16),
                                   hintText: '770 123 4567',
                                   hintStyle: theme
                                       .textTheme.bodySmall
@@ -334,7 +332,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'كلمة المرور',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -358,7 +355,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   border: InputBorder.none,
                                   contentPadding:
                                       const EdgeInsets.symmetric(
-                                          horizontal: 15, vertical: 16),
+                                          horizontal: 15,
+                                          vertical: 16),
                                   hintText: 'أدخل كلمة مرور آمنة',
                                   hintStyle: theme
                                       .textTheme.bodySmall
@@ -371,8 +369,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             IconButton(
                               onPressed: () {
                                 setState(() {
-                                  _obscurePassword =
-                                      !_obscurePassword;
+                                  _obscurePassword = !_obscurePassword;
                                 });
                               },
                               icon: Icon(
@@ -395,7 +392,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         'تأكيد كلمة المرور',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
-                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -420,7 +416,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   border: InputBorder.none,
                                   contentPadding:
                                       const EdgeInsets.symmetric(
-                                          horizontal: 15, vertical: 16),
+                                          horizontal: 15,
+                                          vertical: 16),
                                   hintText: 'أعد إدخال كلمة المرور',
                                   hintStyle: theme
                                       .textTheme.bodySmall
@@ -481,10 +478,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                         theme.colorScheme.onPrimary,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'تسجيل',
-                                  style: TextStyle(
+                                  style: theme.textTheme.bodyLarge
+                                      ?.copyWith(
                                     fontSize: 16,
+                                    color: theme
+                                        .colorScheme.onPrimary,
                                   ),
                                 ),
                           // الألوان من ElevatedButtonTheme في AppTheme
@@ -498,8 +498,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           Text(
                             'هل أنت مسؤول؟',
-                            style:
-                                theme.textTheme.bodySmall?.copyWith(
+                            style: theme.textTheme.bodySmall?.copyWith(
                               fontSize: 13,
                               color: theme.hintColor,
                             ),

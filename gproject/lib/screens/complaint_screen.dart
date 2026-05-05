@@ -95,17 +95,20 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) {
+        final dialogTheme = Theme.of(ctx).dialogTheme;
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            shape: dialogTheme.shape ??
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
             content: Text(
               message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: 14,
-              ),
+              style: dialogTheme.contentTextStyle ??
+                  theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                  ),
             ),
             actionsAlignment: MainAxisAlignment.center,
             actions: [
@@ -113,7 +116,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(
                   'حسنًا',
-                  style: TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.primary,
                   ),
@@ -237,6 +240,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               Icons.arrow_back_ios_new_rounded,
                               size: 20,
                               color: theme.appBarTheme.foregroundColor ??
+                                  theme.iconTheme.color ??
                                   const Color(0xFF4B5563),
                             ),
                           ),
@@ -248,8 +252,9 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: theme.appBarTheme.foregroundColor ??
-                                  theme.textTheme.bodyLarge?.color,
+                              color:
+                                  theme.appBarTheme.foregroundColor ??
+                                      theme.textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
@@ -271,36 +276,43 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                         bottom: 90,
                       ),
                       child: Container(
-                        constraints: const BoxConstraints(maxWidth: 520),
+                        constraints:
+                            const BoxConstraints(maxWidth: 520),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             // بلوك معلومات الوزارة
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(16),
                                 border: Border.all(
                                   color: theme.dividerColor,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color: Colors.black
+                                        .withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Container(
                                     height: 72,
                                     width: 72,
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      color: theme.colorScheme.primary
+                                      borderRadius:
+                                          BorderRadius.circular(
+                                              16),
+                                      color: primaryColor
                                           .withOpacity(0.08),
                                       image: widget.logoUrl != null
                                           ? DecorationImage(
@@ -322,15 +334,17 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment
+                                              .start,
                                       children: [
                                         Text(
                                           widget.ministry,
-                                          style: theme
-                                              .textTheme.bodyLarge
+                                          style: theme.textTheme
+                                              .bodyLarge
                                               ?.copyWith(
                                             fontSize: 20,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight:
+                                                FontWeight.w700,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -355,13 +369,15 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius:
+                                    BorderRadius.circular(16),
                                 border: Border.all(
                                   color: theme.dividerColor,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color: Colors.black
+                                        .withOpacity(0.02),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -380,11 +396,12 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           'الخط الساخن: $hotline',
-                                          style: theme
-                                              .textTheme.bodyMedium
+                                          style: theme.textTheme
+                                              .bodyMedium
                                               ?.copyWith(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w500,
+                                            fontWeight:
+                                                FontWeight.w500,
                                           ),
                                         ),
                                       ),
@@ -402,11 +419,12 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           website,
-                                          style: theme
-                                              .textTheme.bodyMedium
+                                          style: theme.textTheme
+                                              .bodyMedium
                                               ?.copyWith(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w500,
+                                            fontWeight:
+                                                FontWeight.w500,
                                           ),
                                         ),
                                       ),
@@ -426,11 +444,12 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                       Expanded(
                                         child: Text(
                                           address,
-                                          style: theme
-                                              .textTheme.bodyMedium
+                                          style: theme.textTheme
+                                              .bodyMedium
                                               ?.copyWith(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w500,
+                                            fontWeight:
+                                                FontWeight.w500,
                                           ),
                                         ),
                                       ),
@@ -444,7 +463,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
                             Text(
                               'تقديم شكوى جديدة',
-                              style: theme.textTheme.bodyLarge?.copyWith(
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -453,7 +473,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
                             Text(
                               'عنوان الشكوى',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -462,7 +483,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             Container(
                               decoration: BoxDecoration(
                                 color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(12),
                                 border: Border.all(
                                   color: theme.dividerColor,
                                 ),
@@ -474,12 +496,17 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   contentPadding:
-                                      const EdgeInsets.symmetric(
+                                      const EdgeInsets
+                                          .symmetric(
                                     horizontal: 15,
                                     vertical: 12,
                                   ),
                                   hintText: 'أدخل عنوان شكواك',
-                                  hintStyle: theme.textTheme.bodySmall,
+                                  hintStyle: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ),
                             ),
@@ -487,7 +514,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
                             Text(
                               'وصف تفصيلي',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -496,7 +524,8 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                             Container(
                               decoration: BoxDecoration(
                                 color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(12),
                                 border: Border.all(
                                   color: theme.dividerColor,
                                 ),
@@ -510,13 +539,18 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   contentPadding:
-                                      const EdgeInsets.symmetric(
+                                      const EdgeInsets
+                                          .symmetric(
                                     horizontal: 15,
                                     vertical: 12,
                                   ),
                                   hintText:
                                       'يرجى تقديم أكبر قدر ممكن من التفاصيل.',
-                                  hintStyle: theme.textTheme.bodySmall,
+                                  hintStyle: theme
+                                      .textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ),
                             ),
@@ -551,20 +585,27 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                     height: 52,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitComplaint,
+                      onPressed:
+                          _isSubmitting ? null : _submitComplaint,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor:
+                            theme.colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius:
+                              BorderRadius.circular(16),
                         ),
                         elevation: 4,
                       ),
                       child: Text(
-                        _isSubmitting ? 'جاري الإرسال...' : 'إرسال الشكوى',
-                        style: const TextStyle(
+                        _isSubmitting
+                            ? 'جاري الإرسال...'
+                            : 'إرسال الشكوى',
+                        style: theme.textTheme.bodyLarge
+                            ?.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onPrimary,
                         ),
                       ),
                     ),

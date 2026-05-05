@@ -283,7 +283,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                                   controller: _fullNameController,
                                   decoration: InputDecoration(
                                     hintText:
-                                        'أدخل الاسم الثلاثي كما في الهوية الرسمية',
+                                        'أدخل الاسم الكامل',
                                     filled: true,
                                     fillColor: theme.cardColor,
                                     border: OutlineInputBorder(

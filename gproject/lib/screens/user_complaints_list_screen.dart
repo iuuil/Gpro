@@ -32,11 +32,11 @@ class UserComplaintsListScreen extends StatelessWidget {
           automaticallyImplyLeading: false,
           title: Text(
             title,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: theme.appBarTheme.foregroundColor ??
-                  theme.textTheme.bodyLarge?.color,
+                  theme.textTheme.titleMedium?.color,
             ),
           ),
           centerTitle: true,
@@ -221,8 +221,9 @@ class _ComplaintListTile extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: 14,
-                  color: theme.iconTheme.color?.withOpacity(0.6) ??
-                      const Color(0xFF9CA3AF),
+                  color:
+                      theme.iconTheme.color?.withOpacity(0.6) ??
+                          const Color(0xFF9CA3AF),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -244,9 +245,9 @@ class _ComplaintListTile extends StatelessWidget {
                   child: Icon(
                     Icons.update,
                     size: 14,
-                    color:
-                        theme.iconTheme.color?.withOpacity(0.6) ??
-                            const Color(0xFF9CA3AF),
+                    color: theme.iconTheme.color
+                            ?.withOpacity(0.6) ??
+                        const Color(0xFF9CA3AF),
                   ),
                 ),
                 const SizedBox(width: 6),
