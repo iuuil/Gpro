@@ -39,6 +39,19 @@ class CitizenDetailsScreen extends StatelessWidget {
     return 'تفاصيل الشكاوى';
   }
 
+  // دالة تستخرج اسم المواطن من بيانات الشكوى
+  String _getCitizenName(Map<String, dynamic> data) {
+    final fullName = (data['fullName'] as String?)?.trim();
+    final contactName = (data['contactName'] as String?)?.trim();
+    if (fullName != null && fullName.isNotEmpty) {
+      return fullName;
+    }
+    if (contactName != null && contactName.isNotEmpty) {
+      return contactName;
+    }
+    return 'مواطن غير معروف';
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = _buildQuery();
@@ -174,7 +187,8 @@ class CitizenDetailsScreen extends StatelessWidget {
                           children: [
                             Text(
                               'قائمة الشكاوى',
-                              style: theme.textTheme.bodyLarge?.copyWith(
+                              style:
+                                  theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -199,20 +213,19 @@ class CitizenDetailsScreen extends StatelessWidget {
                                 final status =
                                     (data['status'] ?? 'pending')
                                         .toString();
+                                // اسم المواطن الآن يُستخرج بشكل ذكي
                                 final citizenName =
-                                    (data['citizenName'] ??
-                                            'مواطن غير معروف')
-                                        .toString();
+                                    _getCitizenName(data);
                                 final ministry =
                                     (data['ministry'] ?? 'غير محدد')
                                         .toString();
                                 final createdAt =
                                     (data['createdAt'] as Timestamp?)
-                                        ?.toDate()
-                                        .toString()
-                                        .split(' ')
-                                        .first ??
-                                    '';
+                                            ?.toDate()
+                                            .toString()
+                                            .split(' ')
+                                            .first ??
+                                        '';
 
                                 final bool isResolved =
                                     status == 'resolved' ||
@@ -221,29 +234,24 @@ class CitizenDetailsScreen extends StatelessWidget {
                                     status == 'pending' ||
                                         status == 'suspended';
 
-                                final Color statusColor =
-                                    isResolved
-                                        ? const Color(0xFF16A34A)
-                                        : isPending
-                                            ? const Color(
-                                                0xFFF59E0B)
-                                            : theme.hintColor;
+                                final Color statusColor = isResolved
+                                    ? const Color(0xFF16A34A)
+                                    : isPending
+                                        ? const Color(0xFFF59E0B)
+                                        : theme.hintColor;
 
-                                final Color statusBg =
-                                    isResolved
-                                        ? const Color(0xFFEFFDF3)
-                                        : isPending
-                                            ? const Color(
-                                                0xFFFFF7E6)
-                                            : theme.dividerColor
-                                                .withOpacity(0.3);
+                                final Color statusBg = isResolved
+                                    ? const Color(0xFFEFFDF3)
+                                    : isPending
+                                        ? const Color(0xFFFFF7E6)
+                                        : theme.dividerColor
+                                            .withOpacity(0.3);
 
-                                final String statusText =
-                                    isResolved
-                                        ? 'معالجة'
-                                        : isPending
-                                            ? 'معلقة'
-                                            : status;
+                                final String statusText = isResolved
+                                    ? 'معالجة'
+                                    : isPending
+                                        ? 'معلقة'
+                                        : status;
 
                                 return Container(
                                   padding:
@@ -251,8 +259,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: theme.cardColor,
                                     borderRadius:
-                                        BorderRadius.circular(
-                                            14),
+                                        BorderRadius.circular(14),
                                     border: Border.all(
                                       color: theme.dividerColor,
                                     ),
@@ -260,11 +267,9 @@ class CitizenDetailsScreen extends StatelessWidget {
                                       if (!isDark)
                                         BoxShadow(
                                           color: Colors.black
-                                              .withOpacity(
-                                                  0.03),
+                                              .withOpacity(0.03),
                                           blurRadius: 4,
-                                          offset: const Offset(
-                                              0, 2),
+                                          offset: const Offset(0, 2),
                                         ),
                                     ],
                                   ),
@@ -274,21 +279,18 @@ class CitizenDetailsScreen extends StatelessWidget {
                                     children: [
                                       Row(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment
-                                                .start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Container(
                                             height: 40,
                                             width: 40,
-                                            decoration:
-                                                BoxDecoration(
+                                            decoration: BoxDecoration(
                                               color: theme
                                                   .colorScheme
                                                   .surfaceVariant,
                                               borderRadius:
                                                   BorderRadius
-                                                      .circular(
-                                                          12),
+                                                      .circular(12),
                                             ),
                                             child: Icon(
                                               Icons
@@ -299,8 +301,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                               size: 22,
                                             ),
                                           ),
-                                          const SizedBox(
-                                              width: 10),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
@@ -313,8 +314,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                                       .textTheme
                                                       .bodyMedium
                                                       ?.copyWith(
-                                                    fontSize:
-                                                        14,
+                                                    fontSize: 14,
                                                     fontWeight:
                                                         FontWeight
                                                             .w700,
@@ -334,8 +334,7 @@ class CitizenDetailsScreen extends StatelessWidget {
                                                         .textTheme
                                                         .bodySmall
                                                         ?.copyWith(
-                                                      fontSize:
-                                                          12,
+                                                      fontSize: 12,
                                                       color: theme
                                                           .hintColor,
                                                     ),
@@ -343,21 +342,18 @@ class CitizenDetailsScreen extends StatelessWidget {
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(
-                                              width: 6),
+                                          const SizedBox(width: 6),
                                           Container(
                                             padding: const EdgeInsets
                                                 .symmetric(
                                               horizontal: 8,
                                               vertical: 4,
                                             ),
-                                            decoration:
-                                                BoxDecoration(
+                                            decoration: BoxDecoration(
                                               color: statusBg,
                                               borderRadius:
                                                   BorderRadius
-                                                      .circular(
-                                                          999),
+                                                      .circular(999),
                                             ),
                                             child: Text(
                                               statusText,
@@ -367,10 +363,8 @@ class CitizenDetailsScreen extends StatelessWidget {
                                                   ?.copyWith(
                                                 fontSize: 11,
                                                 fontWeight:
-                                                    FontWeight
-                                                        .w600,
-                                                color:
-                                                    statusColor,
+                                                    FontWeight.w600,
+                                                color: statusColor,
                                               ),
                                             ),
                                           ),
@@ -385,19 +379,17 @@ class CitizenDetailsScreen extends StatelessWidget {
                                           Row(
                                             children: [
                                               Icon(
-                                                Icons
-                                                    .person_outline,
+                                                Icons.person_outline,
                                                 size: 14,
                                                 color: theme
-                                                    .iconTheme
-                                                    .color
-                                                    ?.withOpacity(
-                                                        0.6) ??
+                                                        .iconTheme
+                                                        .color
+                                                        ?.withOpacity(
+                                                            0.6) ??
                                                     const Color(
                                                         0xFF9CA3AF),
                                               ),
-                                              const SizedBox(
-                                                  width: 4),
+                                              const SizedBox(width: 4),
                                               Text(
                                                 citizenName,
                                                 style: theme
@@ -418,15 +410,14 @@ class CitizenDetailsScreen extends StatelessWidget {
                                                     .account_balance_outlined,
                                                 size: 14,
                                                 color: theme
-                                                    .iconTheme
-                                                    .color
-                                                    ?.withOpacity(
-                                                        0.6) ??
+                                                        .iconTheme
+                                                        .color
+                                                        ?.withOpacity(
+                                                            0.6) ??
                                                     const Color(
                                                         0xFF9CA3AF),
                                               ),
-                                              const SizedBox(
-                                                  width: 4),
+                                              const SizedBox(width: 4),
                                               Text(
                                                 ministry,
                                                 style: theme
@@ -443,19 +434,17 @@ class CitizenDetailsScreen extends StatelessWidget {
                                           Row(
                                             children: [
                                               Icon(
-                                                Icons
-                                                    .access_time,
+                                                Icons.access_time,
                                                 size: 14,
                                                 color: theme
-                                                    .iconTheme
-                                                    .color
-                                                    ?.withOpacity(
-                                                        0.6) ??
+                                                        .iconTheme
+                                                        .color
+                                                        ?.withOpacity(
+                                                            0.6) ??
                                                     const Color(
                                                         0xFF9CA3AF),
                                               ),
-                                              const SizedBox(
-                                                  width: 4),
+                                              const SizedBox(width: 4),
                                               Text(
                                                 createdAt,
                                                 style: theme
